@@ -50,8 +50,8 @@
   "detox": {
     "configurations": {
       "ios.sim.debug": {
-        "binaryPath": "ios/build/Build/Products/Debug-iphonesimulator/YourApp.app",
-        "build": "xcodebuild -workspace ios/YourApp.xcworkspace -scheme YourApp -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build",
+        "binaryPath": "ios/build/Build/Products/Debug-iphonesimulator/SOEN-390.app",
+        "build": "xcodebuild -workspace ios/SOEN-390.xcworkspace -scheme SOEN-390 -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build",
         "type": "ios.simulator",
         "name": "iPhone 11"
       }
