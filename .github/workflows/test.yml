@@ -56,12 +56,21 @@ jobs:
           cd frontend
           npx expo start --dev-client --no-interactive &
         env:
-          EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || '' }}
+          EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY }}
 
       - name: Install Maestro
         run: |
           curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo 'export PATH="$PATH:$HOME/.maestro/bin"' >> ~/.bashrc
+          echo 'export PATH="$PATH:$HOME/.maestro/bin"' >> ~/.zshrc
+          export PATH="$PATH:$HOME/.maestro/bin"
+
+      - name: Verify Maestro Installation
+        run: |
+          export PATH="$PATH:$HOME/.maestro/bin"
+          maestro --version
 
       - name: Run Maestro Tests
         run: |
+          export PATH="$PATH:$HOME/.maestro/bin"
           maestro test frontend/maestro/test_app.yaml
