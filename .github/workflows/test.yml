@@ -12,7 +12,7 @@ jobs:
   backend_tests:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v2
 
       - name: Setup Node.js
@@ -45,21 +45,27 @@ jobs:
         working-directory: ./frontend
         run: npm install --legacy-peer-deps
 
-      # Start an Android emulator using the reactivecircus action.
-      - name: Start Android Emulator
+      # Install adb so the emulator runner can locate it.
+      - name: Install adb
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y android-tools-adb
+
+      # Use the android-emulator-runner action to start an emulator,
+      # build the app, and run Detox tests via the provided script.
+      - name: Run Detox tests on Android Emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 31
           target: google_apis
           arch: x86_64
-
-      # Build your app for Android. Ensure your Detox configuration (in package.json)
-      # has an "android.emu" configuration.
-      - name: Build Detox App for Android
-        working-directory: ./frontend
-        run: detox build --configuration android.emu
-
-      # Run Detox tests using the Android emulator.
-      - name: Run Detox Tests for Android
-        working-directory: ./frontend
-        run: detox test --configuration android.emu
+          avd-name: test
+          force-avd-creation: true
+          emulator-boot-timeout: 600
+          emulator-port: 5554
+          emulator-options: "-no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim"
+          disable-animations: true
+          script: |
+            cd frontend
+            detox build --configuration android.emu
+            detox test --configuration android.emu
