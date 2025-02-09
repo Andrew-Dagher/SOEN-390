@@ -31,12 +31,6 @@ jobs:
         run: |
           cd frontend
           npm install
-      - name: Install Homebrew
-        run: |
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-      - name: Install AppleSimUtils
-        run: |
-          brew tap wix/brew && brew install applesimutils
       - name: Build iOS App
         run: |
           cd frontend
