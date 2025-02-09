@@ -41,21 +41,14 @@ jobs:
           cd frontend
           npm install
 
-      # Generate the native iOS project (only needed for Expo Managed Workflow)
-      - name: Generate iOS Native Project
-        run: |
-          cd frontend
-          npx expo prebuild --platform ios
-
       - name: Install CocoaPods
         run: |
           cd frontend/ios
           pod install
 
-      - name: Build Frontend (Detox)
+      - name: Download Expo Go App
         run: |
-          cd frontend
-          npm run build:ios
+          curl -o path/to/ExpoGo.app https://expo.io/tools#client
 
       - name: Run Frontend Detox Tests
         run: |
