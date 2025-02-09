@@ -44,7 +44,7 @@ jobs:
       - name: Generate iOS Native Project
         run: |
           cd frontend
-          nnpx expo prebuild --platform ios
+          npx expo prebuild --platform ios
                   
       - name: Install CocoaPods
         run: |
