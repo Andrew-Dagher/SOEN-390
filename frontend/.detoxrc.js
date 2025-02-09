@@ -79,5 +79,10 @@ module.exports = {
       device: 'emulator',
       app: 'android.release'
     }
+  },
+  "scripts": {
+    "detox:build": "detox build --configuration android.emu",
+    "detox:test": "detox test --configuration android.emu"
   }
+
 };
