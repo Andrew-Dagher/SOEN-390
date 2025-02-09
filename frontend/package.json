@@ -53,9 +53,9 @@
         "binaryPath": "ios/build/Build/Products/Debug-iphonesimulator/SOEN-390.app",
         "build": "xcodebuild -workspace ios/SOEN-390.xcworkspace -scheme SOEN-390 -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build",
         "type": "ios.simulator",
-        "name": "iPhone 11"
+        "name": "iPhone 16",
+        "device": "iPhone 16"
       }
     }
-  },
-  "private": true
+  }
 }

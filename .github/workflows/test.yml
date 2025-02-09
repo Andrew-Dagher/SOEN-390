@@ -15,26 +15,38 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
       - name: Setup Node
         uses: actions/setup-node@v2
         with: 
           node-version: 20.11
+
+      # Install applesimutils for Detox iOS tests
+      - name: Install applesimutils
+        run: |
+          brew tap wix/brew
+          brew install applesimutils
+
       - name: Install Backend Dependencies
         run: |
           cd backend
           npm ci
+
       - name: Run Backend Tests
         run: |
           cd backend
           npm test
+
       - name: Install Frontend Dependencies
         run: |
           cd frontend
           npm install
+
       - name: Build Frontend (Detox)
         run: |
           cd frontend
           npm run build:ios
+
       - name: Run Frontend Detox Tests
         run: |
           cd frontend
