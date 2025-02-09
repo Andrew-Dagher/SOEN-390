@@ -21,7 +21,6 @@ jobs:
         with: 
           node-version: 20.11
 
-      # Install applesimutils for Detox iOS tests
       - name: Install applesimutils
         run: |
           brew tap wix/brew
@@ -41,6 +40,17 @@ jobs:
         run: |
           cd frontend
           npm install
+
+      # Generate the native iOS project (only needed for Expo Managed Workflow)
+      - name: Generate iOS Native Project
+        run: |
+          cd frontend
+          npx expo prebuild --platform ios
+
+      - name: Install CocoaPods
+        run: |
+          cd frontend/ios
+          pod install
 
       - name: Build Frontend (Detox)
         run: |
