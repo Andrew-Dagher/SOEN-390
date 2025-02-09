@@ -23,7 +23,7 @@ jobs:
       - name: Install Backend Dependencies
         run: |
           cd backend
-          npm ci
+          npm ci --legacy-peer-deps
 
       - name: Run Backend Tests
         run: |
@@ -31,7 +31,7 @@ jobs:
           npm test
 
   frontend_tests:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -39,29 +39,27 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20.11'
-
-      - name: Install applesimutils
-        run: |
-          brew tap wix/brew
-          brew install applesimutils
+          node-version: "20.11"
 
       - name: Install Frontend Dependencies
         working-directory: ./frontend
-        run: npm install
+        run: npm install --legacy-peer-deps
 
-      - name: Generate iOS Native Project
+      # Start an Android emulator using the reactivecircus action.
+      - name: Start Android Emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 31
+          target: google_apis
+          arch: x86_64
+
+      # Build your app for Android. Ensure your Detox configuration (in package.json)
+      # has an "android.emu" configuration.
+      - name: Build Detox App for Android
         working-directory: ./frontend
-        run: npx expo prebuild --platform ios
+        run: detox build --configuration android.emu
 
-      - name: Install CocoaPods
-        working-directory: ./frontend/ios
-        run: pod install
-
-      - name: Build iOS Detox App
+      # Run Detox tests using the Android emulator.
+      - name: Run Detox Tests for Android
         working-directory: ./frontend
-        run: npx detox build --configuration ios.sim.release
-
-      - name: Run Detox Tests for iOS
-        working-directory: ./frontend
-        run: npx detox test --configuration ios.sim.release
+        run: detox test --configuration android.emu
