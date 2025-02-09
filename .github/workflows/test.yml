@@ -45,7 +45,7 @@ jobs:
         working-directory: ./frontend
         run: npm install --legacy-peer-deps
 
-      # Install adb so the emulator runner can locate it.
+      # Install adb so that the emulator runner can locate it.
       - name: Install adb
         run: |
           sudo apt-get update
@@ -67,5 +67,5 @@ jobs:
           disable-animations: true
           script: |
             cd frontend
-            detox build --configuration android.emu
-            detox test --configuration android.emu
+            npx detox build --configuration android.emu
+            npx detox test --configuration android.emu
