@@ -31,7 +31,14 @@ jobs:
         run: |
           cd frontend
           npm install
-      # - name: Run Frontend Tests
-      #   run: |
-      #     cd frontend
-      #     npm test
+      - name: Install AppleSimUtils
+        run: |
+          brew tap wix/brew && brew install applesimutils
+      - name: Build iOS App
+        run: |
+          cd frontend
+          npm run build:ios
+      - name: Run Detox Tests
+        run: |
+          cd frontend
+          npm run test:detox

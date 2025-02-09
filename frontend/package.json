@@ -7,7 +7,9 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "build:ios": "detox build --configuration ios.sim.debug",
+    "test:detox": "detox test --configuration ios.sim.debug"
   },
   "dependencies": {
     "@clerk/clerk-expo": "^2.7.5",
@@ -21,6 +23,7 @@
     "axios": "^1.7.9",
     "expo": "~52.0.27",
     "expo-auth-session": "~6.0.3",
+    "expo-linking": "~7.0.5",
     "expo-secure-store": "~14.0.1",
     "expo-status-bar": "~2.0.1",
     "expo-web-browser": "~14.0.2",
@@ -36,13 +39,23 @@
     "react-native-screens": "^4.5.0",
     "react-native-svg": "15.8.0",
     "react-native-svg-transformer": "^1.5.0",
-    "tailwindcss": "^3.4.17",
-    "expo-linking": "~7.0.5",
-    "react-native-svg": "15.8.0",
-    "react-native-web": "~0.19.13"
+    "react-native-web": "~0.19.13",
+    "tailwindcss": "^3.4.17"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.20.0",
+    "detox": "^20.33.0",
+    "jest": "^29.7.0"
+  },
+  "detox": {
+    "configurations": {
+      "ios.sim.debug": {
+        "binaryPath": "ios/build/Build/Products/Debug-iphonesimulator/YourApp.app",
+        "build": "xcodebuild -workspace ios/YourApp.xcworkspace -scheme YourApp -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build",
+        "type": "ios.simulator",
+        "name": "iPhone 11"
+      }
+    }
   },
   "private": true
 }
