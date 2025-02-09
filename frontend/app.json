@@ -1,10 +1,5 @@
 {
   "expo": {
-    "platforms": [
-      "android",
-      "ios"
-    ],
-    "scheme": "myapp",
     "name": "frontend",
     "slug": "frontend",
     "version": "1.0.0",
@@ -18,18 +13,13 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "ca.concordia.app",
-      "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
-      }
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      },
-      "package": "ca.concordia.app"
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
