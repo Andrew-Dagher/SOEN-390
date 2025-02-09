@@ -36,6 +36,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      # (Optional) Set up Java to a known good version.
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -45,14 +52,18 @@ jobs:
         working-directory: ./frontend
         run: npm install --legacy-peer-deps
 
-      # Install adb so the emulator runner can locate it.
+      # Install adb so that the emulator runner can locate it.
       - name: Install adb
         run: |
           sudo apt-get update
           sudo apt-get install -y android-tools-adb
 
+      # Update the Android SDK to reduce XML parse warnings.
+      - name: Update Android SDK
+        run: sdkmanager --update > /dev/null 2>&1
+
       # Use the android-emulator-runner action to start an emulator,
-      # build the app, and run Detox tests via the provided script.
+      # build the app, and run Detox tests.
       - name: Run Detox tests on Android Emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
