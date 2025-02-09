@@ -1,10 +1,18 @@
 import React, { useEffect, useRef, useCallback, useState } from "react";
-import { View, Text, TouchableOpacity, Animated, Image, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Animated,
+  Image,
+  ActivityIndicator,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useOAuth, useUser, useAuth } from "@clerk/clerk-expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ConcordiaLogo from "../../components/ConcordiaLogo";
 import * as WebBrowser from "expo-web-browser";
+import ContinueWithGoogle from "../../components/ContinueWithGoogle";
 
 export default function LoginScreen() {
   return <LoginScreenContent />;
@@ -72,27 +80,30 @@ function LoginScreenContent() {
   const { startOAuthFlow } = useOAuth({
     strategy: "oauth_google",
     extraParams: {
-      scope: "openid profile email https://www.googleapis.com/auth/calendar.readonly",
+      scope:
+        "openid profile email https://www.googleapis.com/auth/calendar.readonly",
     },
   });
 
   // Function to handle Google Sign-In
-  const handleGoogleSignIn = useCallback(async () => {
+  const handleGoogleSignIn = async () => {
     try {
       const { createdSessionId, setActive } = await startOAuthFlow();
-      console.log("Created Session ID:", createdSessionId);
 
       if (createdSessionId) {
         await AsyncStorage.setItem("sessionId", createdSessionId);
         setActive({ session: createdSessionId });
-        navigation.replace("Home");
       }
     } catch (error) {
-      console.error("Error signing in with OAuth:", error);
+      console.error("OAuth Error:", error);
+      if (error.message.includes("cancelled")) {
+        console.log("User cancelled the login process.");
+      } else {
+        alert("Login failed. Please try again later.");
+      }
     }
-  }, [navigation]);
+  };
 
-  // Get user authentication state from Clerk
   const { user } = useUser();
   const { isSignedIn } = useAuth();
 
@@ -100,13 +111,12 @@ function LoginScreenContent() {
   useEffect(() => {
     const storeUserData = async () => {
       if (isSignedIn && user) {
-        const userData = {
-          fullName: user.fullName || "N/A",
-          email: user.primaryEmailAddress?.emailAddress || "N/A",
-          imageUrl: user.imageUrl || null,
-        };
-
         try {
+          const userData = {
+            fullName: user.fullName,
+            email: user.primaryEmailAddress?.emailAddress,
+            imageUrl: user.imageUrl,
+          };
           await AsyncStorage.setItem("userData", JSON.stringify(userData));
           console.log("Stored User Data:\n", JSON.stringify(userData, null, 2));
           navigation.replace("Home");
@@ -158,19 +168,12 @@ function LoginScreenContent() {
         style={{ opacity: formOpacity }}
       >
         <View className="w-full bg-white rounded-t-[50px] py-32 px-6 items-center shadow-md">
-          {/* Google Sign-In Button */}
-          <TouchableOpacity
-            onPress={handleGoogleSignIn}
-            className="flex-row items-center bg-white rounded-xl py-3 px-6 shadow-md"
-          >
-            <Image
-              source={{ uri: "https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" }}
-              className="w-6 h-6 mr-3"
-            />
-            <Text className="text-black text-lg font-semibold">Continue with Google</Text>
+
+          <TouchableOpacity>
+            <ContinueWithGoogle onPress={handleGoogleSignIn}/>
           </TouchableOpacity>
 
-          {/* Guest Login Button */}
+
           <TouchableOpacity className="mt-5" onPress={handleGuestLogin}>
             <Text className="text-[#1A73E8] text-lg font-medium underline">Continue as Guest</Text>
           </TouchableOpacity>

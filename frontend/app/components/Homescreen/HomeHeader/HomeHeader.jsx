@@ -1,15 +1,16 @@
 import React from "react";
 import { View, Text, Button, Pressable } from "react-native";
 import Concordia50 from "./Icons/Concordia50/Concordia50";
-
+import getThemeColors from "../../../ColorBindTheme";
 export default function HomeHeader(props) {
+  const theme = getThemeColors();
   return (
     <View
       style={{
         height: 194,
         alignItems: "center",
         flexDirection: "row",
-        backgroundColor: "#862532",
+        backgroundColor: theme.backgroundColor,
         borderBottomLeftRadius: 60,
         borderBottomRightRadius: 60,
         shadowColor: "#000",

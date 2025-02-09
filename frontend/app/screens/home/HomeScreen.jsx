@@ -1,14 +1,29 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@clerk/clerk-expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { View, Text, Button, Alert } from "react-native";
+import {
+  View,
+  Text,
+  Button,
+  Alert,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
 import BottomNavBar from "../../components/BottomNavBar/BottomNavBar";
 import HomeHeader from "../../components/Homescreen/HomeHeader/HomeHeader";
 import HomeCard from "../../components/Homescreen/HomeCard";
 import MapPic from "../../../assets/MapScreenshot.png";
 import CalendarPic from "../../../assets/CalendarScreenshot.png";
+import { useNavigation } from "@react-navigation/native";
+import { useTextSize } from "../../TextSizeContext";
 
-export default function HomeScreen({ navigation }) {
+export default function HomeScreen() {
+  const navigation = useNavigation();
+
+  const { textSize, setTextSize } = useTextSize(); // Get global text size from context
+
+  // Apply theme colors based on selected mode
+
   const { signOut, isSignedIn } = useAuth();
   const [username, setUsername] = useState("");
 
