@@ -32,10 +32,46 @@ jobs:
           cd backend
           npm test
 
+  frontend_build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    needs: backend_tests  # Build frontend only if backend tests pass
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 20.11
+
+      - name: Install Expo CLI
+        run: |
+          npm install -g expo-cli eas-cli
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm install
+
+      - name: Login to Expo (Optional, if using EAS)
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          eas login --token $EXPO_TOKEN
+
+      - name: Build Expo App
+        env:
+          EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+        run: |
+          cd frontend
+          eas build --platform android --profile preview --non-interactive
+
   frontend_tests:
     name: Frontend Tests
     runs-on: ubuntu-latest
-    needs: backend_tests  # Runs after backend tests complete
+    needs: frontend_build  # Run tests only after frontend build completes
 
     steps:
       - name: Checkout Repository
