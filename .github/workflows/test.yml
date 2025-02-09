@@ -30,38 +30,38 @@ jobs:
           cd backend
           npm test
 
+  frontend_tests:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-          frontend_tests:
-            runs-on: ubuntu-latest
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.11'
 
-            steps:
-              - name: Checkout repository
-                uses: actions/checkout@v2
+      - name: Install applesimutils
+        run: |
+          brew tap wix/brew
+          brew install applesimutils
 
-              - name: Setup Node.js
-                uses: actions/setup-node@v3
-                with:
-                  node-version: '20.11'
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm install
 
-              - name: Install Frontend Dependencies
-                working-directory: ./frontend
-                run: npm install
+      - name: Generate iOS Native Project
+        working-directory: ./frontend
+        run: npx expo prebuild --platform ios
 
-              # Start an Android emulator using the reactivecircus action.
-              - name: Start Android Emulator
-                uses: reactivecircus/android-emulator-runner@v2
-                with:
-                  api-level: 31
-                  target: google_apis
-                  arch: x86_64
+      - name: Install CocoaPods
+        working-directory: ./frontend/ios
+        run: pod install
 
-              # Build your app for Android. Ensure your Detox configuration (in package.json)
-              # has an "android.emu" configuration.
-              - name: Build Detox App for Android
-                working-directory: ./frontend
-                run: detox build --configuration android.emu
+      - name: Build iOS Detox App
+        working-directory: ./frontend
+        run: npx detox build --configuration ios.sim.release
 
-              # Run Detox tests using the Android emulator.
-              - name: Run Detox Tests for Android
-                working-directory: ./frontend
-                run: detox test --configuration android.emu
+      - name: Run Detox Tests for iOS
+        working-directory: ./frontend
+        run: npx detox test --configuration ios.sim.release
