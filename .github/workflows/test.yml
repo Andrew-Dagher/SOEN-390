@@ -44,7 +44,7 @@ jobs:
       - name: Install Frontend Dependencies
         run: |
           cd frontend
-          npm install
+          npm install --legacy-peer-deps
 
       # Set up Android emulator (using an action that provisions an emulator)
       - name: Start Android Emulator
