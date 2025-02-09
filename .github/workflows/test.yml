@@ -1,6 +1,6 @@
-name: Testing (iOS)
+name: Testing
 
-on:
+on: 
   push:
     branches:
       - main
@@ -9,6 +9,28 @@ on:
       - main
 
 jobs:
+  backend_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.11'
+
+      - name: Install Backend Dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: Run Backend Tests
+        run: |
+          cd backend
+          npm test
+
+  
   frontend_tests:
     runs-on: macos-latest  # iOS simulators require macOS
 
@@ -23,22 +45,20 @@ jobs:
 
       - name: Install Frontend Dependencies
         working-directory: ./frontend
-        run: npm install
+        run: npm install --legacy-peer-deps
 
-      # Download the Expo IPA (or zipped .app) into the bin folder.
-      # Update the URL below with your actual Expo IPA/ZIP download link.
       - name: Download Expo IPA for Detox
         working-directory: ./frontend
         run: |
           mkdir -p bin
           curl -L https://example.com/path-to/Exponent.app.zip -o bin/Exponent.app.zip
           unzip -q bin/Exponent.app.zip -d bin/
-
-      # Optionally, if your project requires starting the Expo server,
-      # you can add a step here or use expo-detox-hook.
-      #- name: Start Expo server (if needed)
-      #- run: |
-      #-   expo start --non-interactive &
+          
+      - name: Start Expo server
+        working-directory: ./frontend
+        run: |
+          expo start --non-interactive &
+          sleep 180
 
       - name: Build Detox App
         working-directory: ./frontend
