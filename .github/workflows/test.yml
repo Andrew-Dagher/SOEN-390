@@ -31,11 +31,11 @@ jobs:
         run: |
           cd frontend
           npm install
-      - name: Build iOS App
+      - name: Build Frontend (Detox)
         run: |
           cd frontend
           npm run build:ios
-      - name: Run Detox Tests
+      - name: Run Frontend Detox Tests
         run: |
           cd frontend
           npm run test:detox
