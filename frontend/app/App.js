@@ -27,7 +27,7 @@ export default function App() {
               name="Loading"
               component={LoadingScreen}
             />
-            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen accessibilityLabel="Home" name="Home" component={HomeScreen} />
             <Stack.Screen name="Calendar" component={CalendarScreen} />
             <Stack.Screen name="Navigation" component={NavigationScreen} />
             <Stack.Screen
