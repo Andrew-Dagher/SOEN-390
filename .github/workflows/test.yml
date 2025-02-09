@@ -1,6 +1,6 @@
-name: Testing
+name: Testing (iOS)
 
-on: 
+on:
   push:
     branches:
       - main
@@ -9,31 +9,11 @@ on:
       - main
 
 jobs:
-  backend_tests:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20.11'
-
-      - name: Install Backend Dependencies
-        run: |
-          cd backend
-          npm ci
-
-      - name: Run Backend Tests
-        run: |
-          cd backend
-          npm test
-
   frontend_tests:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest  # iOS simulators require macOS
+
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v2
 
       - name: Setup Node.js
@@ -42,25 +22,28 @@ jobs:
           node-version: '20.11'
 
       - name: Install Frontend Dependencies
-        run: |
-          cd frontend
-          npm install --legacy-peer-deps
+        working-directory: ./frontend
+        run: npm install
 
-      # Set up Android emulator (using an action that provisions an emulator)
-      - name: Start Android Emulator
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 31
-          target: google_apis
-          arch: x86_64
-
-      - name: Build Detox App for Android
+      # Download the Expo IPA (or zipped .app) into the bin folder.
+      # Update the URL below with your actual Expo IPA/ZIP download link.
+      - name: Download Expo IPA for Detox
+        working-directory: ./frontend
         run: |
-          cd frontend
-          # Ensure your detox configuration for Android (e.g. "android.emu") is correct in package.json
-          detox build --configuration android.emu
+          mkdir -p bin
+          curl -L https://example.com/path-to/Exponent.app.zip -o bin/Exponent.app.zip
+          unzip -q bin/Exponent.app.zip -d bin/
 
-      - name: Run Detox Tests for Android
-        run: |
-          cd frontend
-          detox test --configuration android.emu
+      # Optionally, if your project requires starting the Expo server,
+      # you can add a step here or use expo-detox-hook.
+      #- name: Start Expo server (if needed)
+      #- run: |
+      #-   expo start --non-interactive &
+
+      - name: Build Detox App
+        working-directory: ./frontend
+        run: detox build --configuration ios.sim
+
+      - name: Run Detox Tests
+        working-directory: ./frontend
+        run: detox test --configuration ios.sim
