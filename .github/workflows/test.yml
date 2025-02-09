@@ -1,6 +1,6 @@
 name: Testing
 
-on: 
+on:
   push:
     branches:
       - main
@@ -18,7 +18,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20.11'
+          node-version: "20.11"
 
       - name: Install Backend Dependencies
         run: |
@@ -30,40 +30,38 @@ jobs:
           cd backend
           npm test
 
-  
-  frontend_tests:
-    runs-on: macos-latest  # iOS simulators require macOS
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+          frontend_tests:
+            runs-on: ubuntu-latest
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20.11'
+            steps:
+              - name: Checkout repository
+                uses: actions/checkout@v2
 
-      - name: Install Frontend Dependencies
-        working-directory: ./frontend
-        run: npm install --legacy-peer-deps
+              - name: Setup Node.js
+                uses: actions/setup-node@v3
+                with:
+                  node-version: '20.11'
 
-      - name: Download Expo IPA for Detox
-        working-directory: ./frontend
-        run: |
-          mkdir -p bin
-          curl -L https://example.com/path-to/Exponent.app.zip -o bin/Exponent.app.zip
-          unzip -q bin/Exponent.app.zip -d bin/
-          
-      - name: Start Expo server
-        working-directory: ./frontend
-        run: |
-          expo start --non-interactive &
-          sleep 180
+              - name: Install Frontend Dependencies
+                working-directory: ./frontend
+                run: npm install
 
-      - name: Build Detox App
-        working-directory: ./frontend
-        run: detox build --configuration ios.sim
+              # Start an Android emulator using the reactivecircus action.
+              - name: Start Android Emulator
+                uses: reactivecircus/android-emulator-runner@v2
+                with:
+                  api-level: 31
+                  target: google_apis
+                  arch: x86_64
 
-      - name: Run Detox Tests
-        working-directory: ./frontend
-        run: detox test --configuration ios.sim
+              # Build your app for Android. Ensure your Detox configuration (in package.json)
+              # has an "android.emu" configuration.
+              - name: Build Detox App for Android
+                working-directory: ./frontend
+                run: detox build --configuration android.emu
+
+              # Run Detox tests using the Android emulator.
+              - name: Run Detox Tests for Android
+                working-directory: ./frontend
+                run: detox test --configuration android.emu
