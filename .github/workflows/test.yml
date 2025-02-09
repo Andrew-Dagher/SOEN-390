@@ -51,9 +51,10 @@ jobs:
           cd frontend/ios
           pod install
 
-      - name: Download Expo Go App
+      - name: Build iOS Detox App
         run: |
-          curl -o path/to/ExpoGo.app https://expo.io/tools#client
+          cd frontend
+          npm run build:ios
 
       - name: Run Frontend Detox Tests
         run: |
