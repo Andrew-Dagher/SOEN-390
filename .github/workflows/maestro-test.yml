@@ -41,15 +41,14 @@ jobs:
       - name: Start Expo and Open App in Simulator
         run: |
           cd frontend
-          npx expo start &
+          npx expo run:ios &
           sleep 10  # Wait for the server to initialize
-          osascript -e 'tell application "Terminal" to activate' -e 'tell application "System Events" to keystroke "i"' # Simulate pressing "i" to install and open in iOS
-          echo "i"
 
       - name: List Installed Apps on Simulator
         run: |
           echo "listing all installed apps on the simulator"
           xcrun simctl listapps booted
 
-      - name: Run Maestro Tests
-        run: maestro test .github/workflows/maestro.yaml
+- name: Run Maestro Tests
+  run: MAESTRO_DRIVER_STARTUP_TIMEOUT=60000 maestro test .github/workflows/maestro.yaml
+
