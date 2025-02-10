@@ -41,7 +41,7 @@ jobs:
       - name: Start Expo and Open App in Simulator
         run: |
           cd frontend
-          npx expo start
+          npx expo start &
           sleep 10  # Wait for the server to initialize
           osascript -e 'tell application "Terminal" to activate' -e 'tell application "System Events" to keystroke "i"' # Simulate pressing "i" to install and open in iOS
           echo "i"
