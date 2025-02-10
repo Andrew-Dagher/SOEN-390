@@ -41,7 +41,7 @@ jobs:
       - name: Start Expo and Open App in Simulator
         run: |
           cd frontend
-          npx expo start --IOS &
+          npx expo start --ios &
           sleep 20  # Wait for the server to initialize
 
       - name: List Installed Apps on Simulator
