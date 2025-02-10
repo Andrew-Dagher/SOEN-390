@@ -1,5 +1,4 @@
-appId: host.exp.Exponent
----
-- launchApp
+- tapOn:
+  point: 50%,50%
 - tapOn: "frontend"
 - tapOn: "Continue as Guest"

@@ -38,11 +38,12 @@ jobs:
           sleep 30
           xcrun simctl list devices
 
-      - name: Start Expo and Install App on Simulator
+      - name: Start Expo and Open App in Simulator
         run: |
           cd frontend
-          npx expo run:ios --no-build --simulator "iPhone 16 Pro Max" &
-          sleep 60
+          npx expo start --no-dev --no-clear &  # Start Expo server
+          sleep 20  # Wait for the server to initialize
+          osascript -e 'tell application "Terminal" to activate' -e 'tell application "System Events" to keystroke "i"' # Simulate pressing "i" to install and open in iOS
 
       - name: Run Maestro Tests
         run: maestro test .github/workflows/maestro.yaml
