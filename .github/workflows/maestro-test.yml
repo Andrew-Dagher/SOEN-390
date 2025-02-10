@@ -49,6 +49,6 @@ jobs:
           echo "listing all installed apps on the simulator"
           xcrun simctl listapps booted
 
-- name: Run Maestro Tests
-  run: MAESTRO_DRIVER_STARTUP_TIMEOUT=60000 maestro test .github/workflows/maestro.yaml
+      - name: Run Maestro Tests
+        run: MAESTRO_DRIVER_STARTUP_TIMEOUT=60000 maestro test .github/workflows/maestro.yaml
 
