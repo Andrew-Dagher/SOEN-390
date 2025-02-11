@@ -2,12 +2,8 @@ name: Mobile UI Tests
 
 on: 
   push:
-    branches:
-      - 'main'
   pull_request:
-    branches:
-      - 'main'
-
+    
 jobs:
   maestro_tests:
     runs-on: macos-latest
