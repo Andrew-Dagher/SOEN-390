@@ -1,38 +1,60 @@
----
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
+## 🐞 Bug Report
+
+### **Issue Summary**
+_A clear and concise description of what the bug is._
 
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+### **Steps to Reproduce**
+1. Go to `...`
+2. Click on `...`
+3. Observe `...`
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+---
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+### **Expected Behavior**
+_Describe what you expected to happen._
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+---
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+### **Actual Behavior**
+_Describe what actually happened instead._
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
+---
 
-**Additional context**
-Add any other context about the problem here.
+### **Screenshots/Videos (if applicable)**
+_Add screenshots or a screen recording to help visualize the issue._
+
+---
+
+### **System Information**
+- **Device:** _(e.g., Laptop, Mobile, Tablet)_
+- **Operating System:** _(e.g., Windows 11, macOS Ventura, Ubuntu 22.04)_
+- **Browser/App Version:** _(e.g., Chrome 120.0, Safari 17)_
+- **Internet Connection:** _(WiFi, Mobile Data)_
+
+---
+
+### **Logs & Console Errors (if applicable)**
+_Please provide any relevant logs or error messages from the console._
+
+---
+
+### **Commit References**
+- **Bug Introduced in Commit:** `[Insert Commit Hash]`
+- **Fix Implemented in Commit:** `[Insert Commit Hash]`
+- **Test Coverage Updated in Commit:** `[Insert Commit Hash]`
+
+---
+
+### **Labels**
+- [ ] 🐛 **Bug**
+- [ ] 🚀 **Performance**
+- [ ] 🔍 **Needs Investigation**
+- [ ] ✅ **Fixed in Development**
+- [ ] ❌ **Cannot Reproduce**
+
+---
+
+### **Additional Context**
+_Any additional information that might help us understand and fix the issue._
