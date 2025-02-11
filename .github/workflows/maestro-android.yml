@@ -1,0 +1,39 @@
+name: Mobile UI Tests
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    branches:
+      - "main"
+
+jobs:
+  maestro_tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 34
+          build-tools: "34.0.0"
+          components: platform-tools, emulator
+      - name: Install system image for emulator
+        run: |
+          sdkmanager "system-images;android-34;google_apis;x86_64"
+          sdkmanager --licenses
+
+      - name: Create and start the emulator
+        run: |
+          emulator -avd test -no-window -no-audio -no-boot-anim
+          timeout /t 120
+          adb wait-for-device
