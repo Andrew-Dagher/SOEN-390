@@ -1,0 +1,7 @@
+appId: host.exp.exponent
+---
+- launchApp:
+    clearState: true
+- assertVisible: "Login"
+- tapOn: "Login"
+- assertVisible: "Home"
