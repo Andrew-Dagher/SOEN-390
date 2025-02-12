@@ -1,4 +1,3 @@
-// BottomNavBar.jsx
 import React, { memo } from "react";
 import { View, Pressable, StyleSheet, Platform } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
@@ -18,6 +17,7 @@ const TabButton = memo(
       <Pressable
         onPress={onPress}
         style={styles.button}
+        testID={`${name.toLowerCase()}-tab`}
         android_ripple={{
           color: "rgba(0, 0, 0, 0.1)",
           borderless: true,
@@ -28,6 +28,8 @@ const TabButton = memo(
     );
   }
 );
+
+TabButton.displayName = "TabButton";
 
 // Main navigation bar component
 const BottomNavBar = () => {
@@ -59,7 +61,7 @@ const BottomNavBar = () => {
   ];
 
   return (
-    <View style={styles.container}>
+    <View testID="bottom-nav" style={styles.container}>
       {tabs.map((tab) => (
         <TabButton
           key={tab.name}
