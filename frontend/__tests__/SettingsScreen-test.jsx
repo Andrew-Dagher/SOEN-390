@@ -9,13 +9,13 @@ describe("<Setting />", () => {
   test("Text renders correctly on Settings Screen", () => {
     const { getByTestId } = render(
       <AppSettingsProvider>
-        <NavigationContainer>
-          <Stack.Navigator>
-            <TextSizeProvider>
+        <TextSizeProvider>
+          <NavigationContainer>
+            <Stack.Navigator>
               <Stack.Screen name="Settings" component={SettingsScreen} />
-            </TextSizeProvider>
-          </Stack.Navigator>
-        </NavigationContainer>
+            </Stack.Navigator>
+          </NavigationContainer>
+        </TextSizeProvider>
       </AppSettingsProvider>
     );
 
