@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "plugins": [
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsVersion": "11.0.0",
+          "RNMapboxMapsDownloadToken": "sk.eyJ1IjoiYWNjaXNhIiwiYSI6ImNtNnZmaG0yZDA4OGoybHByNGxuNXdsMXAifQ.88GT6hbpi09Ijw-tkAy55g"
+        }
+      ]
+    ],
+    "name": "frontend",
+    "slug": "soen-390",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "config": {
+        "googleMapsApiKey": "AIzaSyAWZscH3W4vEaI8iVdIKrJ-Dlxy4_RUAi0"
+      },
+      "bundleIdentifier": "com.romullus.frontend",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyAWZscH3W4vEaI8iVdIKrJ-Dlxy4_RUAi0"
+        }
+      },
+      "package": "com.romullus.frontend"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "a2a68c23-c199-4fbf-95a0-dbe6f53793cd"
+      }
+    },
+    "owner": "romullus"
+  }
+}
