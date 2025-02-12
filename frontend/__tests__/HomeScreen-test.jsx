@@ -2,7 +2,6 @@ import { render } from "@testing-library/react-native";
 
 import HomeScreen from "../app/screens/home/HomeScreen";
 import { NavigationContainer } from "@react-navigation/native";
-import { NavigationContainer } from "@react-navigation/native";
 import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
 import { AppSettingsProvider } from "./TextSizeContext";
 import { TextSizeProvider } from "./TextSizeContext";
