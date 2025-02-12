@@ -31,9 +31,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Setup Node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with: 
-          node-version: 20.11
+          node-version: 22.11
       - name: Install Frontend Dependencies
         run: |
           cd frontend
