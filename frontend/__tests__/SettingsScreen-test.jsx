@@ -10,7 +10,7 @@ describe("<Setting />", () => {
       <AppSettingsProvider>
         <NavigationContainer>
           <Stack.Navigator>
-            <Stack.Screen name="Settings" component={BottomNavBar} />
+            <Stack.Screen name="Settings" />
             <SettingsScreen />
           </Stack.Navigator>
         </NavigationContainer>
