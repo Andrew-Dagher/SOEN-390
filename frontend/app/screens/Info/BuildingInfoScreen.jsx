@@ -36,7 +36,7 @@ const BuildingDetails = ({ route }) => {
         className="flex flex-row items-center py-4 bg-white"
       >
         <Text className="flex-1 text-base text-gray-800">{item}</Text>
-        <Text className="text-gray-400 text-lg ml-2">›</Text>
+        {link && <Text className="text-gray-400 text-lg ml-2">›</Text>}
       </Pressable>
     );
   };
@@ -49,6 +49,7 @@ const BuildingDetails = ({ route }) => {
         ? building.DepartmentLink
         : building.ServiceLink;
 
+    // Handle empty or undefined cases
     if (!items || items.length === 0) {
       return (
         <Text className="p-4 text-gray-500">
@@ -57,11 +58,15 @@ const BuildingDetails = ({ route }) => {
       );
     }
 
+    // Ensure items and links are always arrays
+    const itemsArray = Array.isArray(items) ? items : [items];
+    const linksArray = Array.isArray(links) ? links : [links];
+
     return (
       <View className="px-4">
-        {items.map((item, index, array) => (
+        {itemsArray.map((item, index, array) => (
           <View key={index}>
-            {renderListItem(item, links[index], index)}
+            {renderListItem(item, linksArray[index], index)}
             {index < array.length - 1 && (
               <View className="border-b border-gray-100" />
             )}
