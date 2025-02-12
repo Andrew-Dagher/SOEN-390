@@ -16,6 +16,7 @@ import MapPic from "../../../assets/MapScreenshot.png";
 import CalendarPic from "../../../assets/CalendarScreenshot.png";
 import { useNavigation } from "@react-navigation/native";
 import { useTextSize } from "../../TextSizeContext";
+import { trackEvent } from "@aptabase/react-native";
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -103,8 +104,10 @@ export default function HomeScreen() {
           paddingBottom: 160,
         }}
       >
+        <TouchableOpacity onPress={() => trackEvent("Unusable image tapped")}>
         <HomeCard image={MapPic} text="Find your next class" />
         <HomeCard image={CalendarPic} text="Access your calendar" />
+        </TouchableOpacity>
       </View>
       <BottomNavBar />
     </View>
