@@ -12,6 +12,14 @@ export const LoyolaLocation = {
     latitudeDelta: 0.009
 }
 
+export const SGWShuttlePickup = {
+  latitude: 45.497199717584444, longitude: -73.57838187403725
+}
+
+export const LoyolaShuttlePickup = {
+  latitude:45.458414933237755, longitude:-73.63832632000991
+}
+
 export const polygons = [
     {
       name: "JMSB",
