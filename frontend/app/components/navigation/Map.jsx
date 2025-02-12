@@ -4,7 +4,7 @@ import MapView, { Marker, PROVIDER_DEFAULT, Polygon, Callout } from 'react-nativ
 import MapViewDirections from 'react-native-maps-directions';
 import NavigationIcon from './Icons/NavigationIcon';
 import DirectionsIcon from './Icons/DirectionsIcon';
-import { polygons, SGWLocation, LoyolaLocation } from '../../screens/navigation/navigationConfig';
+import { polygons, SGWLocation, LoyolaLocation, SGWShuttlePickup, LoyolaShuttlePickup } from '../../screens/navigation/navigationConfig';
 import MapCard from './MapCard';
 import MapSearch from './MapSearch';
 import SGWIcon from './Icons/SGWIcon';
@@ -30,7 +30,9 @@ export default function Map() {
   const [closeTraceroute, setCloseTraceroute] = useState(false); // bool to hide traceroute
   const [startPosition, setStartPosition] = useState(''); // name of start position for traceroute
   const [destinationPosition, setDestinationPosition] = useState(''); // name of destination position for traceroute
+  const [waypoints, setWaypoints] = useState([]); // array of waypoints traceroutes that should be rendered by the GoogleAPI. This is used to show the directions from start to the shuttle
   const [campus, setCampus] = useState('sgw');
+  const [mode, setMode] = useState('WALKING'); // Mode of transportation 
   const [isRoute, setIsRoute] = useState(false);
   const ref = useRef(null);
   const polygonRef = useRef(null);
@@ -49,6 +51,7 @@ export default function Map() {
   };
 
   const handleGetDirections = () => {
+
     setIsRoute(true);
     setIsSearch(true);
     setEnd(selectedBuilding.point);
@@ -79,8 +82,6 @@ export default function Map() {
   const panToMyLocation = () => {
     ref.current?.animateToRegion(location.coords)
   }
-
- 
 
   const renderPolygons = polygons.map((building, idx) => {
     return (
@@ -135,10 +136,8 @@ export default function Map() {
 
   useEffect(()=>{
     console.log("is route: " + isRoute)
-  },[isRoute])
+  },[isRoute, waypoints, mode])
 
-  console.log("start: "+start)
-  console.log("end: "+end)
 
   useEffect(() => {
     if (location != null && start != location.coords) return;
@@ -185,6 +184,8 @@ export default function Map() {
           apikey={process.env.EXPO_PUBLIC_GOOGLE_API_KEY}
           strokeColor="#862532"
           strokeWidth={6}
+          waypoints={waypoints}
+          mode={mode}
           onReady={traceRouteOnReady}
         />): null}
         <View ref={polygonRef}>
@@ -194,10 +195,8 @@ export default function Map() {
           {renderPolygons}
         </View>
       </MapView>
-      {isRoute ? (<MapTraceroute setIsRoute={setIsRoute} reset={reset} isRoute={isRoute} setSelectedBuilding={setSelectedBuilding} handleSGW={handleSGW} panToMyLocation={panToMyLocation} end={end} start={start} setStart={setStart} setEnd={setEnd} startPosition={startPosition} destinationPosition={destinationPosition} setStartPosition={setStartPosition} setDestinationPosition={setDestinationPosition} setIsSearch={setIsSearch} closeTraceroute={closeTraceroute} setCloseTraceroute={setCloseTraceroute}/>) : null}
+      {isRoute ? (<MapTraceroute setMode={setMode} waypoints={waypoints} setWaypoints={setWaypoints} location={location} setIsRoute={setIsRoute} reset={reset} isRoute={isRoute} setSelectedBuilding={setSelectedBuilding} handleSGW={handleSGW} panToMyLocation={panToMyLocation} end={end} start={start} setStart={setStart} setEnd={setEnd} startPosition={startPosition} destinationPosition={destinationPosition} setStartPosition={setStartPosition} setDestinationPosition={setDestinationPosition} setIsSearch={setIsSearch} closeTraceroute={closeTraceroute} setCloseTraceroute={setCloseTraceroute}/>) : null}
       {isRoute ? (<MapTracerouteBottom setIsRoute={setIsRoute} isRoute={isRoute} panToStart={panToStart} end={end} start={start} closeTraceroute={closeTraceroute} setCloseTraceroute={setCloseTraceroute} />) : null}
-      {/* If isSearch is true, show MapResults. Otherwise, maybe show the search bar.
-          Also ensure that if a building is selected, we hide these. */}
       {isSearch && end == null && <MapResults
         location={location}
         setIsRoute={setIsRoute}
@@ -212,7 +211,6 @@ export default function Map() {
         setSearchText={setSearchText}
         searchResult={searchResult} setSearchResult={setSearchResult}
         isSearch={isSearch} setIsSearch={setIsSearch} searchText={searchText} />}
-      {/* Show the search bar only if we are not searching results AND no building is selected */}
       {!isSearch && (
         <MapSearch
           searchResult={searchResult} 
@@ -224,7 +222,6 @@ export default function Map() {
         />
       )}
 
-      {/* Example campus buttons - if you want them to appear even if a building is selected, remove selectedBuilding check */}
       {!isSearch && (
         <View className="absolute h-full justify-end items-center">
           <View style={styles.shadow} className='mb-40 rounded-xl bg-white p-4 ml-8'>
@@ -238,10 +235,8 @@ export default function Map() {
         </View>
       )}
 
-      {/* Example current location marker (optional); show/hide as you wish */}
       {!isSearch && <MapLocation panToMyLocation={panToMyLocation} setLocation={() => {}} />}
 
-      {/* Show the "Set Start" / "Get Directions" buttons ONLY if a building is selected */}
       {selectedBuilding && !isSearch && (
         <View className='absolute w-full bottom-20'>
           <View className='flex flex-row justify-center items-center'>
