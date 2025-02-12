@@ -158,7 +158,7 @@ function LoginScreenContent() {
   }
 
   return (
-    <View className="flex-1 bg-[#862532] justify-center items-center">
+    <View testID="login-screen" className="flex-1 bg-[#862532] justify-center items-center">
       <Animated.View style={{ transform: [{ translateY: logoPosition }] }}>
         <ConcordiaLogo width={288} height={96} />
       </Animated.View>
