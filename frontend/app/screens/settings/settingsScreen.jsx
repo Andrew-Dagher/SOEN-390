@@ -145,7 +145,7 @@ export default function SettingsScreen() {
     };
 
   return (
-    <View className="flex-1">
+    <View testID="settings-screen" className="flex-1">
       <ScrollView>
         {/* Profile Section */}
         <View style={styles.header} className="pt-16 pb-8 items-center">
