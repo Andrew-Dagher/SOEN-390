@@ -6,6 +6,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
 import { AppSettingsProvider } from './TextSizeContext';
 import { TextSizeProvider } from './TextSizeContext';
+import Aptabase from "@aptabase/react-native";
 
 import "../global.css";
 import HomeScreen from "./screens/home/HomeScreen";
@@ -17,7 +18,7 @@ import SettingsScreen from './screens/settings/settingsScreen';
 
 const Stack = createNativeStackNavigator();
 
-
+Aptabase.init(process.env.EXPO_PUBLIC_APTABASE_KEY)
 export default function App() {
   return (
     <ClerkProvider
