@@ -91,7 +91,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <View testID="home-screen" style={{ flex: 1, justifyContent: "center" }}>
+    <View style={{ flex: 1, justifyContent: "center" }}>
       <HomeHeader name={username} />
       <View
         style={{
