@@ -15,6 +15,8 @@ import MapTraceroute from './MapTraceroute';
 import * as Location from 'expo-location';
 import MapTracerouteBottom from './MapTracerouteBottom';
 import BottomNavBar from '../BottomNavBar/BottomNavBar';
+import { analytics, logEvent } from '../../../firebase.config';
+import * as Analytics from "expo-firebase-analytics";
 
 export default function Map() {
   const [searchResult, setSearchResult] = useState([]);
@@ -48,7 +50,16 @@ export default function Map() {
     setStartPosition(selectedBuilding.name)
   };
 
-  const handleGetDirections = () => {
+  const handleGetDirections =  () => {
+    try {
+      Analytics.logEvent(analytics, "button_clicked", {
+        button_name: "Directions",
+        user_type: "guest"
+      });
+      console.log("✅ Event sent successfully: button_click");
+    } catch (error) {
+      console.error("❌ Failed to send event:", error);
+    }
     setIsRoute(true);
     setIsSearch(true);
     setEnd(selectedBuilding.point);

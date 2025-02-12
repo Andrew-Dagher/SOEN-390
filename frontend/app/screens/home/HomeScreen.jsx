@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import * as Analytics from "expo-firebase-analytics";
 import { useAuth } from "@clerk/clerk-expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
@@ -16,9 +17,15 @@ import MapPic from "../../../assets/MapScreenshot.png";
 import CalendarPic from "../../../assets/CalendarScreenshot.png";
 import { useNavigation } from "@react-navigation/native";
 import { useTextSize } from "../../TextSizeContext";
+import { analytics, logEvent } from "../../../firebase.config";
 
 export default function HomeScreen() {
   const navigation = useNavigation();
+  useEffect(() => {
+    Analytics.logEvent(analytics, "screen_view", {
+      screen_name: "HomeScreen"
+    });
+  }, []);
 
   const { textSize, setTextSize } = useTextSize(); // Get global text size from context
 
