@@ -15,7 +15,7 @@ export default function BottomNavBar() {
   const route = useRoute();
 
   return (
-    <View style={styles.container}>
+    <View testID="bottom-nav" style={styles.container}>
       <Pressable onPress={() => navigation.navigate("Home")}>
         {route.name === "Home" ? <HomeActive /> : <HomeInactive />}
       </Pressable>

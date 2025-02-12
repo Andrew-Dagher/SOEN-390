@@ -1,4 +1,4 @@
-import { render, within } from "@testing-library/react-native";
+import { render } from "@testing-library/react-native";
 
 import HomeHeader from "../app/components/Homescreen/HomeHeader/HomeHeader";
 import { AppSettingsProvider } from "../app/TextSizeContext";
@@ -12,6 +12,7 @@ describe("<HomeHeader />", () => {
 
     const viewComponent = getByTestId("home-header");
 
+    expect(viewComponent).toBeTruthy();
     expect(getByText("Welcome Back")).toBeTruthy();
     expect(getByText("John Doe")).toBeTruthy();
   });
