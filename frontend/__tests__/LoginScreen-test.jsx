@@ -1,24 +1,33 @@
-import { render } from "@testing-library/react-native";
-import LoginScreen from "../app/screens/login/LoginScreen";
-import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { AppSettingsProvider } from "../app/TextSizeContext";
-const Stack = createNativeStackNavigator();
-describe("<Login />", () => {
-  test("Text renders correctly on Login Screen", () => {
+import { render, waitFor } from '@testing-library/react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { ClerkProvider } from '@clerk/clerk-expo';
+import LoginScreen from '../app/screens/login/LoginScreen';
+
+jest.mock('@clerk/clerk-expo', () => ({
+  ClerkProvider: ({ children }) => <>{children}</>,
+  useOAuth: () => ({
+    startOAuthFlow: jest.fn().mockResolvedValue({ createdSessionId: 'mockSessionId', setActive: jest.fn() }),
+  }),
+  useUser: () => ({
+    user: { fullName: 'Test User', primaryEmailAddress: { emailAddress: 'test@test.com' }, imageUrl: null },
+  }),
+  useAuth: () => ({
+    isSignedIn: false,
+  }),
+}));
+
+describe('<Login />', () => {
+  test('Text renders correctly on Login Screen', async () => {
     const { getByTestId } = render(
-      <AppSettingsProvider>
+      <ClerkProvider>
         <NavigationContainer>
-          <Stack.Navigator>
-            <Stack.Screen name="Settings" component={BottomNavBar} />
-            <LoginScreen />
-          </Stack.Navigator>
+          <LoginScreen />
         </NavigationContainer>
-      </AppSettingsProvider>
+      </ClerkProvider>
     );
 
-    const viewComponent = getByTestId("login-screen");
+    await waitFor(() => getByTestId("login-screen"));
 
-    expect(viewComponent).toBeTruthy();
+    expect(getByTestId("login-screen")).toBeTruthy();
   });
 });
