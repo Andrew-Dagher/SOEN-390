@@ -31,9 +31,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with: 
           node-version: 22.11
+      - name: Clear npm cache
+        run: npm cache clean --force
       - name: Install Frontend Dependencies
         run: |
           cd frontend
