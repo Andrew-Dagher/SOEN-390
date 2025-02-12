@@ -20,6 +20,7 @@
     ]
   },
   "dependencies": {
+    "@aptabase/react-native": "^0.3.10",
     "@clerk/clerk-expo": "^2.7.5",
     "@expo/config": "^8.1.1",
     "@expo/metro-config": "^0.10.0",
