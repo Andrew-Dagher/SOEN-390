@@ -1,26 +1,33 @@
-import { render } from "@testing-library/react-native";
-import SettingsScreen from "../app/screens/settings/settingsScreen";
-import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { AppSettingsProvider } from "../app/TextSizeContext";
-import { TextSizeProvider } from "../app/TextSizeContext";
-const Stack = createNativeStackNavigator();
-describe("<Setting />", () => {
-  test("Text renders correctly on Settings Screen", () => {
+import { render } from '@testing-library/react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import SettingsScreen from '../app/screens/settings/settingsScreen';
+import { AppSettingsProvider, TextSizeProvider } from '../app/TextSizeContext';
+
+// Mock Clerk's useAuth hook
+jest.mock('@clerk/clerk-expo', () => ({
+  useAuth: () => ({
+    isSignedIn: true,
+    signOut: jest.fn(),
+  }),
+  ClerkProvider: ({ children }) => <>{children}</>,
+}));
+
+// Mock BottomNavBar to prevent useRoute errors
+jest.mock('../app/components/BottomNavBar/BottomNavBar', () => 'BottomNavBar');
+
+describe('<SettingsScreen />', () => {
+  test('Text renders correctly on Settings Screen', () => {
     const { getByTestId } = render(
-      <AppSettingsProvider>
-        <TextSizeProvider>
-          <NavigationContainer>
-            <Stack.Navigator>
-              <Stack.Screen name="Settings" component={SettingsScreen} />
-            </Stack.Navigator>
-          </NavigationContainer>
-        </TextSizeProvider>
-      </AppSettingsProvider>
+      <NavigationContainer>
+        <AppSettingsProvider>
+          <TextSizeProvider>
+            <SettingsScreen />
+          </TextSizeProvider>
+        </AppSettingsProvider>
+      </NavigationContainer>
     );
 
-    const viewComponent = getByTestId("settings-screen");
-
+    const viewComponent = getByTestId('settings-screen');
     expect(viewComponent).toBeTruthy();
   });
 });
