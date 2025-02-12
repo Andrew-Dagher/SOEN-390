@@ -8,7 +8,7 @@ import MetroIcon from './Icons/MetroIcon';
 
 const MapCard = ({ name, address, isHandicap, isMetro, isInfo}) => {
   return (
-    <View style={styles.shadow} className='flex bg-white p-6 rounded-lg'>
+    <View testID='mapcard-view' style={styles.shadow} className='flex bg-white p-6 rounded-lg'>
       <View className='flex flex-row justify-between'> 
         <Text className='font-bold mr-4'>{name}</Text>
         <View className='flex flex-row justify-around'>

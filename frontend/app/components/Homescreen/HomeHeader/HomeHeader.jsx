@@ -21,7 +21,7 @@ export default function HomeHeader(props) {
         gap: 120,
       }}
     >
-      <View className="flex pl-6 pt-5">
+      <View testID="home-header" className="flex pl-6 pt-5">
         <Text className="text-white font-bold text-3xl">Welcome Back</Text>
         <Text className="text-white font-bold text-2xl">{props.name}</Text>
       </View>
