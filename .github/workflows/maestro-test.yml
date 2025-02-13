@@ -1,0 +1,49 @@
+name: Mobile UI Tests
+
+on: 
+  push:
+  pull_request:
+    
+jobs:
+  maestro_tests:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Install Dependencies
+        run: |
+          cd frontend
+          npm install
+          npm install -g expo-cli
+
+      - name: Install Maestro
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+
+      - name: Select Xcode Version (Latest)
+        run: sudo xcode-select -switch /Applications/Xcode.app/Contents/Developer
+
+      - name: Start iPhone 16 Pro Max Simulator
+        run: |
+          UDID=$(xcrun simctl create "iPhone 16 Pro Max" "com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro-Max")
+          xcrun simctl boot "$UDID"
+          echo "Waiting for the simulator to be ready..."
+          sleep 30
+          xcrun simctl list devices
+
+      - name: Start Expo and Open App in Simulator
+        run: |
+          cd frontend
+          npx expo start --ios &
+          sleep 20  # Wait for the server to initialize
+
+      - name: List Installed Apps on Simulator
+        run: |
+          echo "listing all installed apps on the simulator"
+          xcrun simctl listapps booted
+
+      - name: Run Maestro Tests
+        run: maestro test .github/workflows/maestro.yaml
