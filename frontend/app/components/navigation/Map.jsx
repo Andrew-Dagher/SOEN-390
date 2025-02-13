@@ -15,6 +15,7 @@ import MapTraceroute from './MapTraceroute';
 import * as Location from 'expo-location';
 import MapTracerouteBottom from './MapTracerouteBottom';
 import BottomNavBar from '../BottomNavBar/BottomNavBar';
+import { trackEvent } from "@aptabase/react-native";
 
 export default function Map() {
   const [searchResult, setSearchResult] = useState([]);
@@ -36,7 +37,7 @@ export default function Map() {
   const [isRoute, setIsRoute] = useState(false);
   const ref = useRef(null);
   const polygonRef = useRef(null);
-
+  //Aptabase.init("A-US-0837971026")
   const handleSetStart = () => {
     if (start != null && start != location?.coords) {
       console.log("trying to ")
@@ -51,7 +52,11 @@ export default function Map() {
   };
 
   const handleGetDirections = () => {
-
+    try{
+    trackEvent("Get Directions", {selectedBuilding});
+    console.log("Event tracked")}catch(e){
+      console.error(e)
+    }
     setIsRoute(true);
     setIsSearch(true);
     setEnd(selectedBuilding.point);

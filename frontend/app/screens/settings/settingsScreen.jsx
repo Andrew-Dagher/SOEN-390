@@ -12,11 +12,6 @@ import {
 } from "react-native";
 import Slider from "@react-native-community/slider";
 import * as ImagePicker from "expo-image-picker";
-import {
-  ColorMatrix,
-  concatColorMatrices,
-  colorMatrices,
-} from "react-native-color-matrix-image-filters";
 import { useAppSettings } from "../../TextSizeContext";
 import { useTextSize } from "../../TextSizeContext";
 import BottomNavBar from "../../components/BottomNavBar/BottomNavBar";
@@ -101,51 +96,51 @@ export default function SettingsScreen() {
   };
 
   const { signOut, isSignedIn } = useAuth();
-    // Handle logout and clear storage
-    const handleLogout = async () => {
-      try {
-        // Confirm logout
-        Alert.alert(
-          "Logout",
-          "Are you sure you want to log out?",
-          [
-            { text: "Cancel", style: "cancel" },
-            {
-              text: "Logout",
-              onPress: async () => {
-                try {
-                  // Clear all stored data
-                  await AsyncStorage.removeItem("sessionId");
-                  await AsyncStorage.removeItem("userData");
-                  await AsyncStorage.removeItem("guestMode");
-                  console.log("🗑️ Cleared stored session data.");
-  
-                  // Sign out only if the user is signed in
-                  if (isSignedIn) {
-                    await signOut();
-                    console.log("Successfully signed out!");
-                  }
-  
-                  // Reset navigation history and navigate to Login screen
-                  navigation.reset({
-                    index: 0,
-                    routes: [{ name: "Login" }],
-                  });
-                } catch (error) {
-                  console.error("Logout Error:", error);
+  // Handle logout and clear storage
+  const handleLogout = async () => {
+    try {
+      // Confirm logout
+      Alert.alert(
+        "Logout",
+        "Are you sure you want to log out?",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Logout",
+            onPress: async () => {
+              try {
+                // Clear all stored data
+                await AsyncStorage.removeItem("sessionId");
+                await AsyncStorage.removeItem("userData");
+                await AsyncStorage.removeItem("guestMode");
+                console.log("🗑️ Cleared stored session data.");
+
+                // Sign out only if the user is signed in
+                if (isSignedIn) {
+                  await signOut();
+                  console.log("Successfully signed out!");
                 }
-              },
+
+                // Reset navigation history and navigate to Login screen
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: "Login" }],
+                });
+              } catch (error) {
+                console.error("Logout Error:", error);
+              }
             },
-          ],
-          { cancelable: false }
-        );
-      } catch (error) {
-        console.error("Logout Error:", error);
-      }
-    };
+          },
+        ],
+        { cancelable: false }
+      );
+    } catch (error) {
+      console.error("Logout Error:", error);
+    }
+  };
 
   return (
-    <View className="flex-1">
+    <View testID="settings-screen" className="flex-1">
       <ScrollView>
         {/* Profile Section */}
         <View style={styles.header} className="pt-16 pb-8 items-center">
@@ -290,11 +285,8 @@ export default function SettingsScreen() {
             style={styles.applyButton}
             className="py-3 rounded-lg items-center mt-4"
           >
-            <Text className="text-white text-lg font-medium">
-              Logout
-            </Text>
+            <Text className="text-white text-lg font-medium">Logout</Text>
           </TouchableOpacity>
-
         </View>
       </ScrollView>
       <BottomNavBar />
