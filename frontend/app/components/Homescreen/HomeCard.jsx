@@ -7,7 +7,7 @@ export default function HomeCard(props) {
   return (
     <View style={styles.card}>
       <View style={styles.imageContainer}>
-        <Image source={props.image} style={styles.image} resizeMode="cover" />
+        <Image source={props.image} style={styles.image} resizeMode="contain" />
       </View>
       <View style={styles.textContainer}>
         <Text style={styles.cardText}>{props.text}</Text>
@@ -18,20 +18,20 @@ export default function HomeCard(props) {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 20,
-    width: screenWidth * 0.9,
-    maxWidth: 360,
-    height: screenHeight * 0.25,
-    maxHeight: 190,
+    borderRadius: screenWidth * 0.04, // Responsive border radius
+    width: screenWidth * 0.85, // Take up 85% of screen width
+    height: screenHeight * 0.23, // Take up 23% of screen height
     overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+    backgroundColor: "#fff",
   },
   imageContainer: {
     flex: 1,
+    backgroundColor: "#f5f5f5", // Light background for image container
   },
   image: {
     width: "100%",
@@ -41,14 +41,13 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 0,
     backgroundColor: "rgba(255,255,255,0.85)",
-    height: screenHeight * 0.06,
-    maxHeight: 50,
+    height: "25%", // Take up 25% of card height
     width: "100%",
     justifyContent: "center",
-    paddingLeft: screenWidth * 0.05,
+    paddingHorizontal: screenWidth * 0.04,
   },
   cardText: {
     fontWeight: "bold",
-    fontSize: Math.min(screenWidth * 0.05, 20),
+    fontSize: screenWidth * 0.045, // Responsive font size
   },
 });
