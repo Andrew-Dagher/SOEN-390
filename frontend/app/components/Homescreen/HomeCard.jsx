@@ -1,41 +1,54 @@
 import React from "react";
-import { View, Text, Image } from "react-native";
+import { View, Text, Image, StyleSheet, Dimensions } from "react-native";
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 export default function HomeCard(props) {
   return (
-    <View
-      style={{
-        borderRadius: 20,
-        height: 190,
-        width: 360,
-        overflow: "hidden",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
-      }}
-    >
-      <View style={{ height: 190, width: 360 }}>
-        <Image
-          source={props.image}
-          resizeMode="stretch"
-          style={{ flex: 1, width: null }}
-        />
+    <View style={styles.card}>
+      <View style={styles.imageContainer}>
+        <Image source={props.image} style={styles.image} resizeMode="cover" />
       </View>
-      <View
-        style={{
-          position: "absolute",
-          bottom: 0,
-          backgroundColor: "rgba(255,255,255,0.85)",
-          height: 50,
-          width: 360,
-          justifyContent: "center",
-          paddingLeft: 20,
-        }}
-      >
-        <Text className="font-bold text-xl">{props.text}</Text>
+      <View style={styles.textContainer}>
+        <Text style={styles.cardText}>{props.text}</Text>
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    borderRadius: 20,
+    width: screenWidth * 0.9,
+    maxWidth: 360,
+    height: screenHeight * 0.25,
+    maxHeight: 190,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  imageContainer: {
+    flex: 1,
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+  },
+  textContainer: {
+    position: "absolute",
+    bottom: 0,
+    backgroundColor: "rgba(255,255,255,0.85)",
+    height: screenHeight * 0.06,
+    maxHeight: 50,
+    width: "100%",
+    justifyContent: "center",
+    paddingLeft: screenWidth * 0.05,
+  },
+  cardText: {
+    fontWeight: "bold",
+    fontSize: Math.min(screenWidth * 0.05, 20),
+  },
+});

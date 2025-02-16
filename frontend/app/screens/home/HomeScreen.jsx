@@ -3,11 +3,10 @@ import { useAuth } from "@clerk/clerk-expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   View,
-  Text,
-  Button,
   Alert,
   StyleSheet,
-  TouchableOpacity,
+  Dimensions,
+  SafeAreaView,
 } from "react-native";
 import BottomNavBar from "../../components/BottomNavBar/BottomNavBar";
 import HomeHeader from "../../components/Homescreen/HomeHeader/HomeHeader";
@@ -17,26 +16,20 @@ import CalendarPic from "../../../assets/CalendarScreenshot.png";
 import { useNavigation } from "@react-navigation/native";
 import { useTextSize } from "../../TextSizeContext";
 
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+
 export default function HomeScreen() {
   const navigation = useNavigation();
-
-  const { textSize, setTextSize } = useTextSize(); // Get global text size from context
-
-  // Apply theme colors based on selected mode
-
+  const { textSize } = useTextSize();
   const { signOut, isSignedIn } = useAuth();
   const [username, setUsername] = useState("");
 
-  // Fetch user data from AsyncStorage
   useEffect(() => {
     const loadUserData = async () => {
       try {
         const storedUserData = await AsyncStorage.getItem("userData");
         if (storedUserData) {
           const parsedUser = JSON.parse(storedUserData);
-          console.log("Loaded User Data:", parsedUser);
-
-          // Set the username or full name
           setUsername(parsedUser.fullName || "User");
         }
       } catch (error) {
@@ -47,10 +40,8 @@ export default function HomeScreen() {
     loadUserData();
   }, []);
 
-  // Handle logout and clear storage
   const handleLogout = async () => {
     try {
-      // Confirm logout
       Alert.alert(
         "Logout",
         "Are you sure you want to log out?",
@@ -60,19 +51,14 @@ export default function HomeScreen() {
             text: "Logout",
             onPress: async () => {
               try {
-                // Clear all stored data
                 await AsyncStorage.removeItem("sessionId");
                 await AsyncStorage.removeItem("userData");
                 await AsyncStorage.removeItem("guestMode");
-                console.log("🗑️ Cleared stored session data.");
 
-                // Sign out only if the user is signed in
                 if (isSignedIn) {
                   await signOut();
-                  console.log("Successfully signed out!");
                 }
 
-                // Reset navigation history and navigate to Login screen
                 navigation.reset({
                   index: 0,
                   routes: [{ name: "Login" }],
@@ -91,22 +77,49 @@ export default function HomeScreen() {
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: "center" }}>
+    <View style={styles.container}>
       <HomeHeader name={username} />
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          flexDirection: "column",
-          gap: 20,
-          paddingBottom: 160,
-        }}
-      >
-        <HomeCard image={MapPic} text="Find your next class" />
-        <HomeCard image={CalendarPic} text="Access your calendar" />
+      <SafeAreaView style={styles.mainContent}>
+        <View style={styles.cardContainer}>
+          <HomeCard image={MapPic} text="Find your next class" />
+          <HomeCard image={CalendarPic} text="Access your calendar" />
+        </View>
+      </SafeAreaView>
+      <View style={styles.navBarContainer}>
+        <BottomNavBar />
       </View>
-      <BottomNavBar />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  mainContent: {
+    flex: 1,
+    paddingBottom: 60,
+  },
+  cardContainer: {
+    flex: 1,
+    justifyContent: "flex-start",
+    alignItems: "center",
+    flexDirection: "column",
+    gap: screenHeight * 0.02,
+    paddingTop: screenHeight * 0.03,
+    paddingHorizontal: screenWidth * 0.05,
+  },
+  navBarContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "#fff",
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+});
