@@ -33,6 +33,7 @@ export default function CalendarScreen() {
 
       {/* Calendar */}
       <Calendar
+      testID="calendar-view"
         current={"2025-01-01"}
         minDate={"2025-01-01"}
         maxDate={"2025-12-31"}
