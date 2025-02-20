@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { useNavigation } from "@react-navigation/native";
@@ -8,27 +8,38 @@ import CalendarDirectionsIcon from "../../components/Calendar/CalendarIcons/Cale
 export default function CalendarScreen() {
   const navigation = useNavigation();
 
-  // Google API issues no need for current sprint
-  // Here we would put the code to fetch the calendar with Google API
-
-  // Get screen height and width for multiple phones
+  // Get screen height for different devices
   const screenHeight = Dimensions.get("window").height;
+
+  // State for the current month
+  const [currentMonth, setCurrentMonth] = useState("January");
+
+  // Function to update month based on `onMonthChange`
+  const handleMonthChange = (monthData) => {
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    setCurrentMonth(monthNames[monthData.month - 1]); // Convert month number to name
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: "#FFFFFF", flexDirection: "column" }}>
       {/* Header */}
       <View style={{ flexDirection: "row", justifyContent: "space-between", padding: 16, marginTop: "10%" }}>
-        <Text style={{ fontSize: 24, color: "#000000", fontWeight: "bold" }}>January</Text>
+        <Text style={{ fontSize: 24, color: "#000000", fontWeight: "bold" }}>{currentMonth}</Text>
         <Text style={{ fontSize: 20, color: "#E6863C" }}>27</Text>
       </View>
 
       {/* Calendar */}
       <Calendar
+      testID="calendar-view"
         current={"2025-01-01"}
         minDate={"2025-01-01"}
         maxDate={"2025-12-31"}
         monthFormat={"yyyy MM"}
         onDayPress={(day) => console.log("selected day", day)}
+        onMonthChange={handleMonthChange} // Update month on arrow press
         theme={{
           selectedDayBackgroundColor: "#E6863C",
           selectedDayTextColor: "#FFFFFF",
@@ -44,7 +55,6 @@ export default function CalendarScreen() {
           onPress={() => alert("Directions are coming soon!")}
         >
           <Text style={styles.buttonText}>Get Directions to My Next Class</Text>
-          {/* Add the icon after the text */}
           <CalendarDirectionsIcon width={25} height={25} />
         </TouchableOpacity>
       </View>

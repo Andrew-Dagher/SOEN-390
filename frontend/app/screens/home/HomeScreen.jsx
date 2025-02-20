@@ -15,6 +15,7 @@ import MapPic from "../../../assets/MapScreenshot.png";
 import CalendarPic from "../../../assets/CalendarScreenshot.png";
 import { useNavigation } from "@react-navigation/native";
 import { useTextSize } from "../../TextSizeContext";
+import { trackEvent } from "@aptabase/react-native";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 

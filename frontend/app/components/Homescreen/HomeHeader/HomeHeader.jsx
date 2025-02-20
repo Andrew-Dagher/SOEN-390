@@ -11,7 +11,7 @@ export default function HomeHeader(props) {
 
   return (
     <View style={[styles.header, { backgroundColor: theme.backgroundColor }]}>
-      <View style={styles.welcomeContainer}>
+      <View testID="home-header" style={styles.welcomeContainer}>
         <Text style={styles.welcomeText}>Welcome Back</Text>
         <Text style={styles.nameText}>{props.name}</Text>
       </View>
