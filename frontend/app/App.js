@@ -5,7 +5,6 @@ import Constants from "expo-constants";
 import { NavigationContainer } from "@react-navigation/native";
 import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
 import { AppSettingsProvider } from './AppSettingsContext';
-import { TextSizeProvider } from './AppSettingsContext';
 import Aptabase from "@aptabase/react-native";
 
 import "../global.css";
