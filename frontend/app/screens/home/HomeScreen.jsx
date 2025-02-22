@@ -1,3 +1,8 @@
+/**
+ * @file HomeScreen.jsx
+ * @description Displays the home screen with a header, navigation cards, and a bottom navigation bar.
+ */
+
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@clerk/clerk-expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -17,14 +22,37 @@ import { useNavigation } from "@react-navigation/native";
 import { useTextSize } from "../../TextSizeContext";
 import { trackEvent } from "@aptabase/react-native";
 
+// Retrieve screen dimensions for responsive design.
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
+/**
+ * HomeScreen component renders the main home view.
+ * It displays the user's name in the header, provides navigation cards,
+ * and includes a bottom navigation bar.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered HomeScreen component.
+ */
 export default function HomeScreen() {
+  // Hook to manage navigation between screens.
   const navigation = useNavigation();
+
+  // Retrieve text size from context.
   const { textSize } = useTextSize();
+
+  // Authentication hooks from Clerk for managing user sign-in state.
   const { signOut, isSignedIn } = useAuth();
+
+  // State to store the user's full name.
   const [username, setUsername] = useState("");
 
+  /**
+   * Loads the user data from AsyncStorage when the component mounts.
+   * Updates the username state with the full name from the stored user data.
+   *
+   * @async
+   * @function loadUserData
+   */
   useEffect(() => {
     const loadUserData = async () => {
       try {
@@ -41,6 +69,16 @@ export default function HomeScreen() {
     loadUserData();
   }, []);
 
+  /**
+   * Handles the user logout process by:
+   * - Displaying a confirmation alert.
+   * - Removing user-related data from AsyncStorage.
+   * - Signing out via Clerk if the user is signed in.
+   * - Resetting the navigation stack to redirect to the Login screen.
+   *
+   * @async
+   * @function handleLogout
+   */
   const handleLogout = async () => {
     try {
       Alert.alert(
@@ -52,14 +90,17 @@ export default function HomeScreen() {
             text: "Logout",
             onPress: async () => {
               try {
+                // Remove user session and guest mode data.
                 await AsyncStorage.removeItem("sessionId");
                 await AsyncStorage.removeItem("userData");
                 await AsyncStorage.removeItem("guestMode");
 
+                // If the user is currently signed in, sign out using Clerk.
                 if (isSignedIn) {
                   await signOut();
                 }
 
+                // Reset navigation state and redirect to the Login screen.
                 navigation.reset({
                   index: 0,
                   routes: [{ name: "Login" }],
@@ -79,13 +120,16 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Header displaying the user's name */}
       <HomeHeader name={username} />
       <SafeAreaView style={styles.mainContent}>
+        {/* Container holding navigation cards */}
         <View style={styles.cardContainer}>
           <HomeCard image={MapPic} text="Find your next class" />
           <HomeCard image={CalendarPic} text="Access your calendar" />
         </View>
       </SafeAreaView>
+      {/* Bottom navigation bar */}
       <View style={styles.navBarContainer}>
         <BottomNavBar />
       </View>
@@ -93,6 +137,7 @@ export default function HomeScreen() {
   );
 }
 
+// Stylesheet for HomeScreen component.
 const styles = StyleSheet.create({
   container: {
     flex: 1,
