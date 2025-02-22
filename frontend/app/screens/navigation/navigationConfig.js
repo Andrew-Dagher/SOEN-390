@@ -676,6 +676,12 @@ export const polygons = [
   {
     name: "K Annex",
     longName: "K Annex",
+    point: {
+      latitude: 45.49776784577946,
+      longitude: -73.57953244089616,
+    },
+    address: "2150 Bishop",
+    isSGW: true,
     boundaries: [
       { latitude: 45.497741466457285, longitude: -73.57963574821775 },
       { latitude: 45.49773566772766, longitude: -73.57953026960946 },
@@ -829,6 +835,12 @@ export const polygons = [
   {
     name: "MI Annex",
     longName: "MI Annex",
+    point: {
+      latitude: 45.497786417419476,
+      longitude: -73.57932555170198,
+    },
+    address: "2130 Bishop",
+    isSGW: true,
     boundaries: [
       { latitude: 45.497145688060556, longitude: -73.58004258190762 },
       { latitude: 45.4971151308179, longitude: -73.5799775601368 },
@@ -912,6 +924,12 @@ export const polygons = [
   {
     name: "PR Annex",
     longName: "PR Annex",
+    point: {
+      latitude: 45.496997761057244,
+      longitude: -73.58011246910225,
+    },
+    address: "2100 Mackay",
+    isSGW: true,
     boundaries: [
       { latitude: 45.49697618368829, longitude: -73.57990716507766 },
       { latitude: 45.49700062485126, longitude: -73.57994069260441 },
@@ -958,6 +976,8 @@ export const polygons = [
       latitude: 45.496768374411296,
       longitude: -73.57944237387743,
     },
+    address: "2050 Mackay",
+    isSGW: true,
     boundaries: [
       { latitude: 45.496837546460505, longitude: -73.57942022786025 },
       { latitude: 45.49679994456985, longitude: -73.57934512594144 },
@@ -1028,6 +1048,11 @@ export const polygons = [
     name: "SB Building",
     longName: "Samuel Bronfman Building",
     address: "1590 Doctor Penfield",
+    point: {
+      latitude: 45.49659029576965,
+      longitude: -73.58614279895218,
+    },
+    isSGW: true,
     boundaries: [
       { latitude: 45.49668345633299, longitude: -73.58608699270188 },
       { latitude: 45.496652904603266, longitude: -73.58601390251683 },
@@ -1050,6 +1075,11 @@ export const polygons = [
     name: "TD Building",
     longName: "Toronto-Dominion Building",
     address: "1410 Guy St.",
+    point: {
+      latitude: 45.495092296568636,
+      longitude: -73.57837455453812,
+    },
+    isSGW: true,
     boundaries: [
       { latitude: 45.49503798021289, longitude: -73.5783455966998 },
       { latitude: 45.495117886635555, longitude: -73.57848238914504 },
@@ -1155,6 +1185,11 @@ export const polygons = [
     name: "Z Annex",
     longName: "Z Annex",
     address: "2090 Mackay St.",
+    point: {
+      latitude: 45.496926346379375,
+      longitude: -73.57974926239366,
+    },
+    isSGW: true,
     boundaries: [
       { latitude: 45.497087821235226, longitude: -73.57991574272076 },
       { latitude: 45.49704880941643, longitude: -73.57983460581892 },
@@ -1178,6 +1213,11 @@ export const polygons = [
     name: "AD Building",
     longName: "Administration Building",
     address: "7141 Sherbrooke St. W.",
+    point: {
+      latitude: 45.4580948810239,
+      longitude: -73.63981125517904,
+    },
+    isSGW: false,
     boundaries: [
       { latitude: 45.45800335055294, longitude: -73.6396736034014 },
       { latitude: 45.45802404580459, longitude: -73.63975138745974 },
@@ -1230,7 +1270,12 @@ export const polygons = [
   {
     name: "BB Annex",
     longName: "BB Annex",
-    address: "3502 Bermore Ave.",
+    address: "3502 Belmore Ave.",
+    point: {
+      latitude: 45.45976882970145,
+      longitude: -73.63917135240146,
+    },
+    isSGW: false,
     boundaries: [
       { latitude: 45.45969472027361, longitude: -73.63916844992578 },
       { latitude: 45.459726007683315, longitude: -73.6392434266539 },
@@ -1250,7 +1295,12 @@ export const polygons = [
   {
     name: "BH Annex",
     longName: "BH Annex",
-    address: "3500 Bermore Ave.",
+    address: "3500 Belmore Ave.",
+    point: {
+      latitude: 45.45973096285629,
+      longitude: -73.63909165265945,
+    },
+    isSGW: false,
     boundaries: [
       { latitude: 45.4596656895243, longitude: -73.63909275582184 },
       { latitude: 45.45969579081858, longitude: -73.63916584601458 },
@@ -1271,6 +1321,11 @@ export const polygons = [
     name: "CC Building",
     longName: "Central Building",
     address: "7141 Sherbrooke St. W.",
+    point: {
+      latitude: 45.45828938414714,
+      longitude: -73.6403397237877,
+    },
+    isSGW: false,
     boundaries: [
       { latitude: 45.4581042021557, longitude: -73.63995784322546 },
       { latitude: 45.45809537104427, longitude: -73.63996287928404 },
@@ -1303,6 +1358,11 @@ export const polygons = [
     name: "CJ Building",
     longName: "Communication Studies and Journalism Building",
     address: "7141 Sherbrooke St. W.",
+    point: {
+      latitude: 45.457453475993596,
+      longitude: -73.64020688613166,
+    },
+    isSGW: false,
     boundaries: [
       { latitude: 45.45740882916023, longitude: -73.64020736298139 },
       { latitude: 45.45717741566173, longitude: -73.64039243539604 },
@@ -1343,6 +1403,11 @@ export const polygons = [
     name: "Stinger Dome",
     longName: "Stinger Dome",
     address: "7141 Sherbrooke St. W.",
+    point: {
+      latitude: 45.457636806287496,
+      longitude: -73.63617861812148,
+    },
+    isSGW: false,
     boundaries: [
       { latitude: 45.45792374396299, longitude: -73.63524187780685 },
       { latitude: 45.45696046430309, longitude: -73.63636304113045 },
@@ -1363,6 +1428,11 @@ export const polygons = [
     name: "FC Building",
     longName: "F. C. Smith Building",
     address: "7141 Sherbrooke St. W.",
+    point: {
+      latitude: 45.45856237628958,
+      longitude: -73.63930004071865,
+    },
+    isSGW: false,
     boundaries: [
       { latitude: 45.45838268252303, longitude: -73.63904194723771 },
       { latitude: 45.45850801353835, longitude: -73.63942164268585 },
@@ -1401,6 +1471,11 @@ export const polygons = [
     name: "GE Building",
     name: "Center for Structural and Functional Genomics",
     address: "7141 Sherbrooke St. W.",
+    point: {
+      latitude: 45.45697610972942,
+      longitude: -73.64044437939735,
+    },
+    isSGW: false,
     boundaries: [
       { latitude: 45.45679811634551, longitude: -73.64035333241623 },
       { latitude: 45.456896593505434, longitude: -73.64060858986035 },
@@ -1425,6 +1500,11 @@ export const polygons = [
     name: "HA Building",
     longName: "Hingston Hall, wing HA",
     address: "7141 Sherbrooke St. W.",
+    point: {
+      latitude: 45.459452605732466,
+      longitude: -73.64120307084625,
+    },
+    isSGW: false,
     boundaries: [
       { latitude: 45.45925073011908, longitude: -73.64106265529762 },
       { latitude: 45.459283041472254, longitude: -73.64114162537777 },
@@ -1450,6 +1530,11 @@ export const polygons = [
     name: "HB Building",
     longName: "Hingston Hall, wing B",
     address: "7141 Sherbrooke St. W.",
+    point: {
+      latitude: 45.45924950593679,
+      longitude: -73.64187732547785,
+    },
+    isSGW: false,
     boundaries: [
       { latitude: 45.4589717294752, longitude: -73.64181214555022 },
       { latitude: 45.45899583377771, longitude: -73.64187923916282 },
@@ -1481,6 +1566,11 @@ export const polygons = [
     name: "HC Building",
     longName: "Hingston Hall, wing HC",
     address: "7141 Sherbrooke St. W.",
+    point: {
+      latitude: 45.45970212733706,
+      longitude: -73.64204692326862,
+    },
+    isSGW: false,
     boundaries: [
       { latitude: 45.459540431991925, longitude: -73.64201762469914 },
       { latitude: 45.45962697336985, longitude: -73.64224427135211 },
@@ -1506,6 +1596,11 @@ export const polygons = [
     name: "HU Building",
     name: "Applied Science Hub",
     address: "7141 Sherbrooke St. W.",
+    point: {
+      latitude: 45.458677921150624,
+      longitude: -73.64216274615383,
+    },
+    isSGW: false,
     boundaries: [
       { latitude: 45.45829238873858, longitude: -73.64171908628015 },
       { latitude: 45.45844590809539, longitude: -73.64211875660926 },
@@ -1526,6 +1621,11 @@ export const polygons = [
     name: "JR Building",
     longName: "Jesuit Residence",
     address: "7141 Sherbrooke St. W.",
+    point: {
+      latitude: 45.458524143545546,
+      longitude: -73.64321756168181,
+    },
+    isSGW: false,
     boundaries: [
       { latitude: 45.45846738431191, longitude: -73.64309715060635 },
       { latitude: 45.458396433612236, longitude: -73.6431539376945 },
@@ -1561,6 +1661,11 @@ export const polygons = [
     name: "PC Building",
     longName: "PERFORM Center",
     address: "7200 Sherbrooke St. W.",
+    point: {
+      latitude: 45.45697845065405,
+      longitude: -73.63730460931984,
+    },
+    isSGW: false,
     boundaries: [
       { latitude: 45.4566832023212, longitude: -73.63698931998641 },
       { latitude: 45.45701184580415, longitude: -73.6378394869645 },
@@ -1581,6 +1686,11 @@ export const polygons = [
     name: "PS Building",
     longName: "Physical Services Building",
     address: "7141 Sherbrooke St. W.",
+    point: {
+      latitude: 45.45966710625854,
+      longitude: -73.6398138000452,
+    },
+    isSGW: false,
     boundaries: [
       { latitude: 45.45929263659354, longitude: -73.63945158167996 },
       { latitude: 45.45934807931811, longitude: -73.63960088711397 },
@@ -1615,6 +1725,11 @@ export const polygons = [
     name: "PT Building",
     longName: "Oscar Peterson Concert Hall",
     address: "7141 Sherbrooke St. W.",
+    point: {
+      latitude: 45.45905792845069,
+      longitude: -73.63866143439992,
+    },
+    isSGW: false,
     boundaries: [
       { latitude: 45.45916334535203, longitude: -73.63878134145095 },
       { latitude: 45.459333969279335, longitude: -73.63922059274914 },
@@ -1637,6 +1752,11 @@ export const polygons = [
     name: "PY Building",
     longName: "Psychology Building",
     address: "7141 Sherbrooke St. W.",
+    point: {
+      latitude: 45.45891096627851,
+      longitude: -73.6405234680422,
+    },
+    isSGW: false,
     boundaries: [
       { latitude: 45.45868128971848, longitude: -73.64055340303679 },
       { latitude: 45.45876218832274, longitude: -73.64077066195541 },
@@ -1677,6 +1797,11 @@ export const polygons = [
     name: "Quadrangle",
     longName: "Quadrangle",
     address: "7141 Sherbrooke St. W.",
+    point: {
+      latitude: 45.45870682410703,
+      longitude: -73.64005416984244,
+    },
+    isSGW: false,
     boundaries: [
       { latitude: 45.45896436784346, longitude: -73.64001082041777 },
       { latitude: 45.45882860088644, longitude: -73.63969282910347 },
@@ -1697,6 +1822,11 @@ export const polygons = [
     name: "RA Building",
     longName: "Recreation and Athletics Complex",
     address: "7200 Sherbrooke St. W.",
+    point: {
+      latitude: 45.456729166516176,
+      longitude: -73.63765644942514,
+    },
+    isSGW: false,
     boundaries: [
       { latitude: 45.45700879547161, longitude: -73.63805322213418 },
       { latitude: 45.4569671204416, longitude: -73.63793779050737 },
@@ -1724,6 +1854,11 @@ export const polygons = [
     name: "RF Building",
     longName: "Loyola Jesuit Hall and Conference Centre",
     address: "7141 Sherbrooke St. W.",
+    point: {
+      latitude: 45.45857248852857,
+      longitude: -73.6410258186809,
+    },
+    isSGW: false,
     boundaries: [
       { latitude: 45.45880734336593, longitude: -73.64116267777592 },
       { latitude: 45.45880313929571, longitude: -73.64114619532359 },
