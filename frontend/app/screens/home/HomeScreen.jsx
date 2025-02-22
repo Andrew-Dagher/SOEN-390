@@ -1,8 +1,3 @@
-/**
- * @file HomeScreen.jsx
- * @description Displays the home screen with a header, navigation cards, and a bottom navigation bar.
- */
-
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@clerk/clerk-expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -12,6 +7,7 @@ import {
   StyleSheet,
   Dimensions,
   SafeAreaView,
+  TouchableOpacity,
 } from "react-native";
 import BottomNavBar from "../../components/BottomNavBar/BottomNavBar";
 import HomeHeader from "../../components/Homescreen/HomeHeader/HomeHeader";
@@ -125,8 +121,12 @@ export default function HomeScreen() {
       <SafeAreaView style={styles.mainContent}>
         {/* Container holding navigation cards */}
         <View style={styles.cardContainer}>
-          <HomeCard image={MapPic} text="Find your next class" />
-          <HomeCard image={CalendarPic} text="Access your calendar" />
+          <TouchableOpacity onPress={() => navigation.navigate("Navigation")}>
+            <HomeCard image={MapPic} text="Find your next class" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate("Calendar")}>
+            <HomeCard image={CalendarPic} text="Access your calendar" />
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
       {/* Bottom navigation bar */}
