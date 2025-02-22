@@ -16,8 +16,11 @@ import * as Location from 'expo-location';
 import MapTracerouteBottom from './MapTracerouteBottom';
 import BottomNavBar from '../BottomNavBar/BottomNavBar';
 import { trackEvent } from "@aptabase/react-native";
-
+import { useAppSettings } from "../../AppSettingsContext";
+import getThemeColors from "../../ColorBindTheme";
 export default function Map() {
+  const {textSize} = useAppSettings();
+  const theme = getThemeColors();
   const [searchResult, setSearchResult] = useState([]);
   const [isSelected, setIsSelected] = useState(false);
   const [locationData, setLocationData] = useState(SGWLocation);
@@ -111,8 +114,8 @@ export default function Map() {
         <Polygon
           coordinates={building.boundaries}
           strokeWidth={2}
-          strokeColor="#862532"
-          fillColor="rgba(134, 37, 50, 0.5)"
+          strokeColor= {theme.backgroundColor}
+          fillColor= {theme.polygonFillColor}
         />
       </View>
     );
@@ -246,22 +249,22 @@ export default function Map() {
         <View className='absolute w-full bottom-20'>
           <View className='flex flex-row justify-center items-center'>
             <TouchableHighlight
-              style={styles.shadow}
+              style={[styles.shadow, { backgroundColor: theme.backgroundColor }]}
               className='mr-4 rounded-xl p-4 bg-primary-red'
               onPress={handleSetStart}
             >
               <View className='flex flex-row justify-around items-center'>
-                {start != null && start != location?.coords ? <Text className='color-white mr-4 font-bold'>Set Destination</Text> : <Text className='color-white mr-4 font-bold'>Set Start</Text>}
+                {start != null && start != location?.coords ? <Text style={[{ fontSize: textSize }]} className='color-white mr-4 font-bold'>Set Destination</Text> : <Text style={[{ fontSize: textSize }]} className='color-white mr-4 font-bold'>Set Start</Text>}
                 <NavigationIcon />
               </View>
             </TouchableHighlight>
             <TouchableHighlight
-              style={styles.shadow}
+              style={[styles.shadow, { backgroundColor: theme.backgroundColor }]}
               className='rounded-xl p-4 bg-primary-red'
               onPress={handleGetDirections}
             >
               <View className='flex flex-row justify-around items-center'>
-                <Text className='color-white mr-4 font-bold'>Get Directions</Text>
+                <Text style={[{ fontSize: textSize }]} className='color-white mr-4 font-bold'>Get Directions</Text>
                 <DirectionsIcon />
               </View>
             </TouchableHighlight>

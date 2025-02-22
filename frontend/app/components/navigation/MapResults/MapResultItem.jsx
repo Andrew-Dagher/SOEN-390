@@ -7,9 +7,13 @@ import NavigationIcon from '../Icons/NavigationIcon';
 import DirectionsIcon from '../Icons/DirectionsIcon';
 import { useEffect, useRef } from 'react';
 import SmallNavigationIcon from '../Icons/SmallNavigationIcon';
+import { useAppSettings } from "../../../AppSettingsContext";
+import getThemeColors from "../../../ColorBindTheme";
+
 
 const MapResultItem = ({isRoute, location, setIsSearch,setIsRoute, setCloseTraceroute, setStartPosition,setDestinationPosition,building, start, setStart, end, setEnd,  name, address,isHandicap, isBike, isMetro, isInfo}) => {
-
+    const {textSize} = useAppSettings();
+    const theme = getThemeColors();
     const handleSetStart = () => {
         if (start != null && start != location?.coords) {
           console.log("trying to ")
@@ -53,15 +57,15 @@ const MapResultItem = ({isRoute, location, setIsSearch,setIsRoute, setCloseTrace
                 <Text className='color-slate-400 text-xs'>{address}</Text>
             </View>
             <View className='flex flex-row justify-around items-center'>
-                <TouchableHighlight onPress={handleSetStart} style={styles.shadow} className='mr-4 rounded-xl p-4 bg-primary-red'>
+                <TouchableHighlight onPress={handleSetStart} style={[styles.shadow, { backgroundColor: theme.backgroundColor }, {fontSize: textSize}]} className='mr-4 rounded-xl p-4 bg-primary-red'>
                     <View className='flex flex-row justify-around items-center'>
-                        {start != null && start != location?.coords ? <Text className='color-white mr-4 font-bold'>Set Destination</Text> : <Text className='color-white mr-4 font-bold'>Set Start</Text>}
+                        {start != null && start != location?.coords ? <Text style={[{ fontSize: textSize }]} className='color-white mr-4 font-bold'>Set Destination</Text> : <Text style={[{ fontSize: textSize }]} className='color-white mr-4 font-bold'>Set Start</Text>}
                     <NavigationIcon/>
                     </View>
                 </TouchableHighlight>
-                <TouchableHighlight onPress={handleGetDirections} style={styles.shadow} className='rounded-xl p-4 bg-primary-red'>
+                <TouchableHighlight onPress={handleGetDirections} style={[styles.shadow, { backgroundColor: theme.backgroundColor }]} className='rounded-xl p-4 bg-primary-red'>
                     <View className='flex flex-row justify-around items-center'>
-                    <Text className='color-white mr-4 font-bold'>Get Directions</Text>
+                    <Text style={[{ fontSize: textSize }]} className='color-white mr-4 font-bold'>Get Directions</Text>
                     <DirectionsIcon/>
                     </View>
                 </TouchableHighlight>
