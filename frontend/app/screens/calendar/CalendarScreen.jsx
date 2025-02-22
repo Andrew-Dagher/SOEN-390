@@ -4,10 +4,15 @@ import { Calendar } from "react-native-calendars";
 import { useNavigation } from "@react-navigation/native";
 import BottomNavBar from "../../components/BottomNavBar/BottomNavBar"; // Ensure BottomNavBar is correctly imported
 import CalendarDirectionsIcon from "../../components/Calendar/CalendarIcons/CalendarDirectionsIcon.jsx"; // Import CalendarDirectionsIcon
+import { useAppSettings } from "../../AppSettingsContext";
+import getThemeColors from "../../ColorBindTheme";
 
 export default function CalendarScreen() {
   const navigation = useNavigation();
-
+  const theme = getThemeColors();
+  const {
+      textSize
+    } = useAppSettings();
   // Google API issues no need for current sprint
   // Here we would put the code to fetch the calendar with Google API
 
@@ -39,11 +44,11 @@ export default function CalendarScreen() {
 
       {/* Button with Icon */}
       <View style={{ position: "absolute", bottom: "10%", left: 0, right: 0 }}>
-        <TouchableOpacity
-          style={styles.buttonContainer}
-          onPress={() => alert("Directions are coming soon!")}
-        >
-          <Text style={styles.buttonText}>Get Directions to My Next Class</Text>
+      <TouchableOpacity
+        style={[styles.buttonContainer, { backgroundColor: theme.backgroundColor }]}
+        onPress={() => alert("Directions are coming soon!")}
+      >
+          <Text style={[styles.buttonText, { backgroundColor: theme.backgroundColor }, {fontSize: textSize }]}>Get Directions to My Next Class</Text>
           {/* Add the icon after the text */}
           <CalendarDirectionsIcon width={25} height={25} />
         </TouchableOpacity>

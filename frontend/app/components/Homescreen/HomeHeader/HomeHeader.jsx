@@ -2,8 +2,14 @@ import React from "react";
 import { View, Text, Button, Pressable } from "react-native";
 import Concordia50 from "./Icons/Concordia50/Concordia50";
 import getThemeColors from "../../../ColorBindTheme";
+import { useAppSettings } from "../../../AppSettingsContext";
+
 export default function HomeHeader(props) {
   const theme = getThemeColors();
+  const {
+      textSize
+    } = useAppSettings();
+
   return (
     <View
       style={{
@@ -23,7 +29,7 @@ export default function HomeHeader(props) {
     >
       <View testID="home-header" className="flex pl-6 pt-5">
         <Text className="text-white font-bold text-3xl">Welcome Back</Text>
-        <Text className="text-white font-bold text-2xl">{props.name}</Text>
+        <Text style={[{ fontSize: textSize }]} className="text-white font-bold text-2xl">{props.name}</Text>
       </View>
       <View className="pt-10">
         <Concordia50 />

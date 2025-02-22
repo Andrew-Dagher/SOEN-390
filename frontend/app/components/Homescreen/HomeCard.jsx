@@ -1,7 +1,13 @@
 import React from "react";
 import { View, Text, Image } from "react-native";
+import { useAppSettings } from "../../AppSettingsContext";
 
 export default function HomeCard(props) {
+
+  const {
+      textSize
+    } = useAppSettings();
+
   return (
     <View
       style={{
@@ -34,7 +40,7 @@ export default function HomeCard(props) {
           paddingLeft: 20,
         }}
       >
-        <Text className="font-bold text-xl">{props.text}</Text>
+        <Text style={[{ fontSize: textSize }]} className="font-bold text-xl">{props.text}</Text>
       </View>
     </View>
   );

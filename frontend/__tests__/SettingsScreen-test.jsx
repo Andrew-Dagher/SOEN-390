@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import SettingsScreen from '../app/screens/settings/settingsScreen';
-import { AppSettingsProvider, TextSizeProvider } from '../app/TextSizeContext';
+import { AppSettingsProvider, TextSizeProvider } from '../app/AppSettingsContext';
 
 // Mock Clerk's useAuth hook
 jest.mock('@clerk/clerk-expo', () => ({

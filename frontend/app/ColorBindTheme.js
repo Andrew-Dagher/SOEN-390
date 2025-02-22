@@ -1,4 +1,4 @@
-import { useAppSettings } from "./TextSizeContext";
+import { useAppSettings } from "./AppSettingsContext";
 
 const getThemeColors = () => {
   const { colorBlindMode } = useAppSettings();

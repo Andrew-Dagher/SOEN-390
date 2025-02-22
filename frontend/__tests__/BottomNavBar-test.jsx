@@ -3,7 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import BottomNavBar from "../app/components/BottomNavBar/BottomNavBar";
-import { AppSettingsProvider } from "../app/TextSizeContext";
+import { AppSettingsProvider } from "../app/AppSettingsContext";
 
 const Stack = createNativeStackNavigator();
 

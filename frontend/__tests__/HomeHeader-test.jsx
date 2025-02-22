@@ -1,7 +1,7 @@
 import { render } from "@testing-library/react-native";
 
 import HomeHeader from "../app/components/Homescreen/HomeHeader/HomeHeader";
-import { AppSettingsProvider } from "../app/TextSizeContext";
+import { AppSettingsProvider } from "../app/AppSettingsContext";
 describe("<HomeHeader />", () => {
   test("Text renders correctly on HomeScreen", () => {
     const { getByText, getByTestId } = render(

@@ -4,8 +4,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Constants from "expo-constants";
 import { NavigationContainer } from "@react-navigation/native";
 import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
-import { AppSettingsProvider } from './TextSizeContext';
-import { TextSizeProvider } from './TextSizeContext';
+import { AppSettingsProvider } from './AppSettingsContext';
+import { TextSizeProvider } from './AppSettingsContext';
 import Aptabase from "@aptabase/react-native";
 
 import "../global.css";
@@ -26,7 +26,6 @@ export default function App() {
     >
       <ClerkLoaded>
             <AppSettingsProvider>
-    <TextSizeProvider>
         <NavigationContainer>
           <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
             <Stack.Screen
@@ -44,7 +43,6 @@ export default function App() {
             />
           </Stack.Navigator>
         </NavigationContainer>
-        </TextSizeProvider>
         </AppSettingsProvider>
       </ClerkLoaded>
     </ClerkProvider>
