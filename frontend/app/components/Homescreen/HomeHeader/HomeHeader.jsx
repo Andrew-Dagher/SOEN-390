@@ -1,11 +1,24 @@
+/**
+ * @file HomeHeader.jsx
+ * @description Renders the header component for the home screen. This header displays a welcome message,
+ * the user's name, and the Concordia logo. The background color is dynamically determined by the current theme.
+ */
+
 import React from "react";
 import { View, Text, StyleSheet, Dimensions } from "react-native";
 import Concordia50 from "./Icons/Concordia50/Concordia50";
 import getThemeColors from "../../../ColorBindTheme";
 
-// get screen dimensions for responsive design
+// Get screen dimensions for responsive design.
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
+/**
+ * HomeHeader component renders the welcome message and logo on the home screen.
+ *
+ * @param {Object} props - Component properties.
+ * @param {string} props.name - The name of the user to be displayed.
+ * @returns {JSX.Element} The rendered HomeHeader component.
+ */
 export default function HomeHeader(props) {
   const theme = getThemeColors();
 

@@ -1,37 +1,54 @@
+/**
+ * @file MapTracerouteBottom.jsx
+ * @description A React Native component for displaying the bottom navigation bar of the traceroute feature.
+ */
+
 import React, { useRef, useEffect } from 'react';
 import { Animated, StyleSheet, View, Dimensions, TouchableOpacity, Text } from 'react-native';
 import StartIcon from './Icons/StartIcon';
 
-const MapTracerouteBottom = ({isRoute, setIsRoute, end,start, panToStart,closeTraceroute, setCloseTraceroute }) => {
+/**
+ * MapTracerouteBottom component for displaying route details and starting navigation.
+ * @component
+ * @param {Object} props - Component props
+ * @param {Boolean} props.isRoute - Indicates whether a route is currently active
+ * @param {Function} props.setIsRoute - Function to toggle the route state
+ * @param {Object} props.end - Destination coordinates
+ * @param {Object} props.start - Start location coordinates
+ * @param {Function} props.panToStart - Function to pan the map to the start location
+ * @param {Boolean} props.closeTraceroute - Flag to indicate if the traceroute should be closed
+ * @param {Function} props.setCloseTraceroute - Function to close the traceroute panel
+ */
+const MapTracerouteBottom = ({ isRoute, setIsRoute, end, start, panToStart, closeTraceroute, setCloseTraceroute }) => {
   const screenHeight = Dimensions.get('window').height;
-  const slideAnim = useRef(new Animated.Value(screenHeight)).current; // Start from off-screen (bottom)
+  const slideAnim = useRef(new Animated.Value(screenHeight)).current; // Start off-screen
 
-  // Function to slide the component up
+  /**
+   * Slides the component into view.
+   */
   const slideUp = () => {
     Animated.timing(slideAnim, {
-      toValue: screenHeight * 0.9, // 10% of the screen visible
-      duration: 1000, // Duration of the animation
+      toValue: screenHeight * 0.9, // Show 10% of the screen
+      duration: 1000,
       useNativeDriver: false, 
     }).start();
   };
 
-  // Function to slide the component out (downwards)
+  /**
+   * Slides the component out of view.
+   */
   const slideOut = () => {
     Animated.timing(slideAnim, {
-      toValue: screenHeight, // Slide back down off-screen
+      toValue: screenHeight, // Move off-screen
       duration: 500,
       useNativeDriver: false, 
     }).start();
   };
 
-  // Slide up when the component mounts
+  // Slide up when start or end location changes
   useEffect(() => {
     slideUp(); 
   }, [end, start]);
-
-  useEffect(() => {
-
-  },[isRoute])
 
   // Slide out when closeTraceroute is set to true
   useEffect(() => {
@@ -40,6 +57,9 @@ const MapTracerouteBottom = ({isRoute, setIsRoute, end,start, panToStart,closeTr
     }
   }, [closeTraceroute]);
 
+  /**
+   * Handles the start traceroute button click.
+   */
   const handleStartTraceroute = () => {
     console.log("Start traceroute clicked");
     panToStart();
@@ -52,7 +72,10 @@ const MapTracerouteBottom = ({isRoute, setIsRoute, end,start, panToStart,closeTr
           <Text className='color-green-500 font-medium mr-2'>30 min</Text>
           <Text className='font-medium'>(20.0 km)</Text>
         </View>
-        <TouchableOpacity onPress={handleStartTraceroute} className='bg-primary-red p-3 rounded-3xl pr-4 pl-4 flex flex-row justify-around items-center'>
+        <TouchableOpacity 
+          onPress={handleStartTraceroute} 
+          className='bg-primary-red p-3 rounded-3xl pr-4 pl-4 flex flex-row justify-around items-center'
+        >
           <StartIcon />
           <Text className='ml-2 color-selected text-lg'>Start</Text>
         </TouchableOpacity>
@@ -64,11 +87,11 @@ const MapTracerouteBottom = ({isRoute, setIsRoute, end,start, panToStart,closeTr
 const styles = StyleSheet.create({
   slidingView: {
     position: 'absolute',
-    height: '30%', // 10% of the screen height
+    height: '30%', // Height relative to screen
     width: '100%', // Full width
-    backgroundColor: 'white', // Custom background color
-    justifyContent: 'center', // Center content vertically
-    alignItems: 'center', // Center content horizontally
+    backgroundColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
