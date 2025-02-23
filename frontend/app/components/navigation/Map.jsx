@@ -70,23 +70,17 @@ export default function Map() {
   const fetchTravelTime = async (start, end, mode) => {
     if (!start || !end) return;
 
+    const setTravelTime = {
+      DRIVING: setCarTravelTime,
+      BICYCLING: setBikeTravelTime,
+      TRANSIT: setMetroTravelTime,
+      WALKING: setWalkTravelTime,
+    };
+
     // Check if start and end locations are the same
     if (start.latitude === end.latitude && start.longitude === end.longitude) {
       console.log(`Start and end locations are the same. Setting travel time to 0 min.`);
-      switch (mode) {
-          case 'DRIVING':
-              setCarTravelTime("0 min");
-              break;
-          case 'BICYCLING':
-              setBikeTravelTime("0 min");
-              break;
-          case 'TRANSIT':
-              setMetroTravelTime("0 min");
-              break;
-          case 'WALKING':
-              setWalkTravelTime("0 min");
-              break;
-      }
+      setTravelTime[mode]?.("0 min");
       return;
   }
   
@@ -108,20 +102,7 @@ export default function Map() {
       if (data.status !== "OK") {
         console.error(`Error fetching ${mode} directions:`, data.status, data.error_message);
         // Set appropriate state to indicate no route found
-        switch (mode) {
-          case 'DRIVING':
-            setCarTravelTime('No route');
-            break;
-          case 'BICYCLING':
-            setBikeTravelTime('No route');
-            break;
-          case 'TRANSIT':
-            setMetroTravelTime('No route');
-            break;
-          case 'WALKING':
-            setWalkTravelTime('No route');
-            break;
-        }
+        setTravelTime[mode]?.("No route");
         return;
       }
   
@@ -132,39 +113,12 @@ export default function Map() {
       }
   
       const duration = route.legs[0].duration.text;
-      
       // Update the appropriate state based on the mode
-      switch (mode) {
-        case 'DRIVING':
-          setCarTravelTime(duration);
-          break;
-        case 'BICYCLING':
-          setBikeTravelTime(duration);
-          break;
-        case 'TRANSIT':
-          setMetroTravelTime(duration);
-          break;
-        case 'WALKING':
-          setWalkTravelTime(duration);
-          break;
-      }
+      setTravelTime[mode]?.(duration);
     } catch (error) {
       console.error(`Error fetching ${mode} directions:`, error);
       // Set error state for the specific mode
-      switch (mode) {
-        case 'DRIVING':
-          setCarTravelTime('Error');
-          break;
-        case 'BICYCLING':
-          setBikeTravelTime('Error');
-          break;
-        case 'TRANSIT':
-          setMetroTravelTime('Error');
-          break;
-        case 'WALKING':
-          setWalkTravelTime('Error');
-          break;
-      }
+      setTravelTime[mode]?.("Error");
     }
   };
 
