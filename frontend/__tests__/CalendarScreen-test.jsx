@@ -9,6 +9,7 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { Calendar } from 'react-native-calendars';
 import { NavigationContainer } from '@react-navigation/native';
 import CalendarScreen from '../app/screens/calendar/CalendarScreen';
+import { AppSettingsProvider} from '../app/AppSettingsContext';
 
 // Mock useRoute from React Navigation to simulate route information.
 jest.mock('@react-navigation/native', () => ({
@@ -64,7 +65,9 @@ describe('<CalendarScreen />', () => {
   const renderWithNavigation = () =>
     render(
       <NavigationContainer>
+        <AppSettingsProvider>
         <CalendarScreen />
+        </AppSettingsProvider>
       </NavigationContainer>
     );
 
