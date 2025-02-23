@@ -1,7 +1,7 @@
 import { useAppSettings } from "./AppSettingsContext";
 
 const getThemeColors = () => {
-  const { colorBlindMode } = useAppSettings();
+  const colorBlindMode = useAppSettings();
   const blinder = require("color-blind");
   switch (colorBlindMode) {
     case "deuteranomaly":
