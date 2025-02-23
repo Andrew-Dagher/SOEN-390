@@ -13,7 +13,9 @@ import { useAuth } from "@clerk/clerk-expo";
 import BottomNavBar from "../../components/BottomNavBar/BottomNavBar";
 import moment from "moment";
 
-const fakeEvents = [
+
+//calendar Events
+const Events = [
   { id: "1", summary: "SOEN-352", description: "Software Process Engineering", location: "SGW H-513", start: { dateTime: "2025-02-24T09:00:00" } },
   { id: "2", summary: "SOEN-445", description: "Data Warehousing and Mining", location: "SGW MB-S2.330", start: { dateTime: "2025-02-24T11:00:00" } },
   { id: "3", summary: "PHYS-201", description: "General Physics - Mechanics", location: "SGW H-544", start: { dateTime: "2025-02-24T13:00:00" } },
@@ -25,7 +27,7 @@ const fakeEvents = [
   { id: "9", summary: "ENGR-361", description: "Engineering Economics", location: "SGW H-937", start: { dateTime: "2025-02-27T15:00:00" } },
   { id: "10", summary: "SOEN-343", description: "Software Architecture and Design", location: "SGW H-849", start: { dateTime: "2025-02-28T17:00:00" } }
 ];
-
+//Json sending campus, building and room that will ne provided to next page
 const handleGoToClass = (location) => {
   const [campus, building, room] = location.split(" ");
   const jsonData = {
@@ -55,7 +57,7 @@ export default function CalendarScreen() {
 
       <View style={styles.container}>
         <FlatList
-          data={fakeEvents}
+          data={Events}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingBottom: 80 }}
           renderItem={({ item }) => (
