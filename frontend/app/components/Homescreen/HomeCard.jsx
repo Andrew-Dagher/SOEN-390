@@ -5,8 +5,9 @@
  */
 
 import React from "react";
-import { View, Text, Image, StyleSheet, Dimensions } from "react-native";
 
+import { View, Text, Image, StyleSheet, Dimensions } from "react-native";
+import { useAppSettings } from "../../AppSettingsContext";
 // Get screen dimensions for responsive design.
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -20,19 +21,19 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
  * @returns {JSX.Element} The rendered HomeCard component.
  */
 export default function HomeCard(props) {
+  const { textSize } = useAppSettings();
+
   return (
     <View style={styles.card}>
       {/* Container for the image */}
       <View style={styles.imageContainer}>
-        <Image
-          source={props.image}
-          style={styles.image}
-          resizeMode="contain"
-        />
+        <Image source={props.image} style={styles.image} resizeMode="contain" />
       </View>
       {/* Overlay text container */}
       <View style={styles.textContainer}>
-        <Text style={styles.cardText}>{props.text}</Text>
+        <Text style={[styles.cardText, { fontSize: textSize }]}>
+          {props.text}
+        </Text>
       </View>
     </View>
   );

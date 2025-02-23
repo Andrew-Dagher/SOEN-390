@@ -15,7 +15,6 @@ import HomeCard from "../../components/Homescreen/HomeCard";
 import MapPic from "../../../assets/MapScreenshot.png";
 import CalendarPic from "../../../assets/CalendarScreenshot.png";
 import { useNavigation } from "@react-navigation/native";
-import { useTextSize } from "../../TextSizeContext";
 import { trackEvent } from "@aptabase/react-native";
 
 // Retrieve screen dimensions for responsive design.
@@ -33,8 +32,6 @@ export default function HomeScreen() {
   // Hook to manage navigation between screens.
   const navigation = useNavigation();
 
-  // Retrieve text size from context.
-  const { textSize } = useTextSize();
 
   // Authentication hooks from Clerk for managing user sign-in state.
   const { signOut, isSignedIn } = useAuth();

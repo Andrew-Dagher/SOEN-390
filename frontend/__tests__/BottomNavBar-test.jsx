@@ -8,7 +8,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import BottomNavBar from "../app/components/BottomNavBar/BottomNavBar";
-import { AppSettingsProvider } from "../app/TextSizeContext";
+import { AppSettingsProvider } from "../app/AppSettingsContext";
 
 // Create a native stack navigator for test navigation.
 const Stack = createNativeStackNavigator();

@@ -9,24 +9,36 @@ import { View, Text, StyleSheet, Dimensions } from "react-native";
 import Concordia50 from "./Icons/Concordia50/Concordia50";
 import getThemeColors from "../../../ColorBindTheme";
 
-// Get screen dimensions for responsive design.
-const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+import { useAppSettings } from "../../../AppSettingsContext";
 
-/**
- * HomeHeader component renders the welcome message and logo on the home screen.
- *
- * @param {Object} props - Component properties.
- * @param {string} props.name - The name of the user to be displayed.
- * @returns {JSX.Element} The rendered HomeHeader component.
- */
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 export default function HomeHeader(props) {
   const theme = getThemeColors();
+  const {
+      textSize
+    } = useAppSettings();
 
   return (
-    <View style={[styles.header, { backgroundColor: theme.backgroundColor }]}>
-      <View testID="home-header" style={styles.welcomeContainer}>
-        <Text style={styles.welcomeText}>Welcome Back</Text>
-        <Text style={styles.nameText}>{props.name}</Text>
+    <View
+      style={{
+        height: 194,
+        alignItems: "center",
+        flexDirection: "row",
+        backgroundColor: theme.backgroundColor,
+        borderBottomLeftRadius: 60,
+        borderBottomRightRadius: 60,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 1,
+        shadowRadius: 200,
+        elevation: 10,
+        gap: 120,
+      }}
+    >
+      <View testID="home-header" className="flex pl-6 pt-5">
+        <Text className="text-white font-bold text-3xl">Welcome Back</Text>
+        <Text style={[{ fontSize: textSize }]} className="text-white font-bold text-2xl">{props.name}</Text>
+
       </View>
       <View style={styles.logoContainer}>
         <Concordia50 />
