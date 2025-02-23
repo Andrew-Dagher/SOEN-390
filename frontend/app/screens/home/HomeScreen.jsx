@@ -3,10 +3,10 @@ import { useAuth } from "@clerk/clerk-expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   View,
-  Text,
-  Button,
   Alert,
   StyleSheet,
+  Dimensions,
+  SafeAreaView,
   TouchableOpacity,
 } from "react-native";
 import BottomNavBar from "../../components/BottomNavBar/BottomNavBar";
@@ -17,24 +17,41 @@ import CalendarPic from "../../../assets/CalendarScreenshot.png";
 import { useNavigation } from "@react-navigation/native";
 import { trackEvent } from "@aptabase/react-native";
 
+// Retrieve screen dimensions for responsive design.
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+
+/**
+ * HomeScreen component renders the main home view.
+ * It displays the user's name in the header, provides navigation cards,
+ * and includes a bottom navigation bar.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered HomeScreen component.
+ */
 export default function HomeScreen() {
+  // Hook to manage navigation between screens.
   const navigation = useNavigation();
 
-  // Apply theme colors based on selected mode
 
+  // Authentication hooks from Clerk for managing user sign-in state.
   const { signOut, isSignedIn } = useAuth();
+
+  // State to store the user's full name.
   const [username, setUsername] = useState("");
 
-  // Fetch user data from AsyncStorage
+  /**
+   * Loads the user data from AsyncStorage when the component mounts.
+   * Updates the username state with the full name from the stored user data.
+   *
+   * @async
+   * @function loadUserData
+   */
   useEffect(() => {
     const loadUserData = async () => {
       try {
         const storedUserData = await AsyncStorage.getItem("userData");
         if (storedUserData) {
           const parsedUser = JSON.parse(storedUserData);
-          console.log("Loaded User Data:", parsedUser);
-
-          // Set the username or full name
           setUsername(parsedUser.fullName || "User");
         }
       } catch (error) {
@@ -45,10 +62,18 @@ export default function HomeScreen() {
     loadUserData();
   }, []);
 
-  // Handle logout and clear storage
+  /**
+   * Handles the user logout process by:
+   * - Displaying a confirmation alert.
+   * - Removing user-related data from AsyncStorage.
+   * - Signing out via Clerk if the user is signed in.
+   * - Resetting the navigation stack to redirect to the Login screen.
+   *
+   * @async
+   * @function handleLogout
+   */
   const handleLogout = async () => {
     try {
-      // Confirm logout
       Alert.alert(
         "Logout",
         "Are you sure you want to log out?",
@@ -58,19 +83,17 @@ export default function HomeScreen() {
             text: "Logout",
             onPress: async () => {
               try {
-                // Clear all stored data
+                // Remove user session and guest mode data.
                 await AsyncStorage.removeItem("sessionId");
                 await AsyncStorage.removeItem("userData");
                 await AsyncStorage.removeItem("guestMode");
-                console.log("🗑️ Cleared stored session data.");
 
-                // Sign out only if the user is signed in
+                // If the user is currently signed in, sign out using Clerk.
                 if (isSignedIn) {
                   await signOut();
-                  console.log("Successfully signed out!");
                 }
 
-                // Reset navigation history and navigate to Login screen
+                // Reset navigation state and redirect to the Login screen.
                 navigation.reset({
                   index: 0,
                   routes: [{ name: "Login" }],
@@ -89,24 +112,57 @@ export default function HomeScreen() {
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: "center" }}>
+    <View style={styles.container}>
+      {/* Header displaying the user's name */}
       <HomeHeader name={username} />
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          flexDirection: "column",
-          gap: 20,
-          paddingBottom: 160,
-        }}
-      >
-        <TouchableOpacity onPress={() => trackEvent("Unusable image tapped")}>
-        <HomeCard image={MapPic} text="Find your next class" />
-        <HomeCard image={CalendarPic} text="Access your calendar" />
-        </TouchableOpacity>
+      <SafeAreaView style={styles.mainContent}>
+        {/* Container holding navigation cards */}
+        <View style={styles.cardContainer}>
+          <TouchableOpacity onPress={() => navigation.navigate("Navigation")}>
+            <HomeCard image={MapPic} text="Find your next class" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate("Calendar")}>
+            <HomeCard image={CalendarPic} text="Access your calendar" />
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+      {/* Bottom navigation bar */}
+      <View style={styles.navBarContainer}>
+        <BottomNavBar />
       </View>
-      <BottomNavBar />
     </View>
   );
 }
+
+// Stylesheet for HomeScreen component.
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  mainContent: {
+    flex: 1,
+    paddingBottom: 60,
+  },
+  cardContainer: {
+    flex: 1,
+    justifyContent: "flex-start",
+    alignItems: "center",
+    flexDirection: "column",
+    gap: screenHeight * 0.02,
+    paddingTop: screenHeight * 0.03,
+    paddingHorizontal: screenWidth * 0.05,
+  },
+  navBarContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "#fff",
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+});
