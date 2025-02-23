@@ -20,6 +20,7 @@ import SmallNavigationIcon from "../Icons/SmallNavigationIcon";
 import { useAppSettings } from "../../../AppSettingsContext";
 import getThemeColors from "../../../ColorBindTheme";
 import ParkingIcon from "../Icons/ParkingIcon";
+import CreditCardIcon from "../Icons/CreditCardIcon";
 
 const MapResultItem = ({
   isRoute,
@@ -77,16 +78,17 @@ const MapResultItem = ({
    * Only includes icons for features that are enabled (e.g., wheelchair accessibility, bike parking).
    */
   const icons = [
-    building.isHandicap === "true" && <WheelChairIcon key="wheelchair" />,
-    building.isBike === "true" && <BikeIcon key="bike" />,
-    building.isParking === "true" && <ParkingIcon key="parking" />,
-    building.isInfo === "true" && <InformationIcon key="info" />,
-  ].filter(Boolean); // Removes falsy values (i.e., features that are not enabled)
+    building?.isHandicap && <WheelChairIcon key="wheelchair" />,
+    building?.isBike && <BikeIcon key="bike" />,
+    building?.isParking && <ParkingIcon key="parking" />,
+    building?.isCredit && <CreditCardIcon key="credit" />,
+    building?.isInfo && <InformationIcon key="info" />,
+  ].filter(Boolean);
 
   return (
     <View
       style={styles.shadow}
-      className="w-full mb-4 bg-secondary-bg p-4 rounded-lg flex flex-col justify-center items-center"
+      className="w-full mb-4 bg-primary-bg p-4 rounded-lg flex flex-col justify-center items-center"
     >
       {/* Pressable wrapper for navigating to building details */}
       <Pressable

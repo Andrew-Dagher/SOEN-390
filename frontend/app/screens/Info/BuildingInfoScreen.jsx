@@ -19,9 +19,9 @@ import { useNavigation } from "@react-navigation/native";
 import MapPinIcon from "../../components/navigation/Icons/MapPinIcon";
 import WheelChairIcon from "../../components/navigation/Icons/WheelChairIcon";
 import BikeIcon from "../../components/navigation/Icons/BikeIcon";
-import MetroIcon from "../../components/navigation/Icons/MetroIcon";
 import InformationIcon from "../../components/navigation/Icons/InformationIcon";
 import CreditCardIcon from "../../components/navigation/Icons/CreditCardIcon";
+import ParkingIcon from "../../components/navigation/Icons/ParkingIcon";
 
 /**
  * BuildingDetails component displays building information with tabs for departments and services.
@@ -41,6 +41,14 @@ const BuildingDetails = ({ route }) => {
 
   // Retrieve building details from route parameters.
   const building = route.params;
+
+  const icons = [
+    building?.isHandicap && <WheelChairIcon key="wheelchair" />,
+    building?.isBike && <BikeIcon key="bike" />,
+    building?.isParking && <ParkingIcon key="parking" />,
+    building?.isCredit && <CreditCardIcon key="credit" />,
+    building?.isInfo && <InformationIcon key="info" />,
+  ].filter(Boolean);
 
   /**
    * Opens a provided URL using the Linking API.
@@ -98,6 +106,11 @@ const BuildingDetails = ({ route }) => {
       );
     }
 
+    /**
+     * Creates an array of icons representing building features.
+     * Only includes icons for features that are enabled (e.g., wheelchair accessibility, bike parking).
+     */
+
     // Ensure items and links are arrays for consistent rendering.
     const itemsArray = Array.isArray(items) ? items : [items];
     const linksArray = Array.isArray(links) ? links : [links];
@@ -148,11 +161,9 @@ const BuildingDetails = ({ route }) => {
             <MapPinIcon />
             <Text className="ml-2 text-gray-400">{building.address}</Text>
             <Text className="mx-2 text-gray-400">|</Text>
-            {building.isHandicap === "true" && <WheelChairIcon />}
-            {building.isBike === "true" && <BikeIcon />}
-            {building.isMetro === "true" && <MetroIcon />}
-            {building.isInfo === "true" && <InformationIcon />}
-            {building.isCredit === "true" && <CreditCardIcon />}
+            <View className="flex flex-row items-center gap-2 ml-4">
+              {icons}
+            </View>
           </View>
         </View>
       </View>
