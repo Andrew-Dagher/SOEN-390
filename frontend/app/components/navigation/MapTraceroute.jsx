@@ -143,14 +143,6 @@ const MapTraceroute = ({
     />
   );
 
-  /**
-   * Updates waypoints for the selected transportation method.
-   */
-  const updateDirections = () => {
-    console.log("Updating waypoints...");
-    setWaypoints([SGWShuttlePickup]);
-  };
-
   return (
     <Animated.View className='rounded-xl p-3' style={[styles.slidingView, styles.shadow, { top: slideAnim }]}>
       <View className='flex h-full w-full flex-col p-2'>
@@ -172,19 +164,19 @@ const MapTraceroute = ({
           </View>
         </View>
         <View className='flex flex-row items-center justify-around h-1/6'>
-          <TouchableOpacity onPress={() => { setSelected('car'); updateDirections(); }} className={`flex p-2 rounded-3xl flex-row items-center ${selected === 'car' ? 'bg-primary-red' : ''}`}>
+          <TouchableOpacity onPress={() => { setSelected('car'); setWaypoints([SGWShuttlePickup, LoyolaShuttlePickup]); }} className={`flex p-2 rounded-3xl flex-row items-center ${selected === 'car' ? 'bg-primary-red' : ''}`}>
             <CarIcon isSelected={selected === 'car'} />
             <Text className={`ml-2 font-semibold ${selected === 'car' ? 'color-selected' : ''}`}>30 min</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => { setSelected('bike'); setMode("BICYCLING") }} className={`flex p-2 rounded-3xl flex-row items-center ${selected === 'bike' ? 'bg-primary-red' : ''}`}>
+          <TouchableOpacity onPress={() => { setSelected('bike'); setMode("BICYCLING"); setWaypoints([]) }} className={`flex p-2 rounded-3xl flex-row items-center ${selected === 'bike' ? 'bg-primary-red' : ''}`}>
             <BikeNavIcon isSelected={selected === 'bike'} />
             <Text className={`ml-2 font-semibold ${selected === 'bike' ? 'color-selected' : ''}`}>30 min</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => { setSelected('metro'); setMode("TRANSIT") }} className={`flex p-2 rounded-3xl flex-row items-center ${selected === 'metro' ? 'bg-primary-red' : ''}`}>
+          <TouchableOpacity onPress={() => { setSelected('metro'); setMode("TRANSIT"); setWaypoints([]) }} className={`flex p-2 rounded-3xl flex-row items-center ${selected === 'metro' ? 'bg-primary-red' : ''}`}>
             <MetroNavIcon isSelected={selected === 'metro'} />
             <Text className={`ml-2 font-semibold ${selected === 'metro' ? 'color-selected' : ''}`}>30 min</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => { setSelected('walk'); setMode("WALKING") }} className={`flex p-2 rounded-3xl flex-row items-center ${selected === 'walk' ? 'bg-primary-red' : ''}`}>
+          <TouchableOpacity onPress={() => { setSelected('walk'); setMode("WALKING"); setWaypoints([])}} className={`flex p-2 rounded-3xl flex-row items-center ${selected === 'walk' ? 'bg-primary-red' : ''}`}>
             <WalkIcon isSelected={selected === 'walk'} />
             <Text className={`ml-2 font-semibold ${selected === 'walk' ? 'color-selected' : ''}`}>30 min</Text>
           </TouchableOpacity>
@@ -193,5 +185,32 @@ const MapTraceroute = ({
     </Animated.View>
   );
 };
+
+const styles = StyleSheet.create({
+  shadow: {
+    boxShadow: '0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)',
+    textAlign: 'center'
+  },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  slidingView: {
+    position: 'absolute',
+    top: 0, // Start from the top of the screen
+    height: Dimensions.get('window').height * 0.3, // 30% of screen height
+    width: '100%', // Full width
+    backgroundColor: 'white', // Background color (customizable)
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  input: {
+    borderColor: "#888",
+    borderWidth: 2,
+  },
+
+
+});
 
 export default MapTraceroute;
