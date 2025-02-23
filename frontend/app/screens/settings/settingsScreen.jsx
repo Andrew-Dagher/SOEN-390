@@ -1,3 +1,10 @@
+/**
+ * @file SettingsScreen.jsx
+ * @description Renders the Settings screen where users can adjust accessibility settings,
+ * update their profile image, change text size, and logout. It also supports color blindness
+ * options and mobility preferences.
+ */
+
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -19,13 +26,23 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "@clerk/clerk-expo";
 
+/**
+ * SettingsScreen component allows the user to modify various settings including
+ * accessibility options, text size, and profile image. It also provides a logout option.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered SettingsScreen component.
+ */
 export default function SettingsScreen() {
-  const [isWheelchairAccessEnabled, setWheelchairAccessEnabled] =
-    useState(false);
+  // State for mobility (wheelchair) access toggle.
+  const [isWheelchairAccessEnabled, setWheelchairAccessEnabled] = useState(false);
+  // State for temporarily holding the profile image until changes are applied.
   const [tempProfileImage, setTempProfileImage] = useState(profileImage);
+  // State for storing the user name.
   const [userName, setUserName] = useState("Guest");
   const navigation = useNavigation();
 
+  // Load user data from AsyncStorage on component mount.
   useEffect(() => {
     const loadUserData = async () => {
       try {
@@ -42,23 +59,29 @@ export default function SettingsScreen() {
     loadUserData();
   }, []);
 
+  // Retrieve color blind mode and text size settings from context.
   const { colorBlindMode, setColorBlindMode } = useAppSettings();
-  const [isColorBlindModeEnabled, setColorBlindModeEnabled] = useState(
-    !!colorBlindMode
-  );
-  const { textSize, setTextSize, profileImage, setProfileImage } =
-    useTextSize();
+  const [isColorBlindModeEnabled, setColorBlindModeEnabled] = useState(!!colorBlindMode);
+  const { textSize, setTextSize, profileImage, setProfileImage } = useTextSize();
   const [tempSize, setTempSize] = useState(textSize);
   const blinder = require("color-blind");
 
+  /**
+   * Transforms a given color based on the active color blind mode.
+   *
+   * @param {string} color - The original color in hexadecimal format.
+   * @returns {string} The transformed color if colorBlindMode is enabled; otherwise, the original color.
+   */
   const transformColor = (color) => {
     if (!color || !colorBlindMode) return color;
     return blinder[colorBlindMode] ? blinder[colorBlindMode](color) : color;
   };
 
+  // Base maroon color and its transformed version based on color blind mode.
   const baseMaroonColor = "#7c2933";
   const transformedMaroonColor = transformColor(baseMaroonColor);
 
+  // Define component styles using the transformed colors.
   const styles = StyleSheet.create({
     header: {
       backgroundColor: transformedMaroonColor,
@@ -77,6 +100,12 @@ export default function SettingsScreen() {
     },
   });
 
+  /**
+   * Opens the device's image library to allow the user to pick a new profile image.
+   *
+   * @async
+   * @function pickImage
+   */
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -90,16 +119,26 @@ export default function SettingsScreen() {
     }
   };
 
+  /**
+   * Applies the changes made in the settings screen by updating text size and profile image.
+   */
   const applyChanges = () => {
     setTextSize(tempSize);
     setProfileImage(tempProfileImage);
   };
 
   const { signOut, isSignedIn } = useAuth();
-  // Handle logout and clear storage
+
+  /**
+   * Handles user logout by confirming the action, clearing stored session data, signing out,
+   * and navigating back to the Login screen.
+   *
+   * @async
+   * @function handleLogout
+   */
   const handleLogout = async () => {
     try {
-      // Confirm logout
+      // Display confirmation alert before logout.
       Alert.alert(
         "Logout",
         "Are you sure you want to log out?",
@@ -109,19 +148,19 @@ export default function SettingsScreen() {
             text: "Logout",
             onPress: async () => {
               try {
-                // Clear all stored data
+                // Clear stored session and user data.
                 await AsyncStorage.removeItem("sessionId");
                 await AsyncStorage.removeItem("userData");
                 await AsyncStorage.removeItem("guestMode");
                 console.log("🗑️ Cleared stored session data.");
 
-                // Sign out only if the user is signed in
+                // Sign out using Clerk's signOut if the user is signed in.
                 if (isSignedIn) {
                   await signOut();
                   console.log("Successfully signed out!");
                 }
 
-                // Reset navigation history and navigate to Login screen
+                // Reset navigation history and navigate to the Login screen.
                 navigation.reset({
                   index: 0,
                   routes: [{ name: "Login" }],
@@ -270,7 +309,7 @@ export default function SettingsScreen() {
             <View className="h-px bg-gray-200 w-full" />
           </View>
 
-          {/* Apply Button */}
+          {/* Apply Changes Button */}
           <TouchableOpacity
             onPress={applyChanges}
             style={styles.applyButton}
@@ -280,6 +319,7 @@ export default function SettingsScreen() {
               Apply Changes
             </Text>
           </TouchableOpacity>
+          {/* Logout Button */}
           <TouchableOpacity
             onPress={handleLogout}
             style={styles.applyButton}

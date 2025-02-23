@@ -1,7 +1,21 @@
+/**
+ * @file BusSchedule.jsx
+ * @description A React Native component to display the bus schedule for departures between Loyola and SGW.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import busScheduleData from '../../data/bus_schedule.json';
 
+/**
+ * ScheduleTable component to display a formatted table of bus departure times.
+ * @component
+ * @param {Object} props - Component props
+ * @param {string} props.title - Title of the schedule (e.g., "Monday - Thursday")
+ * @param {Object} props.data - Data containing departure times from Loyola and SGW
+ * @param {string[]} props.data.departures_from_loyola - Array of departure times from Loyola
+ * @param {string[]} props.data.departures_from_sgw - Array of departure times from SGW
+ */
 const ScheduleTable = ({ title, data }) => (
   <View className="bg-white rounded-lg p-4 my-2">
     <Text className="text-lg font-bold text-center mb-2">{title}</Text>
@@ -18,9 +32,14 @@ const ScheduleTable = ({ title, data }) => (
   </View>
 );
 
+/**
+ * BusSchedule component that fetches and displays bus schedules for different days of the week.
+ * @component
+ */
 const BusSchedule = () => {
   const [schedule, setSchedule] = useState(null);
 
+  // Load the bus schedule data on component mount
   useEffect(() => {
     setSchedule(busScheduleData);
   }, []);
