@@ -1,61 +1,43 @@
-import { useAuth } from "@clerk/clerk-expo";
-
-export async function getGoogleAccessToken() {
-  try {
-    const { getToken } = useAuth(); // ✅ Correct way to get the OAuth token
-
-    if (!getToken) {
-      console.error("❌ Clerk's getToken() method is undefined.");
-      return null;
-    }
-
-    console.log("🔄 Attempting to retrieve Google OAuth token...");
-
-    // Attempt to retrieve OAuth token from Clerk
-    const token = await getToken({ template: "oauth_google" });
-
-    if (token) {
-      console.log("✅ Google Access Token Retrieved:", token);
-      return token;
-    } else {
-      console.warn("⚠️ Google OAuth token is null or undefined.");
-      return null;
-    }
-  } catch (error) {
-    console.error("❌ Error fetching Google OAuth token:", error);
-    return null;
-  }
-}
-
-export async function fetchGoogleCalendarEvents() {
-  const accessToken = await getGoogleAccessToken();
-
+/**
+ * Fetches Google Calendar events using the correct Google OAuth token.
+ */
+export async function fetchGoogleCalendarEvents(accessToken) {
   if (!accessToken) {
-    console.error("⚠️ No access token available for Google Calendar.");
-    return;
+    console.error("⚠️ No access token provided.");
+    return [];
   }
 
   try {
+    console.log("🔄 Fetching Google Calendar events with access token...");
+
     const response = await fetch(
       "https://www.googleapis.com/calendar/v3/calendars/primary/events",
       {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`, // ✅ Correctly using OAuth 2.0 token
           Accept: "application/json",
         },
       }
     );
 
     if (!response.ok) {
-      throw new Error(`❌ Error fetching calendar events: ${response.statusText}`);
+      console.error("❌ Google API response status:", response.status);
+      let errorBody;
+      try {
+        errorBody = await response.json();
+      } catch {
+        errorBody = await response.text();
+      }
+      console.error("❌ Google API error body:", errorBody);
+      return [];
     }
 
     const data = await response.json();
-    console.log("✅ Google Calendar Events:", data);
-    return data;
+    console.log("✅ Google Calendar Events Fetched:", data.items);
+    return data.items || [];
   } catch (error) {
     console.error("❌ Error fetching Google Calendar events:", error);
-    return null;
+    return [];
   }
 }

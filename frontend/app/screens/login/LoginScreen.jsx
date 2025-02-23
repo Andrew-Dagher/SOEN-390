@@ -1,18 +1,17 @@
-import React, { useEffect, useRef, useCallback, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   Animated,
-  Image,
   ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { useOAuth, useUser, useAuth } from "@clerk/clerk-expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ConcordiaLogo from "../../components/ConcordiaLogo";
-import * as WebBrowser from "expo-web-browser";
 import ContinueWithGoogle from "../../components/ContinueWithGoogle";
+import * as WebBrowser from "expo-web-browser";
+import { useGoogleAuth } from "./useGoogleAccessToken";
 
 export default function LoginScreen() {
   return <LoginScreenContent />;
@@ -22,7 +21,10 @@ function LoginScreenContent() {
   const navigation = useNavigation();
   const logoPosition = useRef(new Animated.Value(0)).current;
   const formOpacity = useRef(new Animated.Value(0)).current;
-  const [isCheckingSession, setIsCheckingSession] = useState(true); // State to manage session check loading
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
+
+  // Import Firebase authentication functions
+  const { user, googleToken, loginWithGoogle, logout, error } = useGoogleAuth();
 
   // Warm-up WebBrowser for OAuth login
   useEffect(() => {
@@ -36,17 +38,11 @@ function LoginScreenContent() {
   useEffect(() => {
     const checkExistingSession = async () => {
       try {
-        const sessionId = await AsyncStorage.getItem("sessionId");
+        const storedUserData = await AsyncStorage.getItem("userData");
         const guestMode = await AsyncStorage.getItem("guestMode");
 
-        if (sessionId) {
-          console.log("Existing session found, navigating to Home");
-          navigation.replace("Home");
-          return;
-        }
-
-        if (guestMode === "true") {
-          console.log("Guest mode detected, navigating to Home");
+        if (storedUserData || guestMode === "true") {
+          console.log("Session found, navigating to Home");
           navigation.replace("Home");
           return;
         }
@@ -76,46 +72,15 @@ function LoginScreenContent() {
     ]).start();
   }, []);
 
-  // OAuth login setup for Google
-  const { startOAuthFlow } = useOAuth({
-    strategy: "oauth_google",
-    extraParams: {
-      scope:
-        "openid profile email https://www.googleapis.com/auth/calendar.readonly",
-    },
-  });
-
-  // Function to handle Google Sign-In
-  const handleGoogleSignIn = async () => {
-    try {
-      const { createdSessionId, setActive } = await startOAuthFlow();
-
-      if (createdSessionId) {
-        await AsyncStorage.setItem("sessionId", createdSessionId);
-        setActive({ session: createdSessionId });
-      }
-    } catch (error) {
-      console.error("OAuth Error:", error);
-      if (error.message.includes("cancelled")) {
-        console.log("User cancelled the login process.");
-      } else {
-        alert("Login failed. Please try again later.");
-      }
-    }
-  };
-
-  const { user } = useUser();
-  const { isSignedIn } = useAuth();
-
-  // Store only name, email, and image in AsyncStorage after login
+  // Store user data after login
   useEffect(() => {
     const storeUserData = async () => {
-      if (isSignedIn && user) {
+      if (user && googleToken) {
         try {
           const userData = {
-            fullName: user.fullName,
-            email: user.primaryEmailAddress?.emailAddress,
-            imageUrl: user.imageUrl,
+            fullName: user.displayName,
+            email: user.email,
+            imageUrl: user.photoURL,
           };
           await AsyncStorage.setItem("userData", JSON.stringify(userData));
           console.log("Stored User Data:\n", JSON.stringify(userData, null, 2));
@@ -127,7 +92,7 @@ function LoginScreenContent() {
     };
 
     storeUserData();
-  }, [isSignedIn, user, navigation]);
+  }, [user, googleToken, navigation]);
 
   // Guest login function
   const handleGuestLogin = async () => {
@@ -168,15 +133,28 @@ function LoginScreenContent() {
         style={{ opacity: formOpacity }}
       >
         <View className="w-full bg-white rounded-t-[50px] py-32 px-6 items-center shadow-md">
-
-          <TouchableOpacity>
-            <ContinueWithGoogle onPress={handleGoogleSignIn}/>
-          </TouchableOpacity>
-
-
-          <TouchableOpacity className="mt-5" onPress={handleGuestLogin}>
-            <Text className="text-[#1A73E8] text-lg font-medium underline">Continue as Guest</Text>
-          </TouchableOpacity>
+          {user ? (
+            <>
+              <Text className="text-black text-lg font-semibold mb-4">
+                Welcome, {user.displayName}!
+              </Text>
+              <TouchableOpacity>
+                <Text className="text-[#D32F2F] text-lg font-medium underline" onPress={logout}>
+                  Sign Out
+                </Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <TouchableOpacity>
+                <ContinueWithGoogle onPress={loginWithGoogle} />
+              </TouchableOpacity>
+              <TouchableOpacity className="mt-5" onPress={handleGuestLogin}>
+                <Text className="text-[#1A73E8] text-lg font-medium underline">Continue as Guest</Text>
+              </TouchableOpacity>
+              {error && <Text className="text-red-500 mt-2">{error}</Text>}
+            </>
+          )}
         </View>
       </Animated.View>
     </View>
