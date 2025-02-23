@@ -185,19 +185,19 @@ const MapTraceroute = ({
         <View className="flex h-1/6">
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View className="flex flex-row items-center justify-around">
-              <TouchableOpacity onPress={() => { setSelected("car"); setMode("DRIVING"); }} className={`flex mr-1 p-2 rounded-3xl flex-row justify-around items-center ${selected === "car" ? "bg-primary-red" : ""}`}>
+              <TouchableOpacity testID="car-button" onPress={() => { setSelected("car"); setMode("DRIVING"); }} className={`flex mr-1 p-2 rounded-3xl flex-row justify-around items-center ${selected === "car" ? "bg-primary-red" : ""}`}>
                 <CarIcon isSelected={selected === "car"} />
                 <Text className={`ml-2 font-semibold ${selected === "car" ? "color-selected" : ""}`}>{carTravelTime ? carTravelTime : "Calculating..."}</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => { setSelected("bike"); setMode("BICYCLING"); }} className={`flex mr-1 p-2 rounded-3xl flex-row justify-around items-center ${selected === "bike" ? "bg-primary-red" : ""}`}>
+              <TouchableOpacity testID="bike-button" onPress={() => { setSelected("bike"); setMode("BICYCLING"); }} className={`flex mr-1 p-2 rounded-3xl flex-row justify-around items-center ${selected === "bike" ? "bg-primary-red" : ""}`}>
                 <BikeNavIcon isSelected={selected === "bike"} />
                 <Text className={`ml-2 font-semibold ${selected === "bike" ? "color-selected" : ""}`}>{bikeTravelTime ? bikeTravelTime : "Calculating..."}</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => { setSelected("metro"); setMode("TRANSIT"); }} className={`flex p-2 rounded-3xl flex-row justify-around items-center ${selected === "metro" ? "bg-primary-red" : ""}`}>
+              <TouchableOpacity testID="metro-button" onPress={() => { setSelected("metro"); setMode("TRANSIT"); }} className={`flex p-2 rounded-3xl flex-row justify-around items-center ${selected === "metro" ? "bg-primary-red" : ""}`}>
                 <MetroNavIcon isSelected={selected === "metro"} />
                 <Text className={`ml-2 font-semibold ${selected === "metro" ? "color-selected" : ""}`}>{metroTravelTime ? metroTravelTime : "Calculating..."}</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => { setSelected("walk"); setMode("WALKING"); }} className={`flex p-2 rounded-3xl flex-row justify-around items-center ${selected === "walk" ? "bg-primary-red" : ""}`}>
+              <TouchableOpacity testID="walk-button" onPress={() => { setSelected("walk"); setMode("WALKING"); }} className={`flex p-2 rounded-3xl flex-row justify-around items-center ${selected === "walk" ? "bg-primary-red" : ""}`}>
                 <WalkIcon isSelected={selected === "walk"} />
                 <Text className={`ml-2 font-semibold ${selected === "walk" ? "color-selected" : ""}`}>{walkTravelTime ? walkTravelTime : "Calculating..."}</Text>
               </TouchableOpacity>
