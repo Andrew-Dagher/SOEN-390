@@ -1,5 +1,3 @@
-//import { address } from "framer-motion/client";
-
 export const SGWLocation = {
   latitude: 45.49572423745457,
   longitude: -73.5792924947185,
@@ -25,21 +23,21 @@ export const LoyolaShuttlePickup = {
 };
 
 const createBuilding = (name, longName, point, address, departments, departmentLinks, services, serviceLinks, isSGW, boundaries, isHandicap, isBike, isParking, isInfo, isCredit) => ({
-  name,
-  longName,
-  point,
-  address,
-  Departments: departments || [],
-  DepartmentLink: departmentLinks || [],
-  Services: services || [],
-  ServiceLink: serviceLinks || [],
-  isSGW: isSGW || false,
-  boundaries,
-  isHandicap,
-  isBike,
-  isParking,
-  isInfo,
-  isCredit
+  name, //display name of the building
+  longName, //full building name, sometimes its the same as name
+  point, //coordinates to the middle point of a building
+  address, //address found on google/concordia app
+  Departments: departments || [], // departements inside building
+  DepartmentLink: departmentLinks || [], //url for said departments
+  Services: services || [], // available services in a buidling
+  ServiceLink: serviceLinks || [], //url for available services in a building
+  isSGW: isSGW || false, // true if building in SGW campus (used for filtering)
+  boundaries, // building boundaries used to render polygons on the interactive map
+  isHandicap, // true if building is handicap accessible
+  isBike, // true if building is bike accessible
+  isParking, // true if building has parking
+  isInfo, // has an information center
+  isCredit // has access to metro
 });
 
 export const polygons = [
