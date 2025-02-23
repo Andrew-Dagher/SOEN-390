@@ -25,7 +25,7 @@ export const LoyolaShuttlePickup = {
 const createBuilding = (
   name,
   longName,
-  coordinate,
+  point,
   address,
   departments,
   departmentLinks,
@@ -41,7 +41,7 @@ const createBuilding = (
 ) => ({
   name, //display name of the building
   longName, //full building name, sometimes its the same as name
-  coordinate: coordinate || { latitude: 0, longitude: 0 }, //coordinates to the middle point of a building
+  point: point || { latitude: 0, longitude: 0 }, //coordinates to the middle point of a building
   address, //address found on google/concordia app
   Departments: departments || [], // departements inside building
   DepartmentLink: departmentLinks || [], //url for said departments
