@@ -8,6 +8,13 @@ import BikeIcon from "./Icons/BikeIcon";
 import CreditCardIcon from "./Icons/CreditCardIcon";
 import ParkingIcon from "./Icons/ParkingIcon";
 
+/**
+ * A card component displaying building information, including accessibility, parking, and other features.
+ * @param {Object} props - The component props.
+ * @param {Object} props.building - The building data.
+ * @param {boolean} [props.isCallout=false] - Determines if the card is used as a callout.
+ * @returns {JSX.Element} - A Pressable component displaying building details.
+ */
 const MapCard = ({ building, isCallout = false }) => {
   const navigation = useNavigation();
 
@@ -21,8 +28,10 @@ const MapCard = ({ building, isCallout = false }) => {
     isCredit,
   };
 
+  /**
+   * Handles navigation to the "Building Details" screen.
+   */
   const handlePress = () => {
-    // Add a small delay for callouts to prevent immediate dismissal
     if (isCallout) {
       setTimeout(() => {
         navigation.navigate("Building Details", buildingData);
@@ -32,34 +41,17 @@ const MapCard = ({ building, isCallout = false }) => {
     }
   };
 
+  /**
+   * Renders the icons associated with the building features.
+   * @returns {JSX.Element} - The set of icons for the building features.
+   */
   const CardContent = () => {
-    // Create an array of icon objects with keys
     const iconComponents = [
-      {
-        key: "handicap",
-        show: buildingData.isHandicap === "true",
-        component: <WheelChairIcon />,
-      },
-      {
-        key: "bike",
-        show: buildingData.isBike === "true",
-        component: <BikeIcon />,
-      },
-      {
-        key: "parking",
-        show: buildingData.isParking === "true",
-        component: <ParkingIcon />,
-      },
-      {
-        key: "info",
-        show: buildingData.isInfo === "true",
-        component: <InformationIcon />,
-      },
-      {
-        key: "credit",
-        show: buildingData.isCredit === "true",
-        component: <CreditCardIcon />,
-      },
+      { key: "handicap", show: buildingData.isHandicap === "true", component: <WheelChairIcon /> },
+      { key: "bike", show: buildingData.isBike === "true", component: <BikeIcon /> },
+      { key: "parking", show: buildingData.isParking === "true", component: <ParkingIcon /> },
+      { key: "info", show: buildingData.isInfo === "true", component: <InformationIcon /> },
+      { key: "credit", show: buildingData.isCredit === "true", component: <CreditCardIcon /> },
     ];
 
     return (
@@ -67,11 +59,9 @@ const MapCard = ({ building, isCallout = false }) => {
         <View className="flex flex-row items-center">
           <Text className="font-bold">{buildingData.name}</Text>
           <View className="flex flex-row items-center gap-2 ml-4">
-            {iconComponents
-              .filter((icon) => icon.show)
-              .map((icon) => (
-                <View key={icon.key}>{icon.component}</View>
-              ))}
+            {iconComponents.filter((icon) => icon.show).map((icon) => (
+              <View key={icon.key}>{icon.component}</View>
+            ))}
           </View>
         </View>
         <View className="mt-2 flex flex-row items-center">
@@ -99,10 +89,7 @@ const styles = StyleSheet.create({
   shadow: {
     width: 250,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 5,
