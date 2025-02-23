@@ -5,9 +5,10 @@
  */
 
 import React from "react";
-import { render } from "@testing-library/react-native";
+import { render, fireEvent } from "@testing-library/react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import MapCard from "../app/components/navigation/MapCard";
+import MapTraceroute from "../app/components/navigation/MapTraceroute";
 
 // Mock the useNavigation hook from React Navigation to provide a mock navigate function.
 jest.mock("@react-navigation/native", () => {
@@ -51,4 +52,48 @@ describe("<MapCard />", () => {
     // Assert that the component is rendered.
     expect(viewComponent).toBeTruthy();
   });
+
+  /**
+   * Verifies that the MapCard component renders correctly within a navigation context.
+   */
+
+  describe("<MapTraceroute />", () => {
+    it("updates the selected transportation mode when clicked", () => {
+      const setModeMock = jest.fn();
+      const { getByTestId } = render(
+        <NavigationContainer>
+          <MapTraceroute setMode={setModeMock} />
+        </NavigationContainer>
+      );
+  
+    //Simulate selecting each button
+    fireEvent.press(getByTestId("car-button"));
+    expect(setModeMock).toHaveBeenCalledWith("DRIVING");
+    
+    fireEvent.press(getByTestId("bike-button"));
+    expect(setModeMock).toHaveBeenCalledWith("BICYCLING");
+    
+    fireEvent.press(getByTestId("metro-button"));
+    expect(setModeMock).toHaveBeenCalledWith("TRANSIT");
+
+    fireEvent.press(getByTestId("walk-button"));
+    expect(setModeMock).toHaveBeenCalledWith("WALKING");
+    });
+
+    /**
+   * Ensures that travel times are displayed correctly.
+   */
+  it("displays the correct travel times", () => {
+    const { getByText } = render(
+      <MapTraceroute carTravelTime="10 mins" bikeTravelTime="5 mins" />
+    );
+
+    expect(getByText("10 mins")).toBeTruthy(); // Car travel time
+    expect(getByText("5 mins")).toBeTruthy(); // Bike travel time
+  });
+  });
+
+  
+
+
 });
