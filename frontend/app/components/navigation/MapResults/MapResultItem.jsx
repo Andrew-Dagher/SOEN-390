@@ -1,44 +1,26 @@
-/**
- * @file MapResultItem.jsx
- * @description A React Native component that displays a building result in a search or route mapping feature.
- * It includes building details, accessibility icons, and actions for setting start and destination points.
- */
-
 import {
   View,
   Text,
   StyleSheet,
+  Animated,
+  Dimensions,
+  TouchableOpacity,
   TouchableHighlight,
+  PanResponder,
   Pressable,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import WheelChairIcon from "../Icons/WheelChairIcon";
 import BikeIcon from "../Icons/BikeIcon";
+import MetroIcon from "../Icons/MetroIcon";
 import InformationIcon from "../Icons/InformationIcon";
 import NavigationIcon from "../Icons/NavigationIcon";
 import DirectionsIcon from "../Icons/DirectionsIcon";
+import { useEffect, useRef } from "react";
 import SmallNavigationIcon from "../Icons/SmallNavigationIcon";
+import { useAppSettings } from "../../../AppSettingsContext";
+import getThemeColors from "../../../ColorBindTheme";
 import ParkingIcon from "../Icons/ParkingIcon";
 
-/**
- * MapResultItem component displays a search result or a location in the mapping interface.
- *
- * @component
- * @param {Object} props - Component properties.
- * @param {boolean} props.isRoute - Indicates whether the user is currently setting a route.
- * @param {Object} props.location - Current user location.
- * @param {Function} props.setIsSearch - Function to toggle search visibility.
- * @param {Function} props.setIsRoute - Function to enable routing mode.
- * @param {Function} props.setCloseTraceroute - Function to close traceroute.
- * @param {Function} props.setStartPosition - Function to set the starting position name.
- * @param {Function} props.setDestinationPosition - Function to set the destination position name.
- * @param {Object} props.building - The building data object.
- * @param {Object} props.start - The starting point coordinates.
- * @param {Function} props.setStart - Function to set the start location.
- * @param {Object} props.end - The destination point coordinates.
- * @param {Function} props.setEnd - Function to set the destination location.
- * @returns {JSX.Element} The rendered MapResultItem component.
- */
 const MapResultItem = ({
   isRoute,
   location,
@@ -54,6 +36,8 @@ const MapResultItem = ({
   setEnd,
 }) => {
   const navigation = useNavigation();
+  const { textSize } = useAppSettings();
+  const theme = getThemeColors();
 
   /**
    * Handles setting the start location for the route.
@@ -114,6 +98,55 @@ const MapResultItem = ({
         <View className="flex flex-row items-center mb-4">
           <Text className="font-bold">{building.name}</Text>
           <View className="flex flex-row items-center gap-2 ml-4">{icons}</View>
+        </View>
+        <View className="mb-4 flex flex-row">
+          <SmallNavigationIcon />
+          <Text className="color-slate-400 text-xs">{address}</Text>
+        </View>
+        <View className="flex flex-row justify-around items-center">
+          <TouchableHighlight
+            onPress={handleSetStart}
+            style={[
+              styles.shadow,
+              { backgroundColor: theme.backgroundColor },
+              { fontSize: textSize },
+            ]}
+            className="mr-4 rounded-xl p-4 bg-primary-red"
+          >
+            <View className="flex flex-row justify-around items-center">
+              {start != null && start != location?.coords ? (
+                <Text
+                  style={[{ fontSize: textSize }]}
+                  className="color-white mr-4 font-bold"
+                >
+                  Set Destination
+                </Text>
+              ) : (
+                <Text
+                  style={[{ fontSize: textSize }]}
+                  className="color-white mr-4 font-bold"
+                >
+                  Set Start
+                </Text>
+              )}
+              <NavigationIcon />
+            </View>
+          </TouchableHighlight>
+          <TouchableHighlight
+            onPress={handleGetDirections}
+            style={[styles.shadow, { backgroundColor: theme.backgroundColor }]}
+            className="rounded-xl p-4 bg-primary-red"
+          >
+            <View className="flex flex-row justify-around items-center">
+              <Text
+                style={[{ fontSize: textSize }]}
+                className="color-white mr-4 font-bold"
+              >
+                Get Directions
+              </Text>
+              <DirectionsIcon />
+            </View>
+          </TouchableHighlight>
         </View>
 
         {/* Address information */}
