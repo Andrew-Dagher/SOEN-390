@@ -1,61 +1,51 @@
-import { useState } from "react";
-import { auth, googleProvider } from "../../../firebaseConfig";
-import { GoogleAuthProvider, signInWithCredential } from "firebase/auth";
-import * as Google from "expo-auth-session/providers/google";
-import * as WebBrowser from "expo-web-browser";
+import { useAuth, useUser } from "@clerk/clerk-expo";
+import { useState, useEffect } from "react";
 
-// Ensure WebBrowser is warmed up for authentication
-WebBrowser.maybeCompleteAuthSession();
-
-export function useGoogleAuth() {
-  const [user, setUser] = useState(null);
+/**
+ * Custom hook to retrieve the correct Google OAuth access token from Clerk
+ */
+export function useGoogleAccessToken() {
+  const { getToken } = useAuth();
+  const { user } = useUser();
   const [googleToken, setGoogleToken] = useState(null);
   const [error, setError] = useState(null);
 
-  // Setup Google OAuth flow
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: "YOUR_FIREBASE_WEB_CLIENT_ID",
-    androidClientId: "YOUR_FIREBASE_ANDROID_CLIENT_ID",
-    iosClientId: "YOUR_FIREBASE_IOS_CLIENT_ID",
-    scopes: ["profile", "email", "https://www.googleapis.com/auth/calendar.readonly"],
-  });
-
-  // Handle Google login
-  const loginWithGoogle = async () => {
-    try {
-      console.log("🔄 Initiating Google Sign-In...");
-      const result = await promptAsync();
-
-      if (result.type !== "success") {
-        throw new Error("Google Sign-In was cancelled.");
+  useEffect(() => {
+    const fetchToken = async () => {
+      if (!getToken || !user) {
+        setError("❌ Clerk getToken() method or user object is undefined.");
+        return;
       }
 
-      console.log("✅ Google OAuth Token Retrieved:", result.authentication.accessToken);
-      setGoogleToken(result.authentication.accessToken);
+      console.log("🔄 Requesting Google OAuth token from Clerk...");
 
-      // Create Firebase credential with the Google token
-      const credential = GoogleAuthProvider.credential(result.authentication.idToken);
-      const firebaseUser = await signInWithCredential(auth, credential);
+      try {
+        // Attempt to retrieve the OAuth token directly
+        const token = await getToken({ template: "oauth_google" });
 
-      console.log("✅ Firebase User:", firebaseUser.user);
-      setUser(firebaseUser.user);
-    } catch (err) {
-      console.error("❌ Error signing in with Google:", err);
-      setError(err.message);
-    }
-  };
+        if (!token || token.includes("{{identity.googleOAuthAccessToken}}")) {
+          setError("⚠️ Google OAuth token is missing or invalid.");
+        } else {
+          console.log("✅ Google OAuth Token Retrieved:", token);
+          // Decode the Clerk JWT to extract the google_access_token
+          const decodedToken = JSON.parse(atob(token.split(".")[1])); // Decode base64 payload
+          const googleAccessToken = decodedToken.google_access_token;
 
-  // Sign out function
-  const logout = async () => {
-    try {
-      setUser(null);
-      setGoogleToken(null);
-      console.log("✅ User signed out");
-    } catch (err) {
-      console.error("❌ Error signing out:", err);
-      setError(err.message);
-    }
-  };
+          if (!googleAccessToken) {
+            setError("⚠️ Google OAuth access token is missing in the Clerk token.");
+          } else {
+            console.log("✅ Google Access Token:", googleAccessToken);
+            setGoogleToken(googleAccessToken);
+          }
+        }
+      } catch (err) {
+        console.error("❌ Error fetching Google OAuth token:", err);
+        setError(err.message);
+      }
+    };
 
-  return { user, googleToken, error, loginWithGoogle, logout };
+    fetchToken();
+  }, [getToken, user]);
+
+  return { googleToken, error };
 }

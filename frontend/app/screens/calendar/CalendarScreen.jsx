@@ -8,35 +8,28 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
-import { Calendar } from "react-native-calendars";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "@clerk/clerk-expo";
 import BottomNavBar from "../../components/BottomNavBar/BottomNavBar";
-import CalendarDirectionsIcon from "../../components/Calendar/CalendarIcons/CalendarDirectionsIcon";
-import { useGoogleAccessToken } from "../login/useGoogleAccessToken"; // ✅ Import hook
-import { fetchGoogleCalendarEvents } from "../login/googleCalendarService"; // ✅ Import service
 import moment from "moment";
+
+const fakeEvents = [
+  { id: "1", summary: "SOEN-352", description: "Software Process Engineering", location: "SGW H-513", start: { dateTime: "2025-02-24T09:00:00" } },
+  { id: "2", summary: "SOEN-445", description: "Data Warehousing and Mining", location: "SGW MB-S2.330", start: { dateTime: "2025-02-24T11:00:00" } },
+  { id: "3", summary: "PHYS-201", description: "General Physics - Mechanics", location: "SGW H-544", start: { dateTime: "2025-02-24T13:00:00" } },
+  { id: "4", summary: "ENGR-361", description: "Engineering Economics", location: "SGW H-937", start: { dateTime: "2025-02-24T15:00:00" } },
+  { id: "5", summary: "SOEN-343", description: "Software Architecture and Design", location: "SGW H-849", start: { dateTime: "2025-02-24T17:00:00" } },
+  { id: "6", summary: "SOEN-352", description: "Software Process Engineering", location: "SGW H-513", start: { dateTime: "2025-02-25T09:00:00" } },
+  { id: "7", summary: "SOEN-445", description: "Data Warehousing and Mining", location: "SGW MB-S2.330", start: { dateTime: "2025-02-25T11:00:00" } },
+  { id: "8", summary: "PHYS-201", description: "General Physics - Mechanics", location: "SGW H-544", start: { dateTime: "2025-02-26T13:00:00" } },
+  { id: "9", summary: "ENGR-361", description: "Engineering Economics", location: "SGW H-937", start: { dateTime: "2025-02-27T15:00:00" } },
+  { id: "10", summary: "SOEN-343", description: "Software Architecture and Design", location: "SGW H-849", start: { dateTime: "2025-02-28T17:00:00" } }
+];
 
 export default function CalendarScreen() {
   const navigation = useNavigation();
   const { isSignedIn } = useAuth();
-  const { googleToken, error } = useGoogleAccessToken(); // ✅ Use the hook
-  const [events, setEvents] = useState([]);
-
-  useEffect(() => {
-    if (googleToken) {
-      loadCalendarEvents(googleToken);
-    }
-  }, [googleToken]);
-
-  const loadCalendarEvents = async (token) => {
-    try {
-      const fetchedEvents = await fetchGoogleCalendarEvents(token);
-      setEvents(fetchedEvents);
-    } catch (error) {
-      Alert.alert("Error", "Failed to load Google Calendar events.");
-    }
-  };
+  const [expandedEvent, setExpandedEvent] = useState(null);
 
   if (!isSignedIn) {
     Alert.alert("Authentication Error", "Please sign in to access Google Calendar.");
@@ -50,41 +43,29 @@ export default function CalendarScreen() {
         <Text style={{ fontSize: 20, color: "#E6863C" }}>{moment().format("DD")}</Text>
       </View>
 
-      {googleToken === null && !error ? (
-        <ActivityIndicator size="large" color="#862532" style={{ marginTop: 20 }} />
-      ) : (
-        <View style={styles.container}>
-          {googleToken ? (
-            <>
-              <Text style={styles.tokenText}>
-                ✅ OAuth Token Retrieved
-              </Text>
-              <FlatList
-                data={events}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <View style={styles.eventItem}>
-                    <Text style={styles.eventTitle}>{item.summary || "No Title"}</Text>
-                    <Text style={styles.eventDescription}>{item.description || "No Description"}</Text>
-                    <Text style={styles.eventTime}>
-                      {moment(item.start?.dateTime || item.start?.date).format("YYYY-MM-DD HH:mm")}
-                    </Text>
-                  </View>
-                )}
-              />
-            </>
-          ) : (
-            <Text style={styles.errorText}>{error || "❌ Failed to retrieve Google OAuth token."}</Text>
+      <View style={styles.container}>
+        <FlatList
+          data={fakeEvents}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingBottom: 80 }}
+          renderItem={({ item }) => (
+            <View style={styles.eventBox}>
+              <TouchableOpacity onPress={() => setExpandedEvent(expandedEvent === item.id ? null : item.id)}>
+                <Text style={styles.eventTitle}>{item.summary}</Text>
+              </TouchableOpacity>
+              {expandedEvent === item.id && (
+                <View>
+                  <Text style={styles.eventDescription}>{item.description}</Text>
+                  <Text style={styles.eventLocation}>📍 {item.location}</Text>
+                  <Text style={styles.eventTime}>{moment(item.start.dateTime).format("YYYY-MM-DD HH:mm")}</Text>
+                  <TouchableOpacity style={styles.nextClassButton} onPress={() => alert("Coming Soon")}>
+                    <Text style={styles.nextClassButtonText}>Next Class</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
           )}
-        </View>
-      )}
-
-      {/* Navigation & Button */}
-      <View style={{ position: "absolute", bottom: "10%", left: 0, right: 0 }}>
-        <TouchableOpacity style={styles.buttonContainer} onPress={() => alert("Directions are coming soon!")}>
-          <Text style={styles.buttonText}>Get Directions to My Next Class</Text>
-          <CalendarDirectionsIcon width={25} height={25} />
-        </TouchableOpacity>
+        />
       </View>
 
       <View style={{ position: "absolute", bottom: 0, left: 0, right: 0 }}>
@@ -95,51 +76,46 @@ export default function CalendarScreen() {
 }
 
 const styles = StyleSheet.create({
-  buttonContainer: {
-    alignSelf: "center",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#862532",
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-  },
-  buttonText: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
-    fontSize: 16,
-    marginRight: 10,
-  },
   container: {
+    flex: 1,
     marginTop: 20,
     paddingHorizontal: 16,
-    alignItems: "center",
   },
-  tokenText: {
-    color: "#862532",
-    fontSize: 16,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  errorText: {
-    color: "red",
-    fontSize: 16,
-    textAlign: "center",
-  },
-  eventItem: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
+  eventBox: {
+    backgroundColor: "#F5F5F5",
+    padding: 20,
+    marginVertical: 10,
+    borderRadius: 10,
+    width: "100%",
+    alignSelf: "center",
+    elevation: 3,
   },
   eventTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
+    color: "#000",
   },
   eventDescription: {
     color: "#555",
+    marginTop: 5,
+  },
+  eventLocation: {
+    color: "#007AFF",
+    marginTop: 5,
   },
   eventTime: {
     color: "#862532",
+    marginTop: 5,
+  },
+  nextClassButton: {
+    backgroundColor: "#862532",
+    padding: 10,
+    borderRadius: 10,
+    marginTop: 10,
+    alignItems: "center",
+  },
+  nextClassButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "bold",
   },
 });
