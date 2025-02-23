@@ -81,7 +81,9 @@ export default function Map() {
     setIsSearch(true);
     setEnd(selectedBuilding.point);
     setDestinationPosition(selectedBuilding.name);
-    setStart(location.coords);
+    if (location != null) {
+      setStart(location.coords);
+    }
     setStartPosition("Your Location");
   };
 
