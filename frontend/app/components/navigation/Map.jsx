@@ -163,35 +163,34 @@ export default function Map() {
     }
   };
 
-  const handleSetStart = () => {
-    if (start != null && start != location?.coords) {
-      setIsRoute(true);
-      setIsSearch(true);
-      setDestinationPosition(selectedBuilding.name);
-      setEnd(selectedBuilding.point);
-  
-      // Reset travel times
-      setCarTravelTime(null);
-      setBikeTravelTime(null);
-      setMetroTravelTime(null);
-      setWalkTravelTime(null);
-  
-      // Fetch times from start point to selected building
-      const fetchAllTravelTimes = async () => {
-        await Promise.all([
-          fetchTravelTime(location.coords, selectedBuilding.point, 'DRIVING'),
-          fetchTravelTime(location.coords, selectedBuilding.point, 'BICYCLING'),
-          fetchTravelTime(location.coords, selectedBuilding.point, 'TRANSIT'),
-          fetchTravelTime(location.coords, selectedBuilding.point, 'WALKING'),
-        ]);
-      };
-  
-      fetchAllTravelTimes();
-      return;
-    }
-    setStart(selectedBuilding.point);
-    setStartPosition(selectedBuilding.name);
-  };
+ const handleSetStart = () => {
+  if (start != null && start !== location?.coords) {
+    setIsRoute(true);
+    setIsSearch(true);
+    setDestinationPosition(selectedBuilding.name);
+    setEnd(selectedBuilding.point);
+
+    // Reset travel times
+    setCarTravelTime(null);
+    setBikeTravelTime(null);
+    setMetroTravelTime(null);
+    setWalkTravelTime(null);
+
+    // Fetch times from start point to selected building
+    const fetchAllTravelTimes = async () => {
+      await Promise.all([
+        fetchTravelTime(start, selectedBuilding.point, 'DRIVING'),
+        fetchTravelTime(start, selectedBuilding.point, 'BICYCLING'),
+        fetchTravelTime(start, selectedBuilding.point, 'TRANSIT'),
+        fetchTravelTime(start, selectedBuilding.point, 'WALKING'),
+      ]);
+    };
+    fetchAllTravelTimes();
+    return;
+  }
+  setStart(selectedBuilding.point);
+  setStartPosition(selectedBuilding.name);
+};
 
   const handleGetDirections = () => {
     try {
