@@ -1,3 +1,9 @@
+/**
+ * @file MapTraceroute.jsx
+ * @description A React Native component that handles traceroute navigation, 
+ * allowing users to select start and destination points and choose between different transportation modes.
+ */
+
 import React, { useEffect, useRef, useState } from 'react';
 import 'react-native-get-random-values';
 import { Animated, StyleSheet, View, Button, Dimensions, Text, TouchableOpacity, TextInput, ScrollView } from 'react-native';
@@ -10,50 +16,112 @@ import DotsIcon from './Icons/DotsIcon';
 import SmallNavigationIcon from './Icons/SmallNavigationIcon';
 import SwapIcon from './Icons/SwapIcon';
 import ArrowIcon from './Icons/ArrowIcon';
-import {
-  GooglePlaceDetail,
-  GooglePlacesAutocomplete,
-} from "react-native-google-places-autocomplete";
+import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { SGWShuttlePickup, LoyolaShuttlePickup } from '../../screens/navigation/navigationConfig';
 
-const MapTraceroute = ({setMode,waypoints, setWaypoints, location, reset, isRoute, setIsRoute, setSelectedBuilding, panToMyLocation,end, start, setEnd, setStart, startPosition,destinationPosition,setStartPosition, setDestinationPosition,closeTraceroute, setCloseTraceroute, setIsSearch, carTravelTime, bikeTravelTime, metroTravelTime, walkTravelTime}) => {
+/**
+ * MapTraceroute component for selecting start and destination locations and choosing a transportation mode.
+ * @component
+ * @param {Object} props - Component props
+ * @param {Function} props.setMode - Function to set the transportation mode.
+ * @param {Array} props.waypoints - Array of waypoints for the traceroute.
+ * @param {Function} props.setWaypoints - Function to update waypoints.
+ * @param {Object} props.location - Current user location.
+ * @param {Function} props.reset - Function to reset traceroute.
+ * @param {boolean} props.isRoute - Boolean indicating if a route is active.
+ * @param {Function} props.setIsRoute - Function to update isRoute state.
+ * @param {Function} props.setSelectedBuilding - Function to set selected building.
+ * @param {Function} props.panToMyLocation - Function to pan the map to the user's location.
+ * @param {Object} props.end - Destination coordinates.
+ * @param {Object} props.start - Start coordinates.
+ * @param {Function} props.setEnd - Function to set the destination.
+ * @param {Function} props.setStart - Function to set the start location.
+ * @param {string} props.startPosition - Name of the start location.
+ * @param {string} props.destinationPosition - Name of the destination.
+ * @param {Function} props.setStartPosition - Function to update start position name.
+ * @param {Function} props.setDestinationPosition - Function to update destination position name.
+ * @param {boolean} props.closeTraceroute - Boolean to control closing traceroute.
+ * @param {Function} props.setCloseTraceroute - Function to update closeTraceroute state.
+ * @param {Function} props.setIsSearch - Function to set search mode.
+ * @param {string|null} props.carTravelTime - Estimated travel time by car.
+ * @param {string|null} props.bikeTravelTime - Estimated travel time by bicycle.
+ * @param {string|null} props.metroTravelTime - Estimated travel time by public transit (metro).
+ * @param {string|null} props.walkTravelTime - Estimated travel time on foot.
+ * 
+ */
+const MapTraceroute = ({
+  setMode,
+  waypoints,
+  setWaypoints,
+  location,
+  reset,
+  isRoute,
+  setIsRoute,
+  setSelectedBuilding,
+  panToMyLocation,
+  end,
+  start,
+  setEnd,
+  setStart,
+  startPosition,
+  destinationPosition,
+  setStartPosition,
+  setDestinationPosition,
+  closeTraceroute,
+  setCloseTraceroute,
+  setIsSearch,
+  carTravelTime, 
+  bikeTravelTime, 
+  metroTravelTime, 
+  walkTravelTime
+}) => {
 
   const [selected, setSelected] = useState('');
+  const slideAnim = useRef(new Animated.Value(-Dimensions.get('window').height * 0.3)).current; // Initially set off-screen
 
-  const slideAnim = useRef(new Animated.Value(-Dimensions.get('window').height * 0.3)).current; // Initially set the top position off the screen
-
+  /**
+   * Animates the traceroute panel sliding in.
+   */
   const slideIn = () => {
     Animated.timing(slideAnim, {
-      toValue: 0, // Slide down to 0 (the top of the screen)
-      duration: 1000, // Duration of the animation
+      toValue: 0, // Slide to visible position
+      duration: 1000,
       useNativeDriver: false,
     }).start();
   };
 
+  /**
+   * Animates the traceroute panel sliding out.
+   */
   const slideOut = () => {
     Animated.timing(slideAnim, {
-      toValue: -Dimensions.get('window').height * 0.3, // Slide back up off the screen
+      toValue: -Dimensions.get('window').height * 0.3, // Slide back up
       duration: 500,
       useNativeDriver: false,
     }).start();
   };
 
+  /**
+   * Handles closing traceroute.
+   */
   const handleCloseTraceroute = () => {
     slideOut();
     setCloseTraceroute(true);
     reset();
-  }
+  };
 
   useEffect(() => {
     if (!closeTraceroute) {
       slideIn();
     }
-  },[closeTraceroute])
+  }, [closeTraceroute]);
 
-  const onPlaceSelected = (
-    details,
-    flag
-  ) => {
+  /**
+   * Handles place selection from Google Places Autocomplete.
+   * @param {Object} details - Place details.
+   * @param {string} flag - Indicates whether it's the origin or destination.
+   */
+  const onPlaceSelected = (details, flag) => {
     const set = flag === "origin" ? setStart : setEnd;
     const position = {
       latitude: details?.geometry.location.lat || 0,
@@ -63,113 +131,83 @@ const MapTraceroute = ({setMode,waypoints, setWaypoints, location, reset, isRout
     panToMyLocation(position);
   };
 
-  useEffect(() => {
+  /**
+   * Input component for selecting locations.
+   * @param {Object} props - Component props.
+   * @param {string} props.label - Label for the input field.
+   * @param {string} props.placeholder - Placeholder text.
+   * @param {Function} props.onPlaceSelected - Function to handle place selection.
+   */
+  const InputAutocomplete = ({ label, placeholder, onPlaceSelected }) => (
+    <GooglePlacesAutocomplete
+      enableHighAccuracyLocation={true}
+      styles={{ textInput: styles.input }}
+      placeholder={placeholder || ""}
+      fetchDetails
+      onPress={(data, details = null) => onPlaceSelected(details)}
+      query={{
+        key: process.env.EXPO_PUBLIC_GOOGLE_API_KEY,
+        language: "en-us",
+      }}
+    />
+  );
 
-  },[end,start,isRoute])
-
-
-  const InputAutocomplete = ({
-    label,
-    placeholder,
-    onPlaceSelected,
-  }) => {
-    return (
-      <>
-        <GooglePlacesAutocomplete
-          enableHighAccuracyLocation={true}
-          styles={{ textInput: styles.input }}
-          placeholder={placeholder || ""}
-          fetchDetails
-          
-          onPress={(data, details = null) => {
-            onPlaceSelected(details);
-          }}
-          query={{
-            key: process.env.EXPO_PUBLIC_GOOGLE_API_KEY,
-            language: "en-us",
-          }}
-        />
-      </>
-    );
-  }
-
+  /**
+   * Updates waypoints for the selected transportation method.
+   */
   const updateDirections = () => {
-    // TODO
-    console.log("tring to update waypoints")
-    if (selected?.isSGW == true && isAtSGW == true) {
-      return;
-    }
-    if (selected?.isSGW == false && isAtSGW == true) {
-      // user is closer to sgw and wants to go to loyola using shuttle
-      setWaypoints([SGWShuttlePickup, LoyolaShuttlePickup])
-    } 
-    if (selected?.isSGW == true && isAtSGW == false)  {
-      // user is closer to loyla and wants to go to sgw using shuttle
-      setWaypoints([LoyolaShuttlePickup, SGWShuttlePickup])
-    }
+    console.log("Updating waypoints...");
     setWaypoints([SGWShuttlePickup]);
-  }
+  };
 
   return (
-      <Animated.View className='rounded-xl p-3' style={[styles.slidingView, styles.shadow,{ top: slideAnim }]}>
-        <View className='flex h-full w-full flex-col p-2'>
-          <View className='mt-2 h-5/6 flex flex-row justify-center items-center'>
-            <TouchableOpacity className='mr-4 mb-8' onPress={handleCloseTraceroute}>
-              <ArrowIcon/>
-            </TouchableOpacity>
-            <View className='flex flex-col justify-center items-center mr-4'>
-              <CircleIcon/>
-              <DotsIcon/>
-              <SmallNavigationIcon/>
-            </View>
-            <View className='w-2/3 mt-14'>
-            <InputAutocomplete
-              label="Origin"
-              placeholder={startPosition}
-              onPlaceSelected={(details) => {
-                onPlaceSelected(details, "origin");
-              }}
-            />
-            <InputAutocomplete
-              label="Destination"
-              placeholder={destinationPosition}
-              onPlaceSelected={(details) => {
-                onPlaceSelected(details, "destination");
-              }}
-            />
-            </View>
-            <View className='ml-4'>
-              <SwapIcon/>
-            </View>
+    <Animated.View className="rounded-xl p-3" style={[styles.slidingView, styles.shadow, { top: slideAnim }]}>
+      <View className="flex h-full w-full flex-col p-2">
+        <View className="mt-2 h-5/6 flex flex-row justify-center items-center">
+          <TouchableOpacity className="mr-4 mb-8" onPress={handleCloseTraceroute}>
+            <ArrowIcon />
+          </TouchableOpacity>
+          <View className="flex flex-col justify-center items-center mr-4">
+            <CircleIcon />
+            <DotsIcon />
+            <SmallNavigationIcon />
           </View>
-          
-          <View className='flex h-1/6'>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View className='flex flex-row items-center justify-around'>
-            <TouchableOpacity onPress={() => {setSelected('car'); setMode("DRIVING");}} className={`flex mr-1 p-2 rounded-3xl flex-row justify-around items-center ${selected === 'car' ? 'bg-primary-red' : ''}`}>
-              <CarIcon isSelected={selected === 'car'? true : false}/>
-              <Text className={`ml-2 font-semibold ${selected === 'car' ? 'color-selected' : ''}`}>{carTravelTime ? carTravelTime : "Calculating..."}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => {setSelected('bike'); setMode("BICYCLING")}} className={`flex mr-1 p-2 rounded-3xl flex-row justify-around items-center ${selected === 'bike' ? 'bg-primary-red' : ''}`}>
-              <BikeNavIcon isSelected={selected === 'bike'? true : false} />
-              <Text className={`ml-2 font-semibold ${selected === 'bike' ? 'color-selected' : ''}`}>{bikeTravelTime ? bikeTravelTime : "Calculating..."}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => {setSelected('metro'); setMode("TRANSIT")}} className={`flex p-2 rounded-3xl flex-row justify-around items-center ${selected === 'metro' ? 'bg-primary-red' : ''}`}>
-              <MetroNavIcon isSelected={selected === 'metro'? true : false} />
-              <Text className={`ml-2 font-semibold ${selected === 'metro' ? 'color-selected' : ''}`}>{metroTravelTime ? metroTravelTime : "Calculating..."}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => {setSelected('walk'); setMode("WALKING")}} className={`flex p-2 rounded-3xl flex-row justify-around items-center ${selected === 'walk' ? 'bg-primary-red' : ''}`}>
-              <WalkIcon isSelected={selected === 'walk'? true : false}/>
-              <Text className={`ml-2 font-semibold ${selected === 'walk' ? 'color-selected' : ''}`}>{walkTravelTime ? walkTravelTime : "Calculating..."}</Text>
-            </TouchableOpacity>
+          <View className="w-2/3 mt-14">
+            <InputAutocomplete label="Origin" placeholder={startPosition} onPlaceSelected={(details) => onPlaceSelected(details, "origin")} />
+            <InputAutocomplete label="Destination" placeholder={destinationPosition} onPlaceSelected={(details) => onPlaceSelected(details, "destination")} />
           </View>
-        </ScrollView>
+          <View className="ml-4">
+            <SwapIcon />
           </View>
         </View>
-      </Animated.View>
+  
+        {/* Transportation Mode Selection */}
+        <View className="flex h-1/6">
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View className="flex flex-row items-center justify-around">
+              <TouchableOpacity onPress={() => { setSelected("car"); setMode("DRIVING"); }} className={`flex mr-1 p-2 rounded-3xl flex-row justify-around items-center ${selected === "car" ? "bg-primary-red" : ""}`}>
+                <CarIcon isSelected={selected === "car"} />
+                <Text className={`ml-2 font-semibold ${selected === "car" ? "color-selected" : ""}`}>{carTravelTime ? carTravelTime : "Calculating..."}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => { setSelected("bike"); setMode("BICYCLING"); }} className={`flex mr-1 p-2 rounded-3xl flex-row justify-around items-center ${selected === "bike" ? "bg-primary-red" : ""}`}>
+                <BikeNavIcon isSelected={selected === "bike"} />
+                <Text className={`ml-2 font-semibold ${selected === "bike" ? "color-selected" : ""}`}>{bikeTravelTime ? bikeTravelTime : "Calculating..."}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => { setSelected("metro"); setMode("TRANSIT"); }} className={`flex p-2 rounded-3xl flex-row justify-around items-center ${selected === "metro" ? "bg-primary-red" : ""}`}>
+                <MetroNavIcon isSelected={selected === "metro"} />
+                <Text className={`ml-2 font-semibold ${selected === "metro" ? "color-selected" : ""}`}>{metroTravelTime ? metroTravelTime : "Calculating..."}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => { setSelected("walk"); setMode("WALKING"); }} className={`flex p-2 rounded-3xl flex-row justify-around items-center ${selected === "walk" ? "bg-primary-red" : ""}`}>
+                <WalkIcon isSelected={selected === "walk"} />
+                <Text className={`ml-2 font-semibold ${selected === "walk" ? "color-selected" : ""}`}>{walkTravelTime ? walkTravelTime : "Calculating..."}</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </View>
+      </View>
+    </Animated.View>
   );
 };
-
 const styles = StyleSheet.create({
   shadow: {
     boxShadow: '0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)',
@@ -194,5 +232,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
 });
+
 
 export default MapTraceroute;

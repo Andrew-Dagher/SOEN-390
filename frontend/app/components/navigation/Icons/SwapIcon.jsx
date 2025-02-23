@@ -1,5 +1,18 @@
-import * as React from "react"
-import Svg, { Path } from "react-native-svg"
+/**
+ * @file SwapIcon.jsx
+ * @description A React Native SVG component for a swap icon.
+ */
+
+import * as React from "react";
+import Svg, { Path } from "react-native-svg";
+
+/**
+ * SwapIcon component renders a swap icon with up and down arrows.
+ *
+ * @component
+ * @param {Object} props - Component properties.
+ * @returns {JSX.Element} The rendered SVG swap icon.
+ */
 const SwapIcon = (props) => (
   <Svg
     xmlns="http://www.w3.org/2000/svg"
@@ -8,6 +21,7 @@ const SwapIcon = (props) => (
     fill="none"
     {...props}
   >
+    {/* Upward arrow */}
     <Path
       stroke="#000"
       strokeLinejoin="bevel"
@@ -21,6 +35,8 @@ const SwapIcon = (props) => (
       strokeWidth={2}
       d="m12.439.39-.033 21.094"
     />
+    
+    {/* Downward arrow */}
     <Path
       stroke="#000"
       strokeLinejoin="bevel"
@@ -35,5 +51,6 @@ const SwapIcon = (props) => (
       d="M4.626 24.61 4.594 3.515"
     />
   </Svg>
-)
-export default SwapIcon
+);
+
+export default SwapIcon;
