@@ -1,27 +1,31 @@
-import * as React from "react"
-import Svg, { G, Path, Defs, ClipPath } from "react-native-svg"
-const CircleIcon = (props) => (
-  <Svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={10}
-    height={10}
-    fill="none"
-    {...props}
-  >
-    <G clipPath="url(#a)">
-      <Path
-        stroke="#000"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={1.333}
-        d="M5 9.48A4.48 4.48 0 1 0 5 .52a4.48 4.48 0 0 0 0 8.96Z"
-      />
-    </G>
-    <Defs>
-      <ClipPath id="a">
-        <Path fill="#fff" d="M0 0h10v10H0z" />
-      </ClipPath>
-    </Defs>
+/**
+ * @file CircleIcon.jsx
+ * @description Renders a circular icon with customizable color and stroke width.
+ */
+
+import * as React from "react";
+import Svg, { Path } from "react-native-svg";
+
+/**
+ * CircleIcon component renders a circular stroke-based icon.
+ *
+ * @component
+ * @param {Object} props - Component properties.
+ * @param {string} [props.color="#000"] - Stroke color.
+ * @param {number} [props.size=10] - Size of the icon (width & height).
+ * @param {number} [props.strokeWidth=1.333] - Stroke width.
+ * @returns {JSX.Element} The rendered Circle icon.
+ */
+const CircleIcon = ({ color = "#000", size = 10, strokeWidth = 1.333 }) => (
+  <Svg width={size} height={size} viewBox="0 0 10 10" fill="none">
+    <Path
+      stroke={color}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={strokeWidth}
+      d="M5 9.48A4.48 4.48 0 1 0 5 .52a4.48 4.48 0 0 0 0 8.96Z"
+    />
   </Svg>
-)
-export default CircleIcon
+);
+
+export default CircleIcon;

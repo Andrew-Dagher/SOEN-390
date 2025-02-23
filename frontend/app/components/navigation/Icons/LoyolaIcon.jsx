@@ -1,6 +1,20 @@
+/**
+ * @file LoyolaIcon.jsx
+ * @description A React Native SVG icon representing different campus locations (SGW and Loyola).
+ */
+
 import * as React from "react";
 import { View } from "react-native";
 import Svg, { Path, Text } from "react-native-svg";
+
+/**
+ * LoyolaIcon component renders an SVG icon based on the selected campus.
+ *
+ * @component
+ * @param {Object} props - Component properties.
+ * @param {string} props.campus - Specifies which campus icon to render ("sgw" or "loyola").
+ * @returns {JSX.Element} The rendered campus icon.
+ */
 const LoyolaIcon = ({ campus }) => (
   <View>
     <Svg
@@ -10,6 +24,7 @@ const LoyolaIcon = ({ campus }) => (
       viewBox="0 0 40 48"
       fill="none"
     >
+      {/* SGW Campus Icon */}
       {campus === "sgw" && (
         <Path
           stroke="#862532"
@@ -20,6 +35,8 @@ const LoyolaIcon = ({ campus }) => (
           d="M1.667 36.667h36.666M32.967 36.684v-7.433M33 18.15a3.656 3.656 0 0 0-3.666 3.667v3.783a3.656 3.656 0 0 0 3.666 3.667 3.656 3.656 0 0 0 3.667-3.667v-3.783A3.656 3.656 0 0 0 33 18.15ZM3.5 36.667V10.05c0-3.35 1.667-5.033 4.984-5.033h10.383c3.317 0 4.967 1.683 4.967 5.033v26.617M9.667 13.75h8.25M9.667 20h8.25M13.75 36.667v-6.25"
         />
       )}
+
+      {/* Loyola Campus Icon */}
       {campus === "loyola" && (
         <>
           <Path
@@ -36,6 +53,8 @@ const LoyolaIcon = ({ campus }) => (
           />
         </>
       )}
+
+      {/* Text label for Loyola campus */}
       <Text
         x="20"
         y="46.5"

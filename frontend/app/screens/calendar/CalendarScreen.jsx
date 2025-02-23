@@ -26,6 +26,16 @@ const fakeEvents = [
   { id: "10", summary: "SOEN-343", description: "Software Architecture and Design", location: "SGW H-849", start: { dateTime: "2025-02-28T17:00:00" } }
 ];
 
+const handleGoToClass = (location) => {
+  const [campus, building, room] = location.split(" ");
+  const jsonData = {
+    Campus: campus,
+    Building: building.split("-")[0],
+    Room: building.includes("-") ? building.split("-")[1] : room,
+  };
+  alert(JSON.stringify(jsonData, null, 2));
+};
+
 export default function CalendarScreen() {
   const navigation = useNavigation();
   const { isSignedIn } = useAuth();
@@ -58,8 +68,8 @@ export default function CalendarScreen() {
                   <Text style={styles.eventDescription}>{item.description}</Text>
                   <Text style={styles.eventLocation}>📍 {item.location}</Text>
                   <Text style={styles.eventTime}>{moment(item.start.dateTime).format("YYYY-MM-DD HH:mm")}</Text>
-                  <TouchableOpacity style={styles.nextClassButton} onPress={() => alert("Coming Soon")}>
-                    <Text style={styles.nextClassButtonText}>Next Class</Text>
+                  <TouchableOpacity style={styles.nextClassButton} onPress={() => handleGoToClass(item.location)}>
+                    <Text style={styles.nextClassButtonText}>Go to Class</Text>
                   </TouchableOpacity>
                 </View>
               )}

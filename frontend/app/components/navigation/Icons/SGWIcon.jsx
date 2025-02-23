@@ -1,6 +1,20 @@
+/**
+ * @file SGWIcon.jsx
+ * @description A React Native SVG component for displaying SGW and Loyola campus icons.
+ */
+
 import * as React from "react";
 import { View } from "react-native";
 import Svg, { G, Path, Defs, ClipPath, Text } from "react-native-svg";
+
+/**
+ * SGWIcon component renders an SVG icon based on the selected campus.
+ *
+ * @component
+ * @param {Object} props - Component properties.
+ * @param {string} props.campus - The campus type ("sgw" or "loyola").
+ * @returns {JSX.Element} The rendered SVG campus icon.
+ */
 const SGWIcon = ({ campus }) => (
   <View>
     <Svg
@@ -10,6 +24,7 @@ const SGWIcon = ({ campus }) => (
       viewBox="0 0 40 48"
       fill="none"
     >
+      {/* Render SGW campus icon */}
       {campus === "sgw" && (
         <G clipPath="url(#a)">
           <Path
@@ -20,6 +35,8 @@ const SGWIcon = ({ campus }) => (
           />
         </G>
       )}
+
+      {/* Render Loyola campus icon */}
       {campus === "loyola" && (
         <G clipPath="url(#a)">
           <Path
@@ -30,6 +47,8 @@ const SGWIcon = ({ campus }) => (
           />
         </G>
       )}
+
+      {/* Campus label */}
       <Text
         x="20"
         y="46.5"
@@ -40,6 +59,8 @@ const SGWIcon = ({ campus }) => (
       >
         SGW
       </Text>
+
+      {/* ClipPath definition */}
       <Defs>
         <ClipPath id="a">
           <Path fill="#862532" d="M0 0h40v40H0z" />
