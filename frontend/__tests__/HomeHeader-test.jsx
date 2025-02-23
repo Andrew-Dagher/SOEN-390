@@ -5,11 +5,7 @@
 
 import { render } from "@testing-library/react-native";
 import HomeHeader from "../app/components/Homescreen/HomeHeader/HomeHeader";
-import { AppSettingsProvider } from "../app/TextSizeContext";
-
-/**
- * Test suite for the <HomeHeader /> component.
- */
+import { AppSettingsProvider } from "../app/AppSettingsContext";
 describe("<HomeHeader />", () => {
   /**
    * Verifies that the HomeHeader component renders the expected welcome text and user name.

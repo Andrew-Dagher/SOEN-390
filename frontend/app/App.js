@@ -10,8 +10,9 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Constants from "expo-constants";
 import { NavigationContainer } from "@react-navigation/native";
 import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
-import { AppSettingsProvider } from "./TextSizeContext";
-import { TextSizeProvider } from "./TextSizeContext";
+
+import { AppSettingsProvider } from './AppSettingsContext';
+
 import Aptabase from "@aptabase/react-native";
 
 // Import global styles.
@@ -48,8 +49,6 @@ export default function App() {
       <ClerkLoaded>
         {/* Provide application-wide settings (e.g., color blind mode) */}
         <AppSettingsProvider>
-          {/* Provide text size and profile image settings */}
-          <TextSizeProvider>
             {/* Set up the navigation container */}
             <NavigationContainer>
               <Stack.Navigator
@@ -73,7 +72,6 @@ export default function App() {
                 />
               </Stack.Navigator>
             </NavigationContainer>
-          </TextSizeProvider>
         </AppSettingsProvider>
       </ClerkLoaded>
     </ClerkProvider>

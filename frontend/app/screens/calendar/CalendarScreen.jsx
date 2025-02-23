@@ -9,6 +9,8 @@ import { Calendar } from "react-native-calendars";
 import { useNavigation } from "@react-navigation/native";
 import BottomNavBar from "../../components/BottomNavBar/BottomNavBar"; // Ensure BottomNavBar is correctly imported
 import CalendarDirectionsIcon from "../../components/Calendar/CalendarIcons/CalendarDirectionsIcon.jsx"; // Import CalendarDirectionsIcon
+import { useAppSettings } from "../../AppSettingsContext";
+import getThemeColors from "../../ColorBindTheme";
 
 /**
  * CalendarScreen component renders a calendar with navigation and a directions button.
@@ -19,8 +21,14 @@ import CalendarDirectionsIcon from "../../components/Calendar/CalendarIcons/Cale
 export default function CalendarScreen() {
   // React Navigation hook to manage navigation.
   const navigation = useNavigation();
+  const theme = getThemeColors();
+  const {
+      textSize
+    } = useAppSettings();
+  // Google API issues no need for current sprint
+  // Here we would put the code to fetch the calendar with Google API
 
-  // Get screen height for different devices.
+  // Get screen height and width for multiple phones
   const screenHeight = Dimensions.get("window").height;
 
   // State for the current month displayed on the header.
@@ -68,11 +76,13 @@ export default function CalendarScreen() {
 
       {/* Button with icon to trigger directions alert. Positioned near the bottom of the screen. */}
       <View style={{ position: "absolute", bottom: "10%", left: 0, right: 0 }}>
-        <TouchableOpacity
-          style={styles.buttonContainer}
-          onPress={() => alert("Directions are coming soon!")}
-        >
-          <Text style={styles.buttonText}>Get Directions to My Next Class</Text>
+
+      <TouchableOpacity
+        style={[styles.buttonContainer, { backgroundColor: theme.backgroundColor }]}
+        onPress={() => alert("Directions are coming soon!")}
+      >
+          <Text style={[styles.buttonText, { backgroundColor: theme.backgroundColor }, {fontSize: textSize }]}>Get Directions to My Next Class</Text>
+          {/* Add the icon after the text */}
           <CalendarDirectionsIcon width={25} height={25} />
         </TouchableOpacity>
       </View>
