@@ -90,6 +90,7 @@ export default function Map() {
       setStart(location.coords);
     }
     setStartPosition("Your Location");
+    setWaypoints([]);
   };
 
   const handleLoyola = () => {
@@ -202,6 +203,14 @@ export default function Map() {
             image={require("../../../assets/my_location.png")}
           />
         )}
+        <Marker
+            coordinate={SGWShuttlePickup}
+            image={require("../../../assets/shuttle.png")}
+          />
+          <Marker
+            coordinate={LoyolaShuttlePickup}
+            image={require("../../../assets/shuttle.png")}
+          />
         {start != null && end != null ? <Marker coordinate={end} /> : null}
         {start != null && end != null ? <Marker coordinate={start} /> : null}
         {start != null && end != null ? (
