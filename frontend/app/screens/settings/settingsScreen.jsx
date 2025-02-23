@@ -1,3 +1,10 @@
+/**
+ * @file SettingsScreen.jsx
+ * @description Renders the Settings screen where users can adjust accessibility settings,
+ * update their profile image, change text size, and logout. It also supports color blindness
+ * options and mobility preferences.
+ */
+
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -18,6 +25,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "@clerk/clerk-expo";
 
+/**
+ * SettingsScreen component allows the user to modify various settings including
+ * accessibility options, text size, and profile image. It also provides a logout option.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered SettingsScreen component.
+ */
 export default function SettingsScreen() {
   const {
     textSize, setTextSize,
@@ -26,7 +40,9 @@ export default function SettingsScreen() {
   } = useAppSettings();
 
   const [isWheelchairAccessEnabled, setWheelchairAccessEnabled] = useState(false);
+
   const [tempProfileImage, setTempProfileImage] = useState(profileImage);
+  // State for storing the user name.
   const [userName, setUserName] = useState("Guest");
   const [isColorBlindModeEnabled, setColorBlindModeEnabled] = useState(!!colorBlindMode);
   const [tempSize, setTempSize] = useState(textSize);
@@ -34,7 +50,7 @@ export default function SettingsScreen() {
   const navigation = useNavigation();
   const blinder = require("color-blind");
 
-  // Load user data from AsyncStorage on mount
+
   useEffect(() => {
     const loadUserData = async () => {
       try {
@@ -51,16 +67,15 @@ export default function SettingsScreen() {
     loadUserData();
   }, []);
 
-  // Function to transform colors dynamically for color-blind mode
   const transformColor = (color) => {
     if (!color || !colorBlindMode) return color;
     return blinder[colorBlindMode] ? blinder[colorBlindMode](color) : color;
   };
 
+  // Base maroon color and its transformed version based on color blind mode.
   const baseMaroonColor = "#7c2933";
   const transformedMaroonColor = transformColor(baseMaroonColor);
 
-  // Function to pick an image from gallery
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -74,7 +89,6 @@ export default function SettingsScreen() {
     }
   };
 
-  // Apply changes and save settings
   const applyChanges = () => {
     setTextSize(tempSize);
     setProfileImage(tempProfileImage);
@@ -85,6 +99,7 @@ export default function SettingsScreen() {
   // Handle user logout and clear AsyncStorage
   const handleLogout = async () => {
     try {
+
       Alert.alert(
         "Logout",
         "Are you sure you want to log out?",
@@ -105,6 +120,7 @@ export default function SettingsScreen() {
                 }
 
                 navigation.reset({ index: 0, routes: [{ name: "Login" }] });
+
               } catch (error) {
                 console.error("Logout Error:", error);
               }
@@ -201,6 +217,7 @@ export default function SettingsScreen() {
             <Text style={{ fontSize: tempSize }} className="text-gray-900 mb-2">Preview text size</Text>
           </View>
 
+
           {/* Apply Button */}
           <TouchableOpacity onPress={applyChanges} style={[styles.applyButton, { backgroundColor: transformedMaroonColor }]} className="py-3 rounded-lg items-center mt-4">
             <Text className="text-white text-lg font-medium">Apply Changes</Text>
@@ -208,6 +225,7 @@ export default function SettingsScreen() {
 
           {/* Logout Button */}
           <TouchableOpacity onPress={handleLogout} style={[styles.applyButton, { backgroundColor: transformedMaroonColor }]} className="py-3 rounded-lg items-center mt-4">
+
             <Text className="text-white text-lg font-medium">Logout</Text>
           </TouchableOpacity>
         </View>
