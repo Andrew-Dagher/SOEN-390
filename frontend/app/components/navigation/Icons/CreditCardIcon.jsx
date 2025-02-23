@@ -1,17 +1,30 @@
+/**
+ * @file CreditCardIcon.jsx
+ * @description Renders a credit card icon with customizable width, height, and color.
+ */
+
 import React from "react";
 import Svg, { Path } from "react-native-svg";
 
-const CreditCardIcon = ({ width = 20, height = 14, color = "#E6863C" }) => {
-  return (
-    <Svg width={width} height={height} viewBox="0 0 20 14" fill="none">
-      <Path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M2.83325 0.333374H17.1666C17.697 0.333374 18.2057 0.544088 18.5808 0.919161C18.9559 1.29423 19.1666 1.80294 19.1666 2.33337V11.6667C19.1666 12.1971 18.9559 12.7058 18.5808 13.0809C18.2057 13.456 17.697 13.6667 17.1666 13.6667H2.83325C2.30282 13.6667 1.79411 13.456 1.41904 13.0809C1.04397 12.7058 0.833252 12.1971 0.833252 11.6667V2.33337C0.833252 1.80294 1.04397 1.29423 1.41904 0.919161C1.79411 0.544088 2.30282 0.333374 2.83325 0.333374ZM18.3333 3.66671H1.66659V6.16671H18.3333V3.66671ZM13.3333 8.66671C13.3333 8.44569 13.421 8.23373 13.5773 8.07745C13.7336 7.92117 13.9456 7.83337 14.1666 7.83337H16.6666C16.8876 7.83337 17.0996 7.92117 17.2558 8.07745C17.4121 8.23373 17.4999 8.44569 17.4999 8.66671C17.4999 8.88772 17.4121 9.09968 17.2558 9.25596C17.0996 9.41224 16.8876 9.50004 16.6666 9.50004H14.1666C13.9456 9.50004 13.7336 9.41224 13.5773 9.25596C13.421 9.09968 13.3333 8.88772 13.3333 8.66671Z"
-        fill={color}
-      />
-    </Svg>
-  );
-};
+/**
+ * CreditCardIcon component renders a credit card icon.
+ *
+ * @component
+ * @param {Object} props - Component properties.
+ * @param {number} [props.width=20] - Width of the icon.
+ * @param {number} [props.height=14] - Height of the icon.
+ * @param {string} [props.color="#E6863C"] - Fill color of the icon.
+ * @returns {JSX.Element} The rendered Credit Card icon.
+ */
+const CreditCardIcon = ({ width = 20, height = 14, color = "#E6863C" }) => (
+  <Svg width={width} height={height} viewBox="0 0 20 14" fill="none">
+    <Path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M2.833 0.333h14.334c0.53 0 1.038 0.211 1.413 0.586s0.587 0.883 0.587 1.414v9.333c0 0.53-0.211 1.038-0.587 1.413s-0.883 0.587-1.413 0.587H2.833c-0.53 0-1.038-0.211-1.413-0.587s-0.587-0.883-0.587-1.413V2.333c0-0.53 0.211-1.038 0.587-1.414S2.303 0.333 2.833 0.333ZM18.333 3.667H1.667V6.167H18.333V3.667ZM13.333 8.667c0-0.222 0.088-0.434 0.244-0.59s0.355-0.244 0.589-0.244h2.5c0.223 0 0.435 0.088 0.591 0.244s0.243 0.368 0.243 0.59-0.087 0.434-0.243 0.59-0.368 0.244-0.591 0.244h-2.5c-0.223 0-0.435-0.088-0.589-0.244s-0.244-0.368-0.244-0.59Z"
+      fill={color}
+    />
+  </Svg>
+);
 
 export default CreditCardIcon;

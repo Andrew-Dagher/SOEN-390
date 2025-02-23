@@ -1,10 +1,16 @@
-import React, { useEffect, useRef, useCallback, useState } from "react";
+/**
+ * @file LoginScreen.jsx
+ * @description Provides the login screen with animated logo, OAuth login via Google,
+ * guest login option, and automatic session detection. Handles the initial authentication
+ * flow and navigates to the Home screen upon successful login or session detection.
+ */
+
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   Animated,
-  Image,
   ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
@@ -14,17 +20,42 @@ import ConcordiaLogo from "../../components/ConcordiaLogo";
 import * as WebBrowser from "expo-web-browser";
 import ContinueWithGoogle from "../../components/ContinueWithGoogle";
 
+/**
+ * LoginScreen component serves as the default export and wraps the LoginScreenContent.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered LoginScreen component.
+ */
 export default function LoginScreen() {
   return <LoginScreenContent />;
 }
 
+/**
+ * LoginScreenContent component handles the login process including:
+ * - Warm-up for OAuth via WebBrowser.
+ * - Checking for an existing session or guest mode.
+ * - Animated logo transition and form appearance.
+ * - Google OAuth login and guest login functionality.
+ * - Storing user data in AsyncStorage upon successful login.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered LoginScreenContent component.
+ */
 function LoginScreenContent() {
+  // Navigation hook for screen transitions.
   const navigation = useNavigation();
+
+  // Animated values for logo position and form opacity.
   const logoPosition = useRef(new Animated.Value(0)).current;
   const formOpacity = useRef(new Animated.Value(0)).current;
-  const [isCheckingSession, setIsCheckingSession] = useState(true); // State to manage session check loading
 
-  // Warm-up WebBrowser for OAuth login
+  // State to manage loading indicator during session check.
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
+
+  /**
+   * Warm-up the WebBrowser for a smoother OAuth login experience.
+   * Cleans up by cooling down the WebBrowser when the component unmounts.
+   */
   useEffect(() => {
     WebBrowser.warmUpAsync();
     return () => {
@@ -32,7 +63,10 @@ function LoginScreenContent() {
     };
   }, []);
 
-  // Check for existing session or guest mode on mount
+  /**
+   * Checks for an existing user session or guest mode in AsyncStorage.
+   * If found, navigates directly to the Home screen.
+   */
   useEffect(() => {
     const checkExistingSession = async () => {
       try {
@@ -60,7 +94,11 @@ function LoginScreenContent() {
     checkExistingSession();
   }, [navigation]);
 
-  // Logo animation effect
+  /**
+   * Performs a sequential animation:
+   * 1. Moves the logo upward.
+   * 2. Fades in the login form.
+   */
   useEffect(() => {
     Animated.sequence([
       Animated.timing(logoPosition, {
@@ -74,9 +112,9 @@ function LoginScreenContent() {
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+  }, [logoPosition, formOpacity]);
 
-  // OAuth login setup for Google
+  // Set up OAuth login for Google with specified scope.
   const { startOAuthFlow } = useOAuth({
     strategy: "oauth_google",
     extraParams: {
@@ -85,7 +123,10 @@ function LoginScreenContent() {
     },
   });
 
-  // Function to handle Google Sign-In
+  /**
+   * Handles Google Sign-In using Clerk's OAuth flow.
+   * Stores the session ID in AsyncStorage and activates the session if login is successful.
+   */
   const handleGoogleSignIn = async () => {
     try {
       const { createdSessionId, setActive } = await startOAuthFlow();
@@ -104,10 +145,14 @@ function LoginScreenContent() {
     }
   };
 
+  // Retrieve user information and authentication state from Clerk.
   const { user } = useUser();
   const { isSignedIn } = useAuth();
 
-  // Store only name, email, and image in AsyncStorage after login
+  /**
+   * Stores user data (name, email, image) in AsyncStorage once the user is signed in.
+   * Navigates to the Home screen after successfully storing the user data.
+   */
   useEffect(() => {
     const storeUserData = async () => {
       if (isSignedIn && user) {
@@ -129,7 +174,9 @@ function LoginScreenContent() {
     storeUserData();
   }, [isSignedIn, user, navigation]);
 
-  // Guest login function
+  /**
+   * Handles guest login by setting guest mode in AsyncStorage and navigating to Home.
+   */
   const handleGuestLogin = async () => {
     console.log("Guest Login Selected");
     try {
@@ -149,6 +196,7 @@ function LoginScreenContent() {
     }
   };
 
+  // Render a loading indicator while checking for an existing session.
   if (isCheckingSession) {
     return (
       <View className="flex-1 bg-[#862532] justify-center items-center">
@@ -159,23 +207,27 @@ function LoginScreenContent() {
 
   return (
     <View testID="login-screen" className="flex-1 bg-[#862532] justify-center items-center">
+      {/* Animated logo container */}
       <Animated.View style={{ transform: [{ translateY: logoPosition }] }}>
         <ConcordiaLogo width={288} height={96} />
       </Animated.View>
 
+      {/* Animated form container */}
       <Animated.View
         className="absolute bottom-0 w-full items-center"
         style={{ opacity: formOpacity }}
       >
         <View className="w-full bg-white rounded-t-[50px] py-32 px-6 items-center shadow-md">
-
+          {/* Google Sign-In Button */}
           <TouchableOpacity>
-            <ContinueWithGoogle onPress={handleGoogleSignIn}/>
+            <ContinueWithGoogle onPress={handleGoogleSignIn} />
           </TouchableOpacity>
 
-
+          {/* Guest Login Option */}
           <TouchableOpacity className="mt-5" onPress={handleGuestLogin}>
-            <Text className="text-[#1A73E8] text-lg font-medium underline">Continue as Guest</Text>
+            <Text className="text-[#1A73E8] text-lg font-medium underline">
+              Continue as Guest
+            </Text>
           </TouchableOpacity>
         </View>
       </Animated.View>
