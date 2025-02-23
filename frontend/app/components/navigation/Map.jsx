@@ -90,6 +90,7 @@ export default function Map() {
       setStart(location.coords);
     }
     setStartPosition("Your Location");
+    setWaypoints([]);
   };
 
   const handleLoyola = () => {
