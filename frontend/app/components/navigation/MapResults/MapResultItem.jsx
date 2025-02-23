@@ -1,13 +1,22 @@
-
-import { View, Text, StyleSheet, Animated, Dimensions, TouchableOpacity, TouchableHighlight, PanResponder, Pressable} from 'react-native';
-import WheelChairIcon from '../Icons/WheelChairIcon';
-import BikeIcon from '../Icons/BikeIcon';
-import MetroIcon from '../Icons/MetroIcon';
-import InformationIcon from '../Icons/InformationIcon';
-import NavigationIcon from '../Icons/NavigationIcon';
-import DirectionsIcon from '../Icons/DirectionsIcon';
-import { useEffect, useRef } from 'react';
-import SmallNavigationIcon from '../Icons/SmallNavigationIcon';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Animated,
+  Dimensions,
+  TouchableOpacity,
+  TouchableHighlight,
+  PanResponder,
+  Pressable,
+} from "react-native";
+import WheelChairIcon from "../Icons/WheelChairIcon";
+import BikeIcon from "../Icons/BikeIcon";
+import MetroIcon from "../Icons/MetroIcon";
+import InformationIcon from "../Icons/InformationIcon";
+import NavigationIcon from "../Icons/NavigationIcon";
+import DirectionsIcon from "../Icons/DirectionsIcon";
+import { useEffect, useRef } from "react";
+import SmallNavigationIcon from "../Icons/SmallNavigationIcon";
 import { useAppSettings } from "../../../AppSettingsContext";
 import getThemeColors from "../../../ColorBindTheme";
 import ParkingIcon from "../Icons/ParkingIcon";
@@ -27,20 +36,8 @@ const MapResultItem = ({
   setEnd,
 }) => {
   const navigation = useNavigation();
-    const {textSize} = useAppSettings();
-    const theme = getThemeColors();
-    const handleSetStart = () => {
-        if (start != null && start != location?.coords) {
-          console.log("trying to ")
-          setIsRoute(true);
-          setIsSearch(true);
-          setDestinationPosition(building.name);
-          setEnd(building.point);
-          return;
-        }
-        setStart(building.point)
-        setStartPosition(building.name)
-    };
+  const { textSize } = useAppSettings();
+  const theme = getThemeColors();
 
   /**
    * Handles setting the start location for the route.
@@ -86,7 +83,7 @@ const MapResultItem = ({
     building.isInfo === "true" && <InformationIcon key="info" />,
   ].filter(Boolean); // Removes falsy values (i.e., features that are not enabled)
 
-       return (
+  return (
     <View
       style={styles.shadow}
       className="w-full mb-4 bg-secondary-bg p-4 rounded-lg flex flex-col justify-center items-center"
@@ -101,26 +98,56 @@ const MapResultItem = ({
         <View className="flex flex-row items-center mb-4">
           <Text className="font-bold">{building.name}</Text>
           <View className="flex flex-row items-center gap-2 ml-4">{icons}</View>
-</View>
-            <View className='mb-4 flex flex-row'>
-                <SmallNavigationIcon/>
-                <Text className='color-slate-400 text-xs'>{address}</Text>
+        </View>
+        <View className="mb-4 flex flex-row">
+          <SmallNavigationIcon />
+          <Text className="color-slate-400 text-xs">{address}</Text>
+        </View>
+        <View className="flex flex-row justify-around items-center">
+          <TouchableHighlight
+            onPress={handleSetStart}
+            style={[
+              styles.shadow,
+              { backgroundColor: theme.backgroundColor },
+              { fontSize: textSize },
+            ]}
+            className="mr-4 rounded-xl p-4 bg-primary-red"
+          >
+            <View className="flex flex-row justify-around items-center">
+              {start != null && start != location?.coords ? (
+                <Text
+                  style={[{ fontSize: textSize }]}
+                  className="color-white mr-4 font-bold"
+                >
+                  Set Destination
+                </Text>
+              ) : (
+                <Text
+                  style={[{ fontSize: textSize }]}
+                  className="color-white mr-4 font-bold"
+                >
+                  Set Start
+                </Text>
+              )}
+              <NavigationIcon />
             </View>
-            <View className='flex flex-row justify-around items-center'>
-                <TouchableHighlight onPress={handleSetStart} style={[styles.shadow, { backgroundColor: theme.backgroundColor }, {fontSize: textSize}]} className='mr-4 rounded-xl p-4 bg-primary-red'>
-                    <View className='flex flex-row justify-around items-center'>
-                        {start != null && start != location?.coords ? <Text style={[{ fontSize: textSize }]} className='color-white mr-4 font-bold'>Set Destination</Text> : <Text style={[{ fontSize: textSize }]} className='color-white mr-4 font-bold'>Set Start</Text>}
-                    <NavigationIcon/>
-                    </View>
-                </TouchableHighlight>
-                <TouchableHighlight onPress={handleGetDirections} style={[styles.shadow, { backgroundColor: theme.backgroundColor }]} className='rounded-xl p-4 bg-primary-red'>
-                    <View className='flex flex-row justify-around items-center'>
-                    <Text style={[{ fontSize: textSize }]} className='color-white mr-4 font-bold'>Get Directions</Text>
-                    <DirectionsIcon/>
-                    </View>
-                </TouchableHighlight>
+          </TouchableHighlight>
+          <TouchableHighlight
+            onPress={handleGetDirections}
+            style={[styles.shadow, { backgroundColor: theme.backgroundColor }]}
+            className="rounded-xl p-4 bg-primary-red"
+          >
+            <View className="flex flex-row justify-around items-center">
+              <Text
+                style={[{ fontSize: textSize }]}
+                className="color-white mr-4 font-bold"
+              >
+                Get Directions
+              </Text>
+              <DirectionsIcon />
             </View>
-
+          </TouchableHighlight>
+        </View>
 
         {/* Address information */}
         <View className="mb-4 flex flex-row items-center">
