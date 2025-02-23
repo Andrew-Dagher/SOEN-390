@@ -1,46 +1,66 @@
+/**
+ * @file MapLocation.jsx
+ * @description A React Native component that provides a button to fetch and center the user's current location on the map.
+ */
+
 import { Text, View, StyleSheet, TouchableOpacity } from "react-native";
-import LocationIcon from "./Icons/LocationIcon"
-import * as Location from 'expo-location';
+import LocationIcon from "./Icons/LocationIcon";
+import * as Location from "expo-location";
 
-const MapLocation = ({panToMyLocation, setLocation,}) => {
-
-    async function getCurrentLocation() {
-      
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setErrorMsg('Permission to access location was denied');
-        return;
-      }
-
-      let location = await Location.getCurrentPositionAsync({});
-      setLocation(location);
+/**
+ * MapLocation component provides a button to pan to the user's current location.
+ * @component
+ * @param {Function} panToMyLocation - Function to center the map on the user's location.
+ * @param {Function} setLocation - Function to update the user's location state.
+ */
+const MapLocation = ({ panToMyLocation, setLocation }) => {
+  /**
+   * Fetches the user's current location and updates the state.
+   * If permission is denied, an error message is set.
+   */
+  async function getCurrentLocation() {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      console.error("Permission to access location was denied");
+      return;
     }
 
-    const handleClick = () => {
-      getCurrentLocation().then(() => {
-        panToMyLocation();
-      })
+    let location = await Location.getCurrentPositionAsync({});
+    setLocation(location);
+  }
 
-    }
+  /**
+   * Handles the button click event to fetch and center the user's location.
+   */
+  const handleClick = () => {
+    getCurrentLocation().then(() => {
+      panToMyLocation();
+    });
+  };
 
-    return (
-        <View className='absolute justify-end items-center right-4 h-full'>
-            <TouchableOpacity onPress={handleClick} style={styles.shadow} className='mb-40 rounded-3xl bg-white p-2 mr-4'>
-                <LocationIcon/>
-            </TouchableOpacity>
-        </View>
-    )
-
-}
-
+  return (
+    <View className="absolute justify-end items-center right-4 h-full">
+      <TouchableOpacity
+        onPress={handleClick}
+        style={styles.shadow}
+        className="mb-40 rounded-3xl bg-white p-2 mr-4"
+      >
+        <LocationIcon />
+      </TouchableOpacity>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   shadow: {
-    width: '250px',
-    boxShadow: '0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)',
-    textAlign: 'center'
-  }
+    width: 50,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+    textAlign: "center",
+  },
 });
-
 
 export default MapLocation;
