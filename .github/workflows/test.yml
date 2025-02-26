@@ -64,7 +64,7 @@ jobs:
           npm run test -- --coverage
 
       - name: Upload Frontend Coverage Report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4  # ✅ Updated to v4
         with:
           name: frontend-coverage
           path: frontend/coverage/lcov.info
@@ -103,13 +103,6 @@ jobs:
           name: frontend-coverage
           path: frontend/coverage
 
-      - name: List Artifacts (Debugging Step)
-        run: |
-          echo "Backend Coverage Report:"
-          ls -lh backend/coverage
-          echo "Frontend Coverage Report:"
-          ls -lh frontend/coverage
-
       - name: Run SonarCloud Analysis
         run: |
           export PATH="/opt/sonar-scanner/bin:$PATH"
@@ -122,13 +115,4 @@ jobs:
             -Dsonar.javascript.lcov.reportPaths=backend/coverage/lcov.info,frontend/coverage/lcov.info || (echo "SonarCloud analysis failed" && exit 1)
 
       - name: Get SonarCloud Results
-        run: |
-          BRANCH_NAME=${GITHUB_REF#refs/heads/}
-          SONAR_URL="https://sonarcloud.io/dashboard?id=SOEN390&branch=${BRANCH_NAME}"
-          echo "Check SonarCloud Report: ${SONAR_URL}"
-
-      - name: Comment on PR with SonarCloud Report
-        if: github.event_name == 'pull_request'
-        uses: mshick/add-pr-comment@v2
-        with:
-          message: "🚀 **SonarCloud Report Available**: [View it here](https://sonarcloud.io/dashboard?id=SOEN390&branch=${GITHUB_REF#refs/heads/})"
+        run: "echo 'Check SonarCloud Report: https://sonarcloud.io/dashboard?id=SOEN390&branch=${GITHUB_REF##*/}'"
