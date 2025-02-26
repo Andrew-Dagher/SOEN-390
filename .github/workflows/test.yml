@@ -2,28 +2,22 @@ name: Testing and Code Analysis
 
 on:
   push:
-    branches:
-      - main
   pull_request:
 
 jobs:
   test_backend:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20.11'
-
       - name: Install Backend Dependencies
         run: |
           cd backend
           npm ci
-
       - name: Run Backend Tests with Coverage
         run: |
           cd backend
@@ -31,21 +25,17 @@ jobs:
 
   test_frontend:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '22.11'
-
       - name: Install Frontend Dependencies
         run: |
           cd frontend
           npm install
-
       - name: Run Frontend Tests with Coverage
         run: |
           cd frontend
@@ -54,24 +44,14 @@ jobs:
   sonar_scan:
     runs-on: ubuntu-latest
     needs: [test_backend, test_frontend]
-
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Set up SonarQube Scanner
-        run: |
-          wget -O sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.7.0.2747-linux.zip
-          unzip sonar-scanner.zip
-          export PATH="$PATH:$(pwd)/sonar-scanner-4.7.0.2747-linux/bin"
-
-      - name: Run SonarQube Analysis
-        env:
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          sonar-scanner \
-            -Dsonar.projectKey=SOEN390 \
-            -Dsonar.sources=. \
-            -Dsonar.host.url=$SONAR_HOST_URL \
-            -Dsonar.login=$SONAR_TOKEN
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v4.1.0
+        with:
+          args: >
+            -Dsonar.projectKey=SOEN390
+            -Dsonar.sources=.
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
