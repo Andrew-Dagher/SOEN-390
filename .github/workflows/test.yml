@@ -26,6 +26,7 @@ jobs:
       - name: Run Backend Tests with Coverage
         run: |
           cd backend
+          mkdir -p coverage
           # Run tests with coverage and output a text summary
           npm test -- --coverage --coverageReporters=text-summary | tee coverage/coverage-summary.txt
 
@@ -60,6 +61,7 @@ jobs:
       - name: Run Frontend Tests with Coverage
         run: |
           cd frontend
+          mkdir -p coverage
           # Run tests with coverage and output a text summary
           npm run test -- --coverage --coverageReporters=text-summary | tee coverage/coverage-summary.txt
 
