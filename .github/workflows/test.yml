@@ -1,10 +1,21 @@
 name: Testing and Code Analysis
 
-on:
-  push:
-  pull_request:
+on: [push, pull_request]
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Setup Git
+      run: |
+        sudo apt-get update
+        sudo apt-get install git -y
+        git --version
+        
   test_backend:
     runs-on: ubuntu-latest
     steps:
@@ -45,13 +56,26 @@ jobs:
     runs-on: ubuntu-latest
     needs: [test_backend, test_frontend]
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v3
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v4.1.0
-        with:
-          args: >
-            -Dsonar.projectKey=SOEN390
-            -Dsonar.sources=.
-            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+
+      - name: Install Java (Required for SonarQube)
+        run: |
+          sudo apt update
+          sudo apt install -y openjdk-17-jdk
+
+      - name: Install SonarQube Scanner
+        run: |
+          curl -o sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+          unzip sonar-scanner.zip
+          mv sonar-scanner-5.0.1.3006-linux /opt/sonar-scanner
+          echo "export PATH=$PATH:/opt/sonar-scanner/bin" >> $HOME/.bashrc
+          source $HOME/.bashrc
+
+      - name: Run SonarQube Analysis
+        run: |
+          sonar-scanner \
+            -Dsonar.projectKey=SOEN390 \
+            -Dsonar.sources=. \
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
+            -Dsonar.token=${{ secrets.SONAR_TOKEN }}
