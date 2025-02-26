@@ -74,11 +74,12 @@ jobs:
           export PATH="/opt/sonar-scanner/bin:$PATH"
           sonar-scanner --version
 
-      - name: Run SonarQube Analysis
-        run: |
-          export PATH="/opt/sonar-scanner/bin:$PATH"
-          sonar-scanner \
-            -Dsonar.projectKey=SOEN390 \
-            -Dsonar.sources=. \
-            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
-            -Dsonar.token=${{ secrets.SONAR_TOKEN }}
+          - name: Run SonarQube Analysis
+          run: |
+            export PATH="/opt/sonar-scanner/bin:$PATH"
+            sonar-scanner \
+              -Dsonar.projectKey=SOEN390 \
+              -Dsonar.sources=. \
+              -Dsonar.host.url="${{ secrets.SONAR_HOST_URL }} || (echo "SonarQube failed URL" && exit 1)" \
+              -Dsonar.token="${{ secrets.SONAR_TOKEN }}" || (echo "SonarQube failed token" && exit 1)
+  
