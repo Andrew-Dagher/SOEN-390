@@ -64,7 +64,7 @@ jobs:
           npm run test -- --coverage
 
       - name: Upload Frontend Coverage Report
-        uses: actions/upload-artifact@v4 
+        uses: actions/upload-artifact@v4
         with:
           name: frontend-coverage
           path: frontend/coverage/lcov.info
@@ -74,16 +74,61 @@ jobs:
     needs: [test_backend, test_frontend]
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Ensures full clone for accurate analysis
+        uses: actions/checkout@v3
 
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@v4
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Install Java (Required for SonarCloud)
+        run: |
+          sudo apt update
+          sudo apt install -y openjdk-17-jdk
+
+      - name: Install SonarQube Scanner
+        run: |
+          curl -o sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+          unzip sonar-scanner.zip
+          sudo mv sonar-scanner-5.0.1.3006-linux /opt/sonar-scanner
+          echo "export PATH=/opt/sonar-scanner/bin:$PATH" >> $HOME/.bashrc
+          source $HOME/.bashrc
+          export PATH="/opt/sonar-scanner/bin:$PATH"
+          sonar-scanner --version
+
+      - name: Download Backend Coverage Report
+        uses: actions/download-artifact@v4  
         with:
-          args: >
-            -Dsonar.organization=${{ secrets.SONAR_ORG }}
-            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
-            -Dsonar.host.url=https://sonarcloud.io
+          name: backend-coverage
+          path: backend/coverage
+
+      - name: Download Frontend Coverage Report
+        uses: actions/download-artifact@v4  
+        with:
+          name: frontend-coverage
+          path: frontend/coverage
+
+      - name: List Artifacts (Debugging Step)
+        run: |
+          echo "Backend Coverage Report:"
+          ls -lh backend/coverage
+          echo "Frontend Coverage Report:"
+          ls -lh frontend/coverage
+
+      - name: Run SonarCloud Analysis
+        run: |
+          export PATH="/opt/sonar-scanner/bin:$PATH"
+          sonar-scanner \
+            -Dsonar.organization=${{ secrets.SONAR_ORG }} \
+            -Dsonar.projectKey=Andrew-Dagher_SOEN-390 \
+            -Dsonar.sources=. \
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
+            -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.javascript.lcov.reportPaths=backend/coverage/lcov.info,frontend/coverage/lcov.info || (echo "SonarCloud analysis failed" && exit 1)
+
+      - name: Get SonarCloud Results
+        run: |
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          SONAR_URL="https://sonarcloud.io/dashboard?id=SOEN390&branch=${BRANCH_NAME}"
+          echo "Check SonarCloud Report: ${SONAR_URL}"
+
+      - name: Comment on PR with SonarCloud Report
+        if: github.event_name == 'pull_request'
+        uses: mshick/add-pr-comment@v2
+        with:
+          message: "🚀 **SonarCloud Report Available**: [View it here](https://sonarcloud.io/dashboard?id=SOEN390&branch=${GITHUB_REF#refs/heads/})"
