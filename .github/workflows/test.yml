@@ -9,9 +9,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v2
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v2
         with: 
           node-version: 20.11
@@ -22,21 +22,15 @@ jobs:
       - name: Run Backend Tests with Coverage
         run: |
           cd backend
-          npm test -- --coverage
-      - name: Upload Jest Coverage Report to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          files: backend/coverage/lcov.info
-          flags: backend
-          fail_ci_if_error: true
+          npm test -- --coverage # Shows coverage in console
 
   test_frontend:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v2
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with: 
           node-version: 22.11
@@ -49,20 +43,14 @@ jobs:
       - name: Run Frontend Tests with Coverage
         run: |
           cd frontend
-          npm run test -- --coverage
-      - name: Upload Jest Coverage Report to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          files: frontend/coverage/lcov.info
-          flags: frontend
-          fail_ci_if_error: true
+          npm run test -- --coverage # Shows coverage in console
 
   sonar_scan:
     runs-on: macos-latest
     needs: [test_backend, test_frontend]
 
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v2
       - name: Install Java (Required for SonarQube)
         run: |
