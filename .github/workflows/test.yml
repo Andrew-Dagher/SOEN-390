@@ -3,17 +3,6 @@ name: Testing and Code Analysis
 on: [push, pull_request]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Setup Git
-        run: |
-          sudo apt-get update
-          sudo apt-get install git -y
-          git --version
 
   test_backend:
     runs-on: ubuntu-latest
@@ -64,7 +53,7 @@ jobs:
           npm run test -- --coverage
 
       - name: Upload Frontend Coverage Report
-        uses: actions/upload-artifact@v4  # ✅ Updated to v4
+        uses: actions/upload-artifact@v4
         with:
           name: frontend-coverage
           path: frontend/coverage/lcov.info
@@ -103,6 +92,22 @@ jobs:
           name: frontend-coverage
           path: frontend/coverage
 
+      - name: Print Backend Coverage Report
+        run: cat backend/coverage/lcov.info || echo "Backend coverage report not found"
+
+      - name: Print Frontend Coverage Report
+        run: cat frontend/coverage/lcov.info || echo "Frontend coverage report not found"
+
+      - name: Extract Backend Coverage Percentage
+        run: |
+          COVERAGE=$(grep -o 'lines.*' backend/coverage/lcov.info | awk '{print $NF}')
+          echo "BACKEND_COVERAGE=$COVERAGE" >> $GITHUB_ENV
+
+      - name: Extract Frontend Coverage Percentage
+        run: |
+          COVERAGE=$(grep -o 'lines.*' frontend/coverage/lcov.info | awk '{print $NF}')
+          echo "FRONTEND_COVERAGE=$COVERAGE" >> $GITHUB_ENV
+
       - name: Run SonarCloud Analysis
         run: |
           export PATH="/opt/sonar-scanner/bin:$PATH"
@@ -116,3 +121,25 @@ jobs:
 
       - name: Get SonarCloud Results
         run: "echo 'Check SonarCloud Report: https://sonarcloud.io/dashboard?id=SOEN390&branch=${GITHUB_REF##*/}'"
+
+      - name: Comment Coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const coverageMessage = `
+            🚀 **Code Coverage Report** 🚀
+
+            🔹 **Backend Coverage**: \`${{ env.BACKEND_COVERAGE }}%\`
+            🔹 **Frontend Coverage**: \`${{ env.FRONTEND_COVERAGE }}%\`
+
+            _View full details in [SonarCloud Report](https://sonarcloud.io/dashboard?id=SOEN390&branch=${{ github.ref_name }})_
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.payload.pull_request.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: coverageMessage
+            });
