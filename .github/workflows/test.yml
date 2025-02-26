@@ -5,52 +5,69 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Setup Git
-      run: |
-        sudo apt-get update
-        sudo apt-get install git -y
-        git --version
-        
+      - name: Setup Git
+        run: |
+          sudo apt-get update
+          sudo apt-get install git -y
+          git --version
+
   test_backend:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20.11'
+
       - name: Install Backend Dependencies
         run: |
           cd backend
           npm ci
+
       - name: Run Backend Tests with Coverage
         run: |
           cd backend
           npm test -- --coverage
+
+      - name: Upload Backend Coverage Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: backend-coverage
+          path: backend/coverage/lcov.info
 
   test_frontend:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '22.11'
+
       - name: Install Frontend Dependencies
         run: |
           cd frontend
           npm install
+
       - name: Run Frontend Tests with Coverage
         run: |
           cd frontend
           npm run test -- --coverage
+
+      - name: Upload Frontend Coverage Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/lcov.info
 
   sonar_scan:
     runs-on: ubuntu-latest
@@ -59,7 +76,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Install Java (Required for SonarQube)
+      - name: Install Java (Required for SonarCloud)
         run: |
           sudo apt update
           sudo apt install -y openjdk-17-jdk
@@ -74,12 +91,27 @@ jobs:
           export PATH="/opt/sonar-scanner/bin:$PATH"
           sonar-scanner --version
 
-          - name: Run SonarQube Analysis
-          run: |
-            export PATH="/opt/sonar-scanner/bin:$PATH"
-            sonar-scanner \
-              -Dsonar.projectKey=SOEN390 \
-              -Dsonar.sources=. \
-              -Dsonar.host.url="${{ secrets.SONAR_HOST_URL }} || (echo "SonarQube failed URL" && exit 1)" \
-              -Dsonar.token="${{ secrets.SONAR_TOKEN }}" || (echo "SonarQube failed token" && exit 1)
-  
+      - name: Download Coverage Reports
+        uses: actions/download-artifact@v3
+        with:
+          name: backend-coverage
+          path: backend/coverage
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: frontend-coverage
+          path: frontend/coverage
+
+      - name: Run SonarCloud Analysis
+        run: |
+          export PATH="/opt/sonar-scanner/bin:$PATH"
+          sonar-scanner \
+            -Dsonar.organization=${{ secrets.SONAR_ORG }} \
+            -Dsonar.projectKey=SOEN390 \
+            -Dsonar.sources=. \
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
+            -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.javascript.lcov.reportPaths=backend/coverage/lcov.info,frontend/coverage/lcov.info || (echo "SonarCloud analysis failed" && exit 1)
+
+      - name: Get SonarCloud Results
+        run: "echo 'Check SonarCloud Report: https://sonarcloud.io/dashboard?id=SOEN390&branch=${GITHUB_REF##*/}'"
