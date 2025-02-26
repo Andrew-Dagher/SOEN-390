@@ -23,15 +23,21 @@ jobs:
           cd backend
           npm ci
 
-      - name: Run Backend Tests with Coverage
+      - name: Run Backend Tests with Coverage and Save Summary
         run: |
           cd backend
-          npm test -- --coverage
+          npm test -- --coverage | tee coverage_summary.txt
+
+      - name: Upload Backend Coverage Summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage-summary
+          path: backend/coverage_summary.txt
 
       - name: Upload Backend Coverage Report
         uses: actions/upload-artifact@v4
         with:
-          name: backend-coverage
+          name: backend-coverage-report
           path: backend/coverage/lcov.info
 
   test_frontend:
@@ -50,15 +56,21 @@ jobs:
           cd frontend
           npm install
 
-      - name: Run Frontend Tests with Coverage
+      - name: Run Frontend Tests with Coverage and Save Summary
         run: |
           cd frontend
-          npm run test -- --coverage
+          npm run test -- --coverage | tee coverage_summary.txt
+
+      - name: Upload Frontend Coverage Summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage-summary
+          path: frontend/coverage_summary.txt
 
       - name: Upload Frontend Coverage Report
         uses: actions/upload-artifact@v4
         with:
-          name: frontend-coverage
+          name: frontend-coverage-report
           path: frontend/coverage/lcov.info
 
   sonar_scan:
@@ -85,16 +97,28 @@ jobs:
           export PATH="/opt/sonar-scanner/bin:$PATH"
           sonar-scanner --version
 
+      - name: Download Backend Artifacts
+        uses: actions/download-artifact@v4  
+        with:
+          name: backend-coverage-summary
+          path: backend
+          
+      - name: Download Frontend Artifacts
+        uses: actions/download-artifact@v4  
+        with:
+          name: frontend-coverage-summary
+          path: frontend
+
       - name: Download Backend Coverage Report
         uses: actions/download-artifact@v4  
         with:
-          name: backend-coverage
+          name: backend-coverage-report
           path: backend/coverage
 
       - name: Download Frontend Coverage Report
         uses: actions/download-artifact@v4  
         with:
-          name: frontend-coverage
+          name: frontend-coverage-report
           path: frontend/coverage
 
       - name: Print Backend Coverage Report
@@ -103,15 +127,19 @@ jobs:
       - name: Print Frontend Coverage Report
         run: cat frontend/coverage/lcov.info || echo "Frontend coverage report not found"
 
-      - name: Extract Backend Coverage Percentage
+      - name: Get Backend Coverage Summary
+        id: backend_cov
         run: |
-          COVERAGE=$(grep -o 'lines.*' backend/coverage/lcov.info | awk '{print $NF}')
-          echo "BACKEND_COVERAGE=$COVERAGE" >> $GITHUB_ENV
+          echo "backend_summary<<EOF" >> $GITHUB_OUTPUT
+          cat backend/coverage_summary.txt
+          echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Extract Frontend Coverage Percentage
+      - name: Get Frontend Coverage Summary
+        id: frontend_cov
         run: |
-          COVERAGE=$(grep -o 'lines.*' frontend/coverage/lcov.info | awk '{print $NF}')
-          echo "FRONTEND_COVERAGE=$COVERAGE" >> $GITHUB_ENV
+          echo "frontend_summary<<EOF" >> $GITHUB_OUTPUT
+          cat frontend/coverage_summary.txt
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Run SonarCloud Analysis
         run: |
@@ -133,17 +161,22 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const backendSummary = `\n${{ steps.backend_cov.outputs.backend_summary }}`;
+            const frontendSummary = `\n${{ steps.frontend_cov.outputs.frontend_summary }}`;
             const coverageMessage = `
             🚀 **Code Coverage Report** 🚀
 
-            🔹 **Backend Coverage**: \`${{ env.BACKEND_COVERAGE }}%\`
-            🔹 **Frontend Coverage**: \`${{ env.FRONTEND_COVERAGE }}%\`
+            **Backend Coverage Summary:**
+            ${backendSummary}
 
-            _Coverage details are provided above as plain text._
-            `;
-            github.rest.issues.createComment({
-              issue_number: context.payload.pull_request.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: coverageMessage
-            });
+            **Frontend Coverage Summary:**
+            ${frontendSummary}
+
+            Coverage details are provided above as plain text.
+                        `;
+                        github.rest.issues.createComment({
+                          issue_number: context.payload.pull_request.number,
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          body: coverageMessage
+                        });
