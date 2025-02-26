@@ -124,7 +124,7 @@ jobs:
             -Dsonar.javascript.lcov.reportPaths=backend/coverage/lcov.info,frontend/coverage/lcov.info || (echo "SonarCloud analysis failed" && exit 1)
 
       - name: Get SonarCloud Results
-        run: "echo 'Check SonarCloud Report: https://sonarcloud.io/dashboard?id=SOEN390&branch=${GITHUB_REF##*/}'"
+        run: "echo 'Check SonarCloud Report: https://sonarcloud.io/dashboard?id=Andrew-Dagher_SOEN-390&branch=${GITHUB_REF##*/}'"
 
       - name: Comment Coverage on PR
         if: github.event_name == 'pull_request'
