@@ -53,7 +53,7 @@ jobs:
               summary = fs.readFileSync(summaryPath, 'utf8');
             }
             const message = `
-            🚀 **Backend Code Coverage Report** 🚀
+            **Backend Code Coverage Report** 
 
             \`\`\`
             ${summary}
@@ -112,7 +112,7 @@ jobs:
               summary = fs.readFileSync(summaryPath, 'utf8');
             }
             const message = `
-            🚀 **Frontend Code Coverage Report** 🚀
+            **Frontend Code Coverage Report** 
 
             \`\`\`
             ${summary}
