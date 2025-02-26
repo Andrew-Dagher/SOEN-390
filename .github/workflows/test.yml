@@ -26,13 +26,20 @@ jobs:
       - name: Run Backend Tests with Coverage
         run: |
           cd backend
-          npm test -- --coverage
+          # Run tests with coverage and output a text summary
+          npm test -- --coverage --coverageReporters=text-summary | tee coverage/coverage-summary.txt
 
       - name: Upload Backend Coverage Report
         uses: actions/upload-artifact@v4
         with:
           name: backend-coverage
           path: backend/coverage/lcov.info
+
+      - name: Upload Backend Coverage Summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage-summary
+          path: backend/coverage/coverage-summary.txt
 
   test_frontend:
     runs-on: ubuntu-latest
@@ -53,13 +60,20 @@ jobs:
       - name: Run Frontend Tests with Coverage
         run: |
           cd frontend
-          npm run test -- --coverage
+          # Run tests with coverage and output a text summary
+          npm run test -- --coverage --coverageReporters=text-summary | tee coverage/coverage-summary.txt
 
       - name: Upload Frontend Coverage Report
         uses: actions/upload-artifact@v4
         with:
           name: frontend-coverage
           path: frontend/coverage/lcov.info
+
+      - name: Upload Frontend Coverage Summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage-summary
+          path: frontend/coverage/coverage-summary.txt
 
   sonar_scan:
     runs-on: ubuntu-latest
@@ -91,27 +105,29 @@ jobs:
           name: backend-coverage
           path: backend/coverage
 
+      - name: Download Backend Coverage Summary
+        uses: actions/download-artifact@v4  
+        with:
+          name: backend-coverage-summary
+          path: backend/coverage
+
       - name: Download Frontend Coverage Report
         uses: actions/download-artifact@v4  
         with:
           name: frontend-coverage
           path: frontend/coverage
 
-      - name: Print Backend Coverage Report
-        run: cat backend/coverage/lcov.info || echo "Backend coverage report not found"
+      - name: Download Frontend Coverage Summary
+        uses: actions/download-artifact@v4  
+        with:
+          name: frontend-coverage-summary
+          path: frontend/coverage
 
-      - name: Print Frontend Coverage Report
-        run: cat frontend/coverage/lcov.info || echo "Frontend coverage report not found"
+      - name: Print Backend Coverage Summary
+        run: cat backend/coverage/coverage-summary.txt || echo "Backend coverage summary not found"
 
-      - name: Extract Backend Coverage Percentage
-        run: |
-          COVERAGE=$(grep -o 'lines.*' backend/coverage/lcov.info | awk '{print $NF}')
-          echo "BACKEND_COVERAGE=$COVERAGE" >> $GITHUB_ENV
-
-      - name: Extract Frontend Coverage Percentage
-        run: |
-          COVERAGE=$(grep -o 'lines.*' frontend/coverage/lcov.info | awk '{print $NF}')
-          echo "FRONTEND_COVERAGE=$COVERAGE" >> $GITHUB_ENV
+      - name: Print Frontend Coverage Summary
+        run: cat frontend/coverage/coverage-summary.txt || echo "Frontend coverage summary not found"
 
       - name: Run SonarCloud Analysis
         run: |
@@ -124,26 +140,37 @@ jobs:
             -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
             -Dsonar.javascript.lcov.reportPaths=backend/coverage/lcov.info,frontend/coverage/lcov.info || (echo "SonarCloud analysis failed" && exit 1)
 
-      - name: Get SonarCloud Results
-        run: "echo 'Check SonarCloud Report: https://sonarcloud.io/dashboard?id=Andrew-Dagher_SOEN-390&branch=${GITHUB_REF##*/}'"
-
       - name: Comment Coverage on PR
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const fs = require('fs');
+            let backendCoverage = 'Backend coverage summary not found';
+            let frontendCoverage = 'Frontend coverage summary not found';
+            try {
+              backendCoverage = fs.readFileSync('backend/coverage/coverage-summary.txt', 'utf8');
+            } catch (error) {}
+            try {
+              frontendCoverage = fs.readFileSync('frontend/coverage/coverage-summary.txt', 'utf8');
+            } catch (error) {}
             const coverageMessage = `
             🚀 **Code Coverage Report** 🚀
 
-            🔹 **Backend Coverage**: \`${{ env.BACKEND_COVERAGE }}%\`
-            🔹 **Frontend Coverage**: \`${{ env.FRONTEND_COVERAGE }}%\`
+            **Backend Coverage Summary:**
+            \`\`\`
+            ${backendCoverage}
+            \`\`\`
 
-            _View full details in [SonarCloud Report](https://sonarcloud.io/dashboard?id=Andrew-Dagher_SOEN-390&branch=${{ github.ref_name }})_
-            `;
-            github.rest.issues.createComment({
-              issue_number: context.payload.pull_request.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: coverageMessage
-            });
+            **Frontend Coverage Summary:**
+            \`\`\`
+            ${frontendCoverage}
+            \`\`\`
+                        `;
+                        github.rest.issues.createComment({
+                          issue_number: context.payload.pull_request.number,
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          body: coverageMessage
+                        });
