@@ -64,7 +64,7 @@ jobs:
           npm run test -- --coverage
 
       - name: Upload Frontend Coverage Report
-        uses: actions/upload-artifact@v4  # ✅ Updated to v4
+        uses: actions/upload-artifact@v4 
         with:
           name: frontend-coverage
           path: frontend/coverage/lcov.info
@@ -74,45 +74,16 @@ jobs:
     needs: [test_backend, test_frontend]
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
-
-      - name: Install Java (Required for SonarCloud)
-        run: |
-          sudo apt update
-          sudo apt install -y openjdk-17-jdk
-
-      - name: Install SonarQube Scanner
-        run: |
-          curl -o sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-          unzip sonar-scanner.zip
-          sudo mv sonar-scanner-5.0.1.3006-linux /opt/sonar-scanner
-          echo "export PATH=/opt/sonar-scanner/bin:$PATH" >> $HOME/.bashrc
-          source $HOME/.bashrc
-          export PATH="/opt/sonar-scanner/bin:$PATH"
-          sonar-scanner --version
-
-      - name: Download Backend Coverage Report
-        uses: actions/download-artifact@v4  # ✅ Updated to v4
+        uses: actions/checkout@v4
         with:
-          name: backend-coverage
-          path: backend/coverage
+          fetch-depth: 0  # Ensures full clone for accurate analysis
 
-      - name: Download Frontend Coverage Report
-        uses: actions/download-artifact@v4  # ✅ Updated to v4
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v4
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          name: frontend-coverage
-          path: frontend/coverage
-
-      - name: Run SonarCloud Analysis
-        run: |
-          export PATH="/opt/sonar-scanner/bin:$PATH"
-          sonar-scanner \
-            -Dsonar.organization=${{ secrets.SONAR_ORG }} \
-            -Dsonar.projectKey=Andrew-Dagher_SOEN-390 \
-            -Dsonar.sources=. \
-            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
-            -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
-            -Dsonar.javascript.lcov.reportPaths=backend/coverage/lcov.info,frontend/coverage/lcov.info || (echo "SonarCloud analysis failed" && exit 1)
-
-      - name: Get SonarCloud Results
-        run: "echo 'Check SonarCloud Report: https://sonarcloud.io/dashboard?id=SOEN390&branch=${GITHUB_REF##*/}'"
+          args: >
+            -Dsonar.organization=${{ secrets.SONAR_ORG }}
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+            -Dsonar.host.url=https://sonarcloud.io
