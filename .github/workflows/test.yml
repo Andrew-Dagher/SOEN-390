@@ -68,12 +68,15 @@ jobs:
         run: |
           curl -o sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
           unzip sonar-scanner.zip
-          mv sonar-scanner-5.0.1.3006-linux /opt/sonar-scanner
-          echo "export PATH=$PATH:/opt/sonar-scanner/bin" >> $HOME/.bashrc
+          sudo mv sonar-scanner-5.0.1.3006-linux /opt/sonar-scanner
+          echo "export PATH=/opt/sonar-scanner/bin:$PATH" >> $HOME/.bashrc
           source $HOME/.bashrc
+          export PATH="/opt/sonar-scanner/bin:$PATH"
+          sonar-scanner --version
 
       - name: Run SonarQube Analysis
         run: |
+          export PATH="/opt/sonar-scanner/bin:$PATH"
           sonar-scanner \
             -Dsonar.projectKey=SOEN390 \
             -Dsonar.sources=. \
