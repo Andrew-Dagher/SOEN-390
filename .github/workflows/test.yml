@@ -1,4 +1,4 @@
-name: Testing
+name: Testing and Code Analysis
 
 on: 
   push:
@@ -19,10 +19,16 @@ jobs:
         run: |
           cd backend
           npm ci
-      - name: Run Backend Tests
+      - name: Run Backend Tests with Coverage
         run: |
           cd backend
-          npm test
+          npm test -- --coverage
+      - name: Upload Jest Coverage Report to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: backend/coverage/lcov.info
+          flags: backend
+          fail_ci_if_error: true
 
   test_frontend:
     runs-on: ubuntu-latest
@@ -40,7 +46,39 @@ jobs:
         run: |
           cd frontend
           npm install
-      - name: Run Frontend Tests
+      - name: Run Frontend Tests with Coverage
         run: |
           cd frontend
-          npm run test
+          npm run test -- --coverage
+      - name: Upload Jest Coverage Report to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: frontend/coverage/lcov.info
+          flags: frontend
+          fail_ci_if_error: true
+
+  sonar_scan:
+    runs-on: macos-latest
+    needs: [test_backend, test_frontend]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install Java (Required for SonarQube)
+        run: |
+          brew install openjdk
+          echo "export JAVA_HOME=$(/usr/libexec/java_home)" >> $HOME/.zshrc
+          source $HOME/.zshrc
+      - name: Install SonarQube Scanner
+        run: |
+          brew install sonarqube
+          brew install sonar-scanner
+      - name: Run SonarQube Analysis
+        run: |
+          sonar-scanner \
+            -Dsonar.projectKey=SOEN390 \
+            -Dsonar.sources=. \
+            -Dsonar.host.url=http://localhost:9000 \
+            -Dsonar.token=${{ secrets.SONAR_TOKEN }}
+      - name: SonarQube Report Link
+        run: echo "Check SonarQube results at http://localhost:9000/dashboard?id=SOEN390"
