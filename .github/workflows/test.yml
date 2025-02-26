@@ -108,7 +108,7 @@ jobs:
           export PATH="/opt/sonar-scanner/bin:$PATH"
           sonar-scanner \
             -Dsonar.organization=${{ secrets.SONAR_ORG }} \
-            -Dsonar.projectKey=SOEN390 \
+            -Dsonar.projectKey=SOEN-390 \
             -Dsonar.sources=. \
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
             -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
