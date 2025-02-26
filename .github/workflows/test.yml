@@ -1,7 +1,9 @@
 name: Testing and Code Analysis
 
-on: 
+on:
   push:
+    branches:
+      - main
   pull_request:
 
 jobs:
@@ -9,74 +11,67 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-      - name: Setup Node.js
-        uses: actions/setup-node@v2
-        with: 
-          node-version: 20.11
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.11'
+
       - name: Install Backend Dependencies
         run: |
           cd backend
           npm ci
+
       - name: Run Backend Tests with Coverage
         run: |
           cd backend
-          npm test -- --coverage # Shows coverage in console
+          npm test -- --coverage
 
   test_frontend:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with: 
-          node-version: 22.11
-      - name: Clear npm cache
-        run: npm cache clean --force
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22.11'
+
       - name: Install Frontend Dependencies
         run: |
           cd frontend
           npm install
+
       - name: Run Frontend Tests with Coverage
         run: |
           cd frontend
-          npm run test -- --coverage # Shows coverage in console
+          npm run test -- --coverage
 
   sonar_scan:
     runs-on: ubuntu-latest
     needs: [test_backend, test_frontend]
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-      
-      - name: Start SonarQube in Docker
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up SonarQube Scanner
         run: |
-          docker run -d --name sonar \
-            -p 9000:9000 \
-            -e SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true \
-            sonarqube:lts
-      
-      - name: Wait for SonarQube to be ready
-        run: |
-          echo "Waiting for SonarQube to be ready..."
-          until curl -s http://localhost:9000/api/system/status | grep -q "UP"; do
-            sleep 5
-            echo "Waiting..."
-          done
-          echo "SonarQube is up and running!"
+          wget -O sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.7.0.2747-linux.zip
+          unzip sonar-scanner.zip
+          export PATH="$PATH:$(pwd)/sonar-scanner-4.7.0.2747-linux/bin"
 
       - name: Run SonarQube Analysis
-        uses: sonarsource/sonarqube-scan-action@master
-        with:
-          args: >
-            -Dsonar.projectKey=SOEN390
-            -Dsonar.sources=.
-            -Dsonar.host.url=http://localhost:9000
-            -Dsonar.token=${{ secrets.SONAR_TOKEN }}
-
-      - name: SonarQube Report Link
-        run: echo "Check SonarQube results at http://localhost:9000/dashboard?id=SOEN390"
+        env:
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          sonar-scanner \
+            -Dsonar.projectKey=SOEN390 \
+            -Dsonar.sources=. \
+            -Dsonar.host.url=$SONAR_HOST_URL \
+            -Dsonar.login=$SONAR_TOKEN
