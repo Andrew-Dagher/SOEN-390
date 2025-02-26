@@ -60,10 +60,10 @@ export default function Map() {
   const [campus, setCampus] = useState("sgw");
   const [mode, setMode] = useState("WALKING"); // Mode of transportation
   const [isRoute, setIsRoute] = useState(false);
-  const [carTravelTime, setCarTravelTime] = useState(null);
-  const [bikeTravelTime, setBikeTravelTime] = useState(null);
-  const [metroTravelTime, setMetroTravelTime] = useState(null);
-  const [walkTravelTime, setWalkTravelTime] = useState(null);
+  const [carTravelTime, setCarTravelTime] = useState(null); //Estimated travel time by car
+  const [bikeTravelTime, setBikeTravelTime] = useState(null); //Estimated travel time by bicycle
+  const [metroTravelTime, setMetroTravelTime] = useState(null); //Estimated travel time by public transit
+  const [walkTravelTime, setWalkTravelTime] = useState(null); //Estimated travel time on foot
   const ref = useRef(null);
   const polygonRef = useRef(null);
   //Aptabase.init("A-US-0837971026")
@@ -84,11 +84,15 @@ export default function Map() {
       return;
   }
   
-    const API_KEY = process.env.EXPO_PUBLIC_GOOGLE_API_KEY;
+    // Base URL defined as a global constant
+    const GOOGLE_DIRECTIONS_API_BASE_URL = "https://maps.googleapis.com/maps/api/directions/json";
     
     const travelMode = mode.toLowerCase();
     
-    let url = `https://maps.googleapis.com/maps/api/directions/json?origin=${start.latitude},${start.longitude}&destination=${end.latitude},${end.longitude}&mode=${travelMode}&key=${API_KEY}`;
+    let url = `${GOOGLE_DIRECTIONS_API_BASE_URL}?origin=${start.latitude},${start.longitude}` +
+          `&destination=${end.latitude},${end.longitude}` +
+          `&mode=${travelMode}` +
+          `&key=${process.env.EXPO_PUBLIC_GOOGLE_API_KEY}`;
     
     // specific parameters for transit mode
     if (travelMode === 'transit') {
