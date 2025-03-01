@@ -11,7 +11,7 @@ import Constants from "expo-constants";
 import { NavigationContainer } from "@react-navigation/native";
 import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
 
-import { AppSettingsProvider } from './AppSettingsContext';
+import { AppSettingsProvider } from "./AppSettingsContext";
 
 import Aptabase from "@aptabase/react-native";
 
@@ -27,6 +27,9 @@ import LoadingScreen from "./screens/login/LoadingScreen";
 import SettingsScreen from "./screens/settings/settingsScreen";
 import BuildingInfoScreen from "./screens/Info/BuildingInfoScreen";
 
+// Import BusService
+import busService from "./services/BusService";
+
 // Create a native stack navigator for navigation.
 const Stack = createNativeStackNavigator();
 
@@ -40,6 +43,9 @@ Aptabase.init(process.env.EXPO_PUBLIC_APTABASE_KEY);
  * @returns {JSX.Element} The rendered App component.
  */
 export default function App() {
+  // Start the bus service.
+  busService.start();
+
   return (
     // Wrap the app in ClerkProvider for authentication.
     <ClerkProvider
@@ -49,29 +55,29 @@ export default function App() {
       <ClerkLoaded>
         {/* Provide application-wide settings (e.g., color blind mode) */}
         <AppSettingsProvider>
-            {/* Set up the navigation container */}
-            <NavigationContainer>
-              <Stack.Navigator
-                initialRouteName="Login"
-                screenOptions={{ headerShown: false }}
-              >
-                {/* Define each screen in the navigation stack */}
-                <Stack.Screen name="Loading" component={LoadingScreen} />
-                <Stack.Screen name="Home" component={HomeScreen} />
-                <Stack.Screen name="Calendar" component={CalendarScreen} />
-                <Stack.Screen name="Navigation" component={NavigationScreen} />
-                <Stack.Screen name="Settings" component={SettingsScreen} />
-                <Stack.Screen
-                  name="Building Details"
-                  component={BuildingInfoScreen}
-                />
-                <Stack.Screen
-                  name="Login"
-                  options={{ headerShown: false }}
-                  component={LoginScreen}
-                />
-              </Stack.Navigator>
-            </NavigationContainer>
+          {/* Set up the navigation container */}
+          <NavigationContainer>
+            <Stack.Navigator
+              initialRouteName="Login"
+              screenOptions={{ headerShown: false }}
+            >
+              {/* Define each screen in the navigation stack */}
+              <Stack.Screen name="Loading" component={LoadingScreen} />
+              <Stack.Screen name="Home" component={HomeScreen} />
+              <Stack.Screen name="Calendar" component={CalendarScreen} />
+              <Stack.Screen name="Navigation" component={NavigationScreen} />
+              <Stack.Screen name="Settings" component={SettingsScreen} />
+              <Stack.Screen
+                name="Building Details"
+                component={BuildingInfoScreen}
+              />
+              <Stack.Screen
+                name="Login"
+                options={{ headerShown: false }}
+                component={LoginScreen}
+              />
+            </Stack.Navigator>
+          </NavigationContainer>
         </AppSettingsProvider>
       </ClerkLoaded>
     </ClerkProvider>
