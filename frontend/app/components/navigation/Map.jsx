@@ -38,8 +38,7 @@ import { trackEvent } from "@aptabase/react-native";
 import { useAppSettings } from "../../AppSettingsContext";
 import getThemeColors from "../../ColorBindTheme";
 export default function Map() {
-
-  const {textSize} = useAppSettings();
+  const { textSize } = useAppSettings();
   const theme = getThemeColors();
   const navigation = useNavigation();
 
@@ -79,18 +78,34 @@ export default function Map() {
     try {
       trackEvent("Get Directions", { selectedBuilding });
       console.log("Event tracked");
+      setIsRoute(true);
+      setIsSearch(true);
+      setEnd(selectedBuilding.point);
+      setDestinationPosition(selectedBuilding.name);
+      if (location != null) {
+        setStart(location.coords);
+      }
+      setStartPosition("Your Location");
+      // Reset all travel times before fetching new ones
+      setCarTravelTime(null);
+      setBikeTravelTime(null);
+      setMetroTravelTime(null);
+      setWalkTravelTime(null);
+
+      // Fetch travel times for all modes
+      const fetchAllTravelTimes = async () => {
+        await Promise.all([
+          fetchTravelTime(location.coords, selectedBuilding.point, "DRIVING"),
+          fetchTravelTime(location.coords, selectedBuilding.point, "BICYCLING"),
+          fetchTravelTime(location.coords, selectedBuilding.point, "TRANSIT"),
+          fetchTravelTime(location.coords, selectedBuilding.point, "WALKING"),
+        ]);
+      };
+
+      fetchAllTravelTimes();
     } catch (e) {
       console.error(e);
     }
-    setIsRoute(true);
-    setIsSearch(true);
-    setEnd(selectedBuilding.point);
-    setDestinationPosition(selectedBuilding.name);
-    if (location != null) {
-      setStart(location.coords);
-    }
-    setStartPosition("Your Location");
-    setWaypoints([]);
   };
 
   const handleLoyola = () => {
@@ -134,8 +149,8 @@ export default function Map() {
         <Polygon
           coordinates={building.boundaries}
           strokeWidth={2}
-          strokeColor= {theme.backgroundColor}
-          fillColor= {theme.polygonFillColor}
+          strokeColor={theme.backgroundColor}
+          fillColor={theme.polygonFillColor}
         />
       </View>
     );
@@ -204,13 +219,13 @@ export default function Map() {
           />
         )}
         <Marker
-            coordinate={SGWShuttlePickup}
-            image={require("../../../assets/shuttle.png")}
-          />
-          <Marker
-            coordinate={LoyolaShuttlePickup}
-            image={require("../../../assets/shuttle.png")}
-          />
+          coordinate={SGWShuttlePickup}
+          image={require("../../../assets/shuttle.png")}
+        />
+        <Marker
+          coordinate={LoyolaShuttlePickup}
+          image={require("../../../assets/shuttle.png")}
+        />
         {start != null && end != null ? <Marker coordinate={end} /> : null}
         {start != null && end != null ? <Marker coordinate={start} /> : null}
         {start != null && end != null ? (
@@ -326,25 +341,48 @@ export default function Map() {
         <View className="absolute w-full bottom-20">
           <View className="flex flex-row justify-center items-center">
             <TouchableHighlight
-
-              style={[styles.shadow, { backgroundColor: theme.backgroundColor }]}
-              className='mr-4 rounded-xl p-4 bg-primary-red'
+              style={[
+                styles.shadow,
+                { backgroundColor: theme.backgroundColor },
+              ]}
+              className="mr-4 rounded-xl p-4 bg-primary-red"
               onPress={handleSetStart}
             >
-              <View className='flex flex-row justify-around items-center'>
-                {start != null && start != location?.coords ? <Text style={[{ fontSize: textSize }]} className='color-white mr-4 font-bold'>Set Destination</Text> : <Text style={[{ fontSize: textSize }]} className='color-white mr-4 font-bold'>Set Start</Text>}
+              <View className="flex flex-row justify-around items-center">
+                {start != null && start != location?.coords ? (
+                  <Text
+                    style={[{ fontSize: textSize }]}
+                    className="color-white mr-4 font-bold"
+                  >
+                    Set Destination
+                  </Text>
+                ) : (
+                  <Text
+                    style={[{ fontSize: textSize }]}
+                    className="color-white mr-4 font-bold"
+                  >
+                    Set Start
+                  </Text>
+                )}
 
                 <NavigationIcon />
               </View>
             </TouchableHighlight>
             <TouchableHighlight
-
-              style={[styles.shadow, { backgroundColor: theme.backgroundColor }]}
-              className='rounded-xl p-4 bg-primary-red'
+              style={[
+                styles.shadow,
+                { backgroundColor: theme.backgroundColor },
+              ]}
+              className="rounded-xl p-4 bg-primary-red"
               onPress={handleGetDirections}
             >
-              <View className='flex flex-row justify-around items-center'>
-                <Text style={[{ fontSize: textSize }]} className='color-white mr-4 font-bold'>Get Directions</Text>
+              <View className="flex flex-row justify-around items-center">
+                <Text
+                  style={[{ fontSize: textSize }]}
+                  className="color-white mr-4 font-bold"
+                >
+                  Get Directions
+                </Text>
 
                 <DirectionsIcon />
               </View>
