@@ -78,34 +78,18 @@ export default function Map() {
     try {
       trackEvent("Get Directions", { selectedBuilding });
       console.log("Event tracked");
-      setIsRoute(true);
-      setIsSearch(true);
-      setEnd(selectedBuilding.point);
-      setDestinationPosition(selectedBuilding.name);
-      if (location != null) {
-        setStart(location.coords);
-      }
-      setStartPosition("Your Location");
-      // Reset all travel times before fetching new ones
-      setCarTravelTime(null);
-      setBikeTravelTime(null);
-      setMetroTravelTime(null);
-      setWalkTravelTime(null);
-
-      // Fetch travel times for all modes
-      const fetchAllTravelTimes = async () => {
-        await Promise.all([
-          fetchTravelTime(location.coords, selectedBuilding.point, "DRIVING"),
-          fetchTravelTime(location.coords, selectedBuilding.point, "BICYCLING"),
-          fetchTravelTime(location.coords, selectedBuilding.point, "TRANSIT"),
-          fetchTravelTime(location.coords, selectedBuilding.point, "WALKING"),
-        ]);
-      };
-
-      fetchAllTravelTimes();
     } catch (e) {
       console.error(e);
     }
+    setIsRoute(true);
+    setIsSearch(true);
+    setEnd(selectedBuilding.point);
+    setDestinationPosition(selectedBuilding.name);
+    if (location != null) {
+      setStart(location.coords);
+    }
+    setStartPosition("Your Location");
+    setWaypoints([]);
   };
 
   const handleLoyola = () => {
