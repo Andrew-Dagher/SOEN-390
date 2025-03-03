@@ -59,15 +59,103 @@ export default function Map() {
   const [campus, setCampus] = useState("sgw");
   const [mode, setMode] = useState("WALKING"); // Mode of transportation
   const [isRoute, setIsRoute] = useState(false);
+  const [carTravelTime, setCarTravelTime] = useState(null); //Estimated travel time by car
+  const [bikeTravelTime, setBikeTravelTime] = useState(null); //Estimated travel time by bicycle
+  const [metroTravelTime, setMetroTravelTime] = useState(null); //Estimated travel time by public transit
+  const [walkTravelTime, setWalkTravelTime] = useState(null); //Estimated travel time on foot
   const ref = useRef(null);
   const polygonRef = useRef(null);
   //Aptabase.init("A-US-0837971026")
+  const fetchTravelTime = async (start, end, mode) => {
+    if (!start || !end) return;
+
+    const setTravelTime = {
+      DRIVING: setCarTravelTime,
+      BICYCLING: setBikeTravelTime,
+      TRANSIT: setMetroTravelTime,
+      WALKING: setWalkTravelTime,
+    };
+
+    // Check if start and end locations are the same
+    if (start.latitude === end.latitude && start.longitude === end.longitude) {
+      console.log(
+        `Start and end locations are the same. Setting travel time to 0 min.`
+      );
+      setTravelTime[mode]?.("0 min");
+      return;
+    }
+
+    // Base URL defined as a global constant
+    const GOOGLE_DIRECTIONS_API_BASE_URL =
+      "https://maps.googleapis.com/maps/api/directions/json";
+
+    const travelMode = mode.toLowerCase();
+
+    let url =
+      `${GOOGLE_DIRECTIONS_API_BASE_URL}?origin=${start.latitude},${start.longitude}` +
+      `&destination=${end.latitude},${end.longitude}` +
+      `&mode=${travelMode}` +
+      `&key=${process.env.EXPO_PUBLIC_GOOGLE_API_KEY}`;
+
+    // specific parameters for transit mode
+    if (travelMode === "transit") {
+      url += "&transit_mode=bus|subway|train";
+    }
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.status !== "OK") {
+        console.error(
+          `Error fetching ${mode} directions:`,
+          data.status,
+          data.error_message
+        );
+        // Set appropriate state to indicate no route found
+        setTravelTime[mode]?.("No route");
+        return;
+      }
+
+      const route = data.routes[0];
+      if (!route || !route.legs || !route.legs[0]) {
+        console.error("No valid route found");
+        return;
+      }
+
+      const duration = route.legs[0].duration.text;
+      // Update the appropriate state based on the mode
+      setTravelTime[mode]?.(duration);
+    } catch (error) {
+      console.error(`Error fetching ${mode} directions:`, error);
+      // Set error state for the specific mode
+      setTravelTime[mode]?.("Error");
+    }
+  };
+
   const handleSetStart = () => {
-    if (start != null && start != location?.coords) {
+    if (start != null && start !== location?.coords) {
       setIsRoute(true);
       setIsSearch(true);
       setDestinationPosition(selectedBuilding.name);
       setEnd(selectedBuilding.point);
+
+      // Reset travel times
+      setCarTravelTime(null);
+      setBikeTravelTime(null);
+      setMetroTravelTime(null);
+      setWalkTravelTime(null);
+
+      // Fetch times from start point to selected building
+      const fetchAllTravelTimes = async () => {
+        await Promise.all([
+          fetchTravelTime(start, selectedBuilding.point, "DRIVING"),
+          fetchTravelTime(start, selectedBuilding.point, "BICYCLING"),
+          fetchTravelTime(start, selectedBuilding.point, "TRANSIT"),
+          fetchTravelTime(start, selectedBuilding.point, "WALKING"),
+        ]);
+      };
+      fetchAllTravelTimes();
       return;
     }
     setStart(selectedBuilding.point);
@@ -78,18 +166,35 @@ export default function Map() {
     try {
       trackEvent("Get Directions", { selectedBuilding });
       console.log("Event tracked");
+      setIsRoute(true);
+      setIsSearch(true);
+      setEnd(selectedBuilding.point);
+      setDestinationPosition(selectedBuilding.name);
+      if (location != null) {
+        setStart(location.coords);
+      }
+      setStartPosition("Your Location");
+
+      // Reset all travel times before fetching new ones
+      setCarTravelTime(null);
+      setBikeTravelTime(null);
+      setMetroTravelTime(null);
+      setWalkTravelTime(null);
+
+      // Fetch travel times for all modes
+      const fetchAllTravelTimes = async () => {
+        await Promise.all([
+          fetchTravelTime(location.coords, selectedBuilding.point, "DRIVING"),
+          fetchTravelTime(location.coords, selectedBuilding.point, "BICYCLING"),
+          fetchTravelTime(location.coords, selectedBuilding.point, "TRANSIT"),
+          fetchTravelTime(location.coords, selectedBuilding.point, "WALKING"),
+        ]);
+      };
+
+      fetchAllTravelTimes();
     } catch (e) {
       console.error(e);
     }
-    setIsRoute(true);
-    setIsSearch(true);
-    setEnd(selectedBuilding.point);
-    setDestinationPosition(selectedBuilding.name);
-    if (location != null) {
-      setStart(location.coords);
-    }
-    setStartPosition("Your Location");
-    setWaypoints([]);
   };
 
   const handleLoyola = () => {
@@ -151,6 +256,7 @@ export default function Map() {
     setStart(null);
     setSelectedBuilding(null);
     setCloseTraceroute(false);
+    setIsSelected(false);
   };
 
   const handleMapPress = () => {};
@@ -202,14 +308,6 @@ export default function Map() {
             image={require("../../../assets/my_location.png")}
           />
         )}
-        <Marker
-          coordinate={SGWShuttlePickup}
-          image={require("../../../assets/shuttle.png")}
-        />
-        <Marker
-          coordinate={LoyolaShuttlePickup}
-          image={require("../../../assets/shuttle.png")}
-        />
         {start != null && end != null ? <Marker coordinate={end} /> : null}
         {start != null && end != null ? <Marker coordinate={start} /> : null}
         {start != null && end != null ? (
@@ -229,6 +327,11 @@ export default function Map() {
 
       {isRoute ? (
         <MapTraceroute
+          carTravelTime={carTravelTime}
+          bikeTravelTime={bikeTravelTime}
+          metroTravelTime={metroTravelTime}
+          walkTravelTime={walkTravelTime}
+          fetchTravelTime={fetchTravelTime}
           setMode={setMode}
           waypoints={waypoints}
           setWaypoints={setWaypoints}
