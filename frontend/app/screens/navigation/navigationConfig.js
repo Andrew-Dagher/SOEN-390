@@ -25,6 +25,7 @@ export const LoyolaShuttlePickup = {
 const createBuilding = (
   name,
   longName,
+  prefix, //prefix for the building
   point,
   address,
   departments,
@@ -41,6 +42,7 @@ const createBuilding = (
 ) => ({
   name, //display name of the building
   longName, //full building name, sometimes its the same as name
+  prefix, //prefix for the building
   point: point || { latitude: 0, longitude: 0 }, //coordinates to the middle point of a building
   address, //address found on google/concordia app
   Departments: departments || [], // departements inside building
@@ -60,6 +62,7 @@ export const polygons = [
   createBuilding(
     "MB Building",
     "John Molson School of Business",
+    "MB",
     { latitude: 45.49530941266274, longitude: -73.57894088705565 },
     "1550 De Maisonneuve W",
     [
@@ -118,6 +121,7 @@ export const polygons = [
   createBuilding(
     "B Annex",
     "B Annex",
+    "B",
     { latitude: 45.49781725012627, longitude: -73.57950979221253 },
     "2160 Bishop",
     "",
@@ -140,6 +144,7 @@ export const polygons = [
   createBuilding(
     "CI Annex",
     "CI Annex",
+    "CI",
     { latitude: 45.49747535175269, longitude: -73.57989583757855 },
     "2149 Mackay St",
     "School of Community and Public Affairs",
@@ -162,6 +167,7 @@ export const polygons = [
   createBuilding(
     "CL Annex",
     "CL Annex",
+    "CL",
     { latitude: 45.49422725158271, longitude: -73.57929532647677 },
     "1665 Saint-Catherine St W",
     "",
@@ -186,6 +192,7 @@ export const polygons = [
   createBuilding(
     "EN Annex",
     "EN Annex",
+    "EN",
     { latitude: 45.49692834804806, longitude: -73.5797433750953 },
     "2070 Mackay",
     "",
@@ -210,6 +217,7 @@ export const polygons = [
   createBuilding(
     "ER Building",
     "ER Building",
+    "ER",
     { latitude: 45.49630521099936, longitude: -73.58019820078486 },
     "2155 Guy St, Montreal",
     [
@@ -255,6 +263,7 @@ export const polygons = [
   createBuilding(
     "EV Building",
     "Engineering, Computer Science and Visual Arts Integrated Complex",
+    "EV",
     { latitude: 45.4954715874386, longitude: -73.57799996419087 },
     "1515 Saint-Catherine St W",
     [
@@ -318,6 +327,7 @@ export const polygons = [
   createBuilding(
     "FA Annex",
     "FA Annex",
+    "FA",
     { latitude: 45.496893526958395, longitude: -73.57965328949106 },
     "2060 MacKay, 2080 Mackay St",
     "Religions and Cultures",
@@ -340,6 +350,7 @@ export const polygons = [
   createBuilding(
     "FB Building",
     "Faubourg Building",
+    "FB",
     { latitude: 45.49468404750868, longitude: -73.5776489392095 },
     "1250 Guy St",
     [
@@ -400,6 +411,7 @@ export const polygons = [
   createBuilding(
     "FG Building",
     "Faubourg Ste-Catherine Building",
+    "FG",
     { latitude: 45.49416585105086, longitude: -73.57833248965449 },
     "1610 St. Catherine W.",
     [],
@@ -435,6 +447,7 @@ export const polygons = [
   createBuilding(
     "Grey Nuns Building",
     "Grey Nuns Building",
+    "GN",
     { latitude: 45.493486154634866, longitude: -73.57669450029397 },
     "1175 Rue St Mathieu",
     "Dept. of Philosophy: 1175 St-Mathieu St. (temporary)",
@@ -522,6 +535,7 @@ export const polygons = [
   createBuilding(
     "Guy-de Maisonneuve",
     "Guy-de Maisonneuve Building",
+    "GM",
     { latitude: 45.495871434958005, longitude: -73.57879508417773 },
     "1550 De Maisonneuve W.",
     ["Contemporary Dance", "Music", "Theatre"],
@@ -586,6 +600,7 @@ export const polygons = [
   createBuilding(
     "GS Building",
     "Guy-Sherbrooke Building",
+    "GS",
     { latitude: 45.496598173335705, longitude: -73.58117219175675 },
     "1538 Sherbrooke St. W.",
     "",
@@ -614,6 +629,7 @@ export const polygons = [
   createBuilding(
     "Hall Building",
     "Henry F. Hall Building",
+    "H",
     { latitude: 45.4972978299552, longitude: -73.57895294688963 },
     "1550 De Maisonneuve West",
     [
@@ -670,6 +686,7 @@ export const polygons = [
   createBuilding(
     "K Annex",
     "K Annex",
+    "K",
     { latitude: 45.49776784577946, longitude: -73.57953244089616 },
     "2150 Bishop",
     "",
@@ -692,6 +709,7 @@ export const polygons = [
   createBuilding(
     "LB Building",
     "J.W. McConnell Building",
+    "LB",
     { latitude: 45.496806875043575, longitude: -73.57794802982542 },
     "1400 De Maisonneuve Blvd. W.",
     [
@@ -768,6 +786,7 @@ export const polygons = [
   createBuilding(
     "LS Building",
     "Learning Square",
+    "LS",
     { latitude: 45.49636175524323, longitude: -73.5794351580434 },
     "1535 De Maisonneuve Blvd. W.",
     "",
@@ -795,6 +814,7 @@ export const polygons = [
   createBuilding(
     "M Annex",
     "M Annex",
+    "M",
     { latitude: 45.497359445972506, longitude: -73.57977066219894 },
     "2135 Mackay St",
     "",
@@ -817,6 +837,7 @@ export const polygons = [
   createBuilding(
     "MI Annex",
     "MI Annex",
+    "MI",
     { latitude: 45.497786417419476, longitude: -73.57932555170198 },
     "2130 Bishop",
     "",
@@ -847,6 +868,7 @@ export const polygons = [
   createBuilding(
     "MU Annex",
     "MU Annex",
+    "MU",
     { latitude: 45.49787093515154, longitude: -73.57957660874176 },
     "2170 Bishop",
     "",
@@ -869,6 +891,7 @@ export const polygons = [
   createBuilding(
     "P Annex",
     "P Annex",
+    "P",
     { latitude: 45.49672080173269, longitude: -73.57935779880465 },
     "2020 Mackay St",
     "",
@@ -891,6 +914,7 @@ export const polygons = [
   createBuilding(
     "PR Annex",
     "PR Annex",
+    "PR",
     { latitude: 45.496997761057244, longitude: -73.58011246910225 },
     "2100 Mackay St",
     "",
@@ -913,6 +937,7 @@ export const polygons = [
   createBuilding(
     "Q Annex",
     "",
+    "Q",
     { latitude: 45.4966176054764, longitude: -73.57910198531287 },
     "2010 Mackay St",
     "",
@@ -935,6 +960,7 @@ export const polygons = [
   createBuilding(
     "R Annex",
     "R Annex",
+    "R",
     { latitude: 45.496768374411296, longitude: -73.57944237387743 },
     "2050 Mackay St",
     "Religions and Cultures",
@@ -957,6 +983,7 @@ export const polygons = [
   createBuilding(
     "RR Annex",
     "RR Annex",
+    "RR",
     { latitude: 45.496768374411296, longitude: -73.57944237387743 },
     "2040 Mackay St",
     "Liberal Arts College",
@@ -979,6 +1006,7 @@ export const polygons = [
   createBuilding(
     "S Annex",
     "S Annex",
+    "S",
     { latitude: 45.49740510973528, longitude: -73.57984883775381 },
     "2145 Mackay St",
     "Department of Philosophy",
@@ -1003,6 +1031,7 @@ export const polygons = [
   createBuilding(
     "SB Building",
     "Samuel Bronfman Building",
+    "SB",
     {
       latitude: 45.49659029576965,
       longitude: -73.58614279895218,
@@ -1030,6 +1059,7 @@ export const polygons = [
   createBuilding(
     "TD Building",
     "Toronto-Dominion Building",
+    "TD",
     { latitude: 45.495092296568636, longitude: -73.57837455453812 },
     "1410 Guy St.",
     "",
@@ -1052,6 +1082,7 @@ export const polygons = [
   createBuilding(
     "V Annex",
     "V Annex",
+    "V",
     { latitude: 45.49706797687867, longitude: -73.58006719227089 },
     "2090 Mackay St",
     "",
@@ -1074,6 +1105,7 @@ export const polygons = [
   createBuilding(
     "VA Building",
     "Visual Arts Building",
+    "VA",
     { latitude: 45.4956849583822, longitude: -73.5739600415101 },
     "1395 Ren\u00e9-L\u00e9vesque Blvd. W.",
     ["Art Education", "Art History", "Creative Arts Therapies", "Studio Arts"],
@@ -1103,6 +1135,7 @@ export const polygons = [
   createBuilding(
     "X Annex",
     "X Annex",
+    "X",
     { latitude: 45.49695760325471, longitude: -73.5798358084977 },
     "2080 Mackay St",
     "",
@@ -1125,6 +1158,7 @@ export const polygons = [
   createBuilding(
     "Z Annex",
     "Z Annex",
+    "Z",
     { latitude: 45.496926346379375, longitude: -73.57974926239366 },
     "2090 Mackay St.",
     "",
@@ -1150,6 +1184,7 @@ export const polygons = [
   createBuilding(
     "AD Building",
     "Administration Building",
+    "AD",
     { latitude: 45.4580948810239, longitude: -73.63981125517904 },
     "7141 Sherbrooke St. W.",
     "Faculty of Arts & Science",
@@ -1205,6 +1240,7 @@ export const polygons = [
   createBuilding(
     "BB Annex",
     "BB Annex",
+    "BB",
     { latitude: 45.45976882970145, longitude: -73.63917135240146 },
     "3502 Belmore Ave.",
     "",
@@ -1227,6 +1263,7 @@ export const polygons = [
   createBuilding(
     "BH Annex",
     "BH Annex",
+    "BH",
     { latitude: 45.45973096285629, longitude: -73.63909165265945 },
     "3500 Belmore Ave.",
     "",
@@ -1249,6 +1286,7 @@ export const polygons = [
   createBuilding(
     "CC Building",
     "Central Building",
+    "CC",
     { latitude: 45.45828938414714, longitude: -73.6403397237877 },
     "7141 Sherbrooke St. W.",
     "",
@@ -1283,6 +1321,7 @@ export const polygons = [
   createBuilding(
     "CJ Building",
     "Communication Studies and Journalism Building",
+    "CJ",
     { latitude: 45.457453475993596, longitude: -73.64020688613166 },
     "7141 Sherbrooke St. W.",
     ["Communication Building", "Journalism"],
@@ -1325,6 +1364,7 @@ export const polygons = [
   createBuilding(
     "Stinger Dome",
     "Stinger Dome",
+    "SD",
     { latitude: 45.457636806287496, longitude: -73.63617861812148 },
     "7141 Sherbrooke St. W.",
     "Stingers",
@@ -1347,6 +1387,7 @@ export const polygons = [
   createBuilding(
     "FC Building",
     "F. C. Smith Building",
+    "FC",
     { latitude: 45.45856237628958, longitude: -73.63930004071865 },
     "7141 Sherbrooke St. W.",
     "",
@@ -1387,6 +1428,7 @@ export const polygons = [
   createBuilding(
     "GE Building",
     "Center for Structural and Functional Genomics",
+    "GE",
     { latitude: 45.45697610972942, longitude: -73.64044437939735 },
     "7141 Sherbrooke St. W.",
     "",
@@ -1413,6 +1455,7 @@ export const polygons = [
   createBuilding(
     "HA Building",
     "Hingston Hall, wing HA",
+    "HA",
     { latitude: 45.459452605732466, longitude: -73.64120307084625 },
     "7141 Sherbrooke St. W.",
     "",
@@ -1439,6 +1482,7 @@ export const polygons = [
   createBuilding(
     "HB Building",
     "Hingston Hall, wing B",
+    "HB",
     { latitude: 45.45924950593679, longitude: -73.64187732547785 },
     "7141 Sherbrooke St. W.",
     "",
@@ -1472,6 +1516,7 @@ export const polygons = [
   createBuilding(
     "HC Building",
     "Hingston Hall, wing HC",
+    "HC",
     { latitude: 45.45970212733706, longitude: -73.64204692326862 },
     "7141 Sherbrooke St. W.",
     "",
@@ -1498,6 +1543,7 @@ export const polygons = [
   createBuilding(
     "HU Building",
     "Applied Science Hub",
+    "HU",
     { latitude: 45.45851455391734, longitude: -73.64179795611825 },
     "7141 Sherbrooke St. W.",
     "",
@@ -1520,6 +1566,7 @@ export const polygons = [
   createBuilding(
     "JR Building",
     "Jesuit Residence",
+    "JR",
     { latitude: 45.45852824701877, longitude: -73.6432269542461 },
     "7141 Sherbrooke St. W.",
     "",
@@ -1556,6 +1603,7 @@ export const polygons = [
   createBuilding(
     "PC Building",
     "PERFORM Center",
+    "PC",
     { latitude: 45.45697845065405, longitude: -73.63730460931984 },
     "7200 Sherbrooke St. W.",
     "",
@@ -1578,6 +1626,7 @@ export const polygons = [
   createBuilding(
     "PS Building",
     "Physical Services Building",
+    "PS",
     { latitude: 45.45966710625854, longitude: -73.6398138000452 },
     "7141 Sherbrooke St. W.",
     "",
@@ -1614,6 +1663,7 @@ export const polygons = [
   createBuilding(
     "PT Building",
     "Oscar Peterson Concert Hall",
+    "PT",
     { latitude: 45.45905792845069, longitude: -73.63866143439992 },
     "7141 Sherbrooke St. W.",
     "Oscar Peterson Concert Hall",
@@ -1678,6 +1728,7 @@ export const polygons = [
   createBuilding(
     "PY Building",
     "Psychology Building",
+    "PY",
     { latitude: 45.45891096627851, longitude: -73.6405234680422 },
     "7141 Sherbrooke St. W.",
     ["Centre for clinical research in health (CCRH)", "Psychology"],
@@ -1717,6 +1768,7 @@ export const polygons = [
   createBuilding(
     "Quadrangle",
     "Quadrangle",
+    "Q",
     { latitude: 45.45870682410703, longitude: -73.64005416984244 },
     "7141 Sherbrooke St. W.",
     "",
@@ -1739,6 +1791,7 @@ export const polygons = [
   createBuilding(
     "RA Building",
     "Recreation and Athletics Complex",
+    "RA",
     { latitude: 45.456729166516176, longitude: -73.63765644942514 },
     "7200 Sherbrooke St. W.",
     "",
@@ -1768,6 +1821,7 @@ export const polygons = [
   createBuilding(
     "RF Building",
     "Loyola Jesuit Hall and Conference Centre",
+    "RF",
     { latitude: 45.45857248852857, longitude: -73.6410258186809 },
     "7141 Sherbrooke St. W.",
     "",
@@ -1815,6 +1869,7 @@ export const polygons = [
   createBuilding(
     "SC Building",
     "Student Center",
+    "SC",
     { latitude: 45.45860551720628, longitude: -73.64103623036401 },
     "7141 Sherbrooke St W",
     "",
@@ -1837,6 +1892,7 @@ export const polygons = [
   createBuilding(
     "SH Building",
     "Solar House",
+    "SH",
     { latitude: 45.45928142821381, longitude: -73.64253871077227 },
     "7141 Sherbrooke St. W.",
     "",
@@ -1859,6 +1915,7 @@ export const polygons = [
   createBuilding(
     "SI Building",
     "Saint Ignatius of Loyola Catholic Church",
+    "SI",
     { latitude: 45.457903577882405, longitude: -73.642292915826 },
     "4455 Broadway",
     "",
@@ -1912,6 +1969,7 @@ export const polygons = [
   createBuilding(
     "SP Building",
     "Richard J Renaud Science Complex",
+    "SP",
     { latitude: 45.45752302066854, longitude: -73.64163335665545 },
     "7141 Sherbrooke St. W.",
     [
