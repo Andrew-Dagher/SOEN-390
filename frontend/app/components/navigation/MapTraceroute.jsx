@@ -6,7 +6,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import 'react-native-get-random-values';
-import { Animated, StyleSheet, View, Dimensions, Text, TouchableOpacity } from 'react-native';
+import { Animated, StyleSheet, View, Button, Dimensions, Text, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 import CarIcon from './Icons/CarIcon';
 import BikeNavIcon from './Icons/BikeNavIcon';
 import MetroNavIcon from './Icons/MetroNavIcon';
@@ -43,6 +43,11 @@ import { SGWShuttlePickup, LoyolaShuttlePickup } from '../../screens/navigation/
  * @param {boolean} props.closeTraceroute - Boolean to control closing traceroute.
  * @param {Function} props.setCloseTraceroute - Function to update closeTraceroute state.
  * @param {Function} props.setIsSearch - Function to set search mode.
+ * @param {string|null} props.carTravelTime - Estimated travel time by car.
+ * @param {string|null} props.bikeTravelTime - Estimated travel time by bicycle.
+ * @param {string|null} props.metroTravelTime - Estimated travel time by public transit (metro).
+ * @param {string|null} props.walkTravelTime - Estimated travel time on foot.
+ * 
  */
 const MapTraceroute = ({
   setMode,
@@ -64,7 +69,11 @@ const MapTraceroute = ({
   setDestinationPosition,
   closeTraceroute,
   setCloseTraceroute,
-  setIsSearch
+  setIsSearch,
+  carTravelTime, 
+  bikeTravelTime, 
+  metroTravelTime, 
+  walkTravelTime
 }) => {
 
   const [selected, setSelected] = useState('');
@@ -152,46 +161,77 @@ const MapTraceroute = ({
   };
 
   return (
-    <Animated.View className='rounded-xl p-3' style={[styles.slidingView, styles.shadow, { top: slideAnim }]}>
-      <View className='flex h-full w-full flex-col p-2'>
-        <View className='mt-2 h-5/6 flex flex-row justify-center items-center'>
-          <TouchableOpacity className='mr-4 mb-8' onPress={handleCloseTraceroute}>
+    <Animated.View className="rounded-xl p-3" style={[styles.slidingView, styles.shadow, { top: slideAnim }]}>
+      <View className="flex h-full w-full flex-col p-2">
+        <View className="mt-2 h-5/6 flex flex-row justify-center items-center">
+          <TouchableOpacity className="mr-4 mb-8" onPress={handleCloseTraceroute}>
             <ArrowIcon />
           </TouchableOpacity>
-          <View className='flex flex-col justify-center items-center mr-4'>
+          <View className="flex flex-col justify-center items-center mr-4">
             <CircleIcon />
             <DotsIcon />
             <SmallNavigationIcon />
           </View>
-          <View className='w-2/3 mt-8'>
+          <View className="w-2/3 mt-14">
             <InputAutocomplete label="Origin" placeholder={startPosition} onPlaceSelected={(details) => onPlaceSelected(details, "origin")} />
             <InputAutocomplete label="Destination" placeholder={destinationPosition} onPlaceSelected={(details) => onPlaceSelected(details, "destination")} />
           </View>
-          <View className='ml-4'>
+          <View className="ml-4">
             <SwapIcon />
           </View>
         </View>
-        <View className='flex flex-row items-center justify-around h-1/6'>
-          <TouchableOpacity onPress={() => { setSelected('car'); updateDirections(); }} className={`flex p-2 rounded-3xl flex-row items-center ${selected === 'car' ? 'bg-primary-red' : ''}`}>
-            <CarIcon isSelected={selected === 'car'} />
-            <Text className={`ml-2 font-semibold ${selected === 'car' ? 'color-selected' : ''}`}>30 min</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => { setSelected('bike'); setMode("BICYCLING") }} className={`flex p-2 rounded-3xl flex-row items-center ${selected === 'bike' ? 'bg-primary-red' : ''}`}>
-            <BikeNavIcon isSelected={selected === 'bike'} />
-            <Text className={`ml-2 font-semibold ${selected === 'bike' ? 'color-selected' : ''}`}>30 min</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => { setSelected('metro'); setMode("TRANSIT") }} className={`flex p-2 rounded-3xl flex-row items-center ${selected === 'metro' ? 'bg-primary-red' : ''}`}>
-            <MetroNavIcon isSelected={selected === 'metro'} />
-            <Text className={`ml-2 font-semibold ${selected === 'metro' ? 'color-selected' : ''}`}>30 min</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => { setSelected('walk'); setMode("WALKING") }} className={`flex p-2 rounded-3xl flex-row items-center ${selected === 'walk' ? 'bg-primary-red' : ''}`}>
-            <WalkIcon isSelected={selected === 'walk'} />
-            <Text className={`ml-2 font-semibold ${selected === 'walk' ? 'color-selected' : ''}`}>30 min</Text>
-          </TouchableOpacity>
+  
+        {/* Transportation Mode Selection */}
+        <View className="flex h-1/6">
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View className="flex flex-row items-center justify-around">
+              <TouchableOpacity testID="car-button" onPress={() => { setSelected("car"); setMode("DRIVING"); }} className={`flex mr-1 p-2 rounded-3xl flex-row justify-around items-center ${selected === "car" ? "bg-primary-red" : ""}`}>
+                <CarIcon isSelected={selected === "car"} />
+                <Text className={`ml-2 font-semibold ${selected === "car" ? "color-selected" : ""}`}>{carTravelTime ? carTravelTime : "Calculating..."}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity testID="bike-button" onPress={() => { setSelected("bike"); setMode("BICYCLING"); }} className={`flex mr-1 p-2 rounded-3xl flex-row justify-around items-center ${selected === "bike" ? "bg-primary-red" : ""}`}>
+                <BikeNavIcon isSelected={selected === "bike"} />
+                <Text className={`ml-2 font-semibold ${selected === "bike" ? "color-selected" : ""}`}>{bikeTravelTime ? bikeTravelTime : "Calculating..."}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity testID="metro-button" onPress={() => { setSelected("metro"); setMode("TRANSIT"); }} className={`flex p-2 rounded-3xl flex-row justify-around items-center ${selected === "metro" ? "bg-primary-red" : ""}`}>
+                <MetroNavIcon isSelected={selected === "metro"} />
+                <Text className={`ml-2 font-semibold ${selected === "metro" ? "color-selected" : ""}`}>{metroTravelTime ? metroTravelTime : "Calculating..."}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity testID="walk-button" onPress={() => { setSelected("walk"); setMode("WALKING"); }} className={`flex p-2 rounded-3xl flex-row justify-around items-center ${selected === "walk" ? "bg-primary-red" : ""}`}>
+                <WalkIcon isSelected={selected === "walk"} />
+                <Text className={`ml-2 font-semibold ${selected === "walk" ? "color-selected" : ""}`}>{walkTravelTime ? walkTravelTime : "Calculating..."}</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
         </View>
       </View>
     </Animated.View>
   );
 };
+const styles = StyleSheet.create({
+  shadow: {
+    boxShadow: '0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)',
+    textAlign: 'center'
+  },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  slidingView: {
+    position: 'absolute',
+    top: 0, // Start from the top of the screen
+    height: Dimensions.get('window').height * 0.3, // 30% of screen height
+    width: '100%', // Full width
+    backgroundColor: 'white', // Background color (customizable)
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  input: {
+    borderColor: "#888",
+    borderWidth: 2,
+  },
+});
+
 
 export default MapTraceroute;
