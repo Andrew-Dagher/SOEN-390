@@ -28,7 +28,7 @@ import ContinueWithGoogle from "../../components/ContinueWithGoogle";
  */
 async function fetchPublicCalendarEvents(calendarId) {
   try {
-    const GOOGLE_API_KEY = process.env.EXPO_GOOGLE_API_KEY; // Ensure API key is set in environment variables
+    const GOOGLE_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_API_KEY2; // Ensure API key is set in environment variables
 
 
     const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?key=${GOOGLE_API_KEY}&timeMin=2000-01-01T00:00:00Z&singleEvents=true&orderBy=startTime`;
@@ -186,7 +186,7 @@ function LoginScreenContent() {
           await AsyncStorage.setItem("userData", JSON.stringify(userData));
           console.log("Stored User Data:\n", JSON.stringify(userData, null, 2));
 
-          const calendarId = process.env.EXPO_GOOGLE_CALENDAR_ID;
+          const calendarId = process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_ID;
           await fetchPublicCalendarEvents(calendarId);
 
           navigation.replace("Home");

@@ -19,7 +19,7 @@ import getThemeColors from "../../ColorBindTheme";
  */
 async function fetchPublicCalendarEvents(calendarId) {
   try {
-    const GOOGLE_API_KEY = 'AIzaSyCvjUbpw2Otdd5H2Rb7WvIUR_k_qPMV4eY';
+    const GOOGLE_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_API_KEY2;
 
     const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?key=${GOOGLE_API_KEY}&timeMin=2000-01-01T00:00:00Z&singleEvents=true&orderBy=startTime`;
 
@@ -66,7 +66,8 @@ export default function CalendarScreen() {
 
   // Fetch Google Calendar events when the calendar screen is accessed.
   useEffect(() => {
-    fetchPublicCalendarEvents('88fe87c39a16882b4aee693947161c1aac92560346c58a7423eca4ac22079fb2@group.calendar.google.com');
+    const calendarId = process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_ID;
+    fetchPublicCalendarEvents(calendarId);
   }, []);
 
   // Get screen height and width for multiple phones
