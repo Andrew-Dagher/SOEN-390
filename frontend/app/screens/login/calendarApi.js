@@ -1,3 +1,5 @@
+import moment from "moment";
+
 /**
  * Fetches the calendar metadata (including the name) using the Google Calendar API.
  *
@@ -63,12 +65,14 @@ export async function getAvailableCalendars() {
 }
 
 /**
- * Fetches public Google Calendar events using the given Calendar ID.
+ * Fetches public Google Calendar events within a given date range.
  *
  * @param {string} calendarId - The public Google Calendar ID.
+ * @param {string} startDate - Start of the range (ISO format).
+ * @param {string} endDate - End of the range (ISO format).
  * @returns {Promise<Array>} Array of event objects.
  */
-export async function fetchPublicCalendarEvents(calendarId) {
+export async function fetchPublicCalendarEvents(calendarId, startDate, endDate) {
   try {
     const GOOGLE_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_API_KEY2;
     if (!GOOGLE_API_KEY) {
@@ -76,11 +80,12 @@ export async function fetchPublicCalendarEvents(calendarId) {
       return [];
     }
 
+    // Construct the API URL with dynamic time range filtering
     const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(
       calendarId
-    )}/events?key=${GOOGLE_API_KEY}&timeMin=2000-01-01T00:00:00Z&singleEvents=true&orderBy=startTime`;
+    )}/events?key=${GOOGLE_API_KEY}&timeMin=${startDate}&timeMax=${endDate}&singleEvents=true&orderBy=startTime`;
 
-    console.log("Fetching events for:", calendarId);
+    console.log(`Fetching events from ${startDate} to ${endDate} for:`, calendarId);
 
     const response = await fetch(url);
     const textResponse = await response.text();
@@ -93,7 +98,7 @@ export async function fetchPublicCalendarEvents(calendarId) {
     const data = JSON.parse(textResponse);
 
     if (!data.items || data.items.length === 0) {
-      console.log(`No events found for ${calendarId}.`);
+      console.log(`No events found for ${calendarId} in the given range.`);
       return [];
     }
 
@@ -116,14 +121,5 @@ export async function fetchPublicCalendarEvents(calendarId) {
   }
 }
 
-//Json sending campus, building and room that will ne provided to next page
-const handleGoToClass = (location) => {
-  const [campus, building, room] = location.split(" ");
-  const jsonData = {
-    Campus: campus,
-    Building: building.split("-")[0],
-    Room: building.includes("-") ? building.split("-")[1] : room,
-  };
-  alert(JSON.stringify(jsonData, null, 2));
-};
+
 

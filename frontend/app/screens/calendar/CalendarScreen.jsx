@@ -12,7 +12,7 @@ import { useAuth } from "@clerk/clerk-expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import BottomNavBar from "../../components/BottomNavBar/BottomNavBar";
 import moment from "moment";
-import { fetchPublicCalendarEvents } from "../login/calendarApi";
+import { fetchPublicCalendarEvents, handleGoToClass } from "../login/calendarApi";
 
 export default function CalendarScreen() {
   const navigation = useNavigation();
@@ -22,6 +22,10 @@ export default function CalendarScreen() {
   const [loading, setLoading] = useState(true);
   const [calendars, setCalendars] = useState([]);
   const [selectedCalendar, setSelectedCalendar] = useState(null);
+  const [currentStartDate, setCurrentStartDate] = useState(moment().startOf("day")); // Start today
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+
 
   // 🚀 Guest Mode Check: Redirect guests to login
   useEffect(() => {
@@ -42,6 +46,22 @@ export default function CalendarScreen() {
 
     checkGuestMode();
   }, [isSignedIn, navigation]);
+
+
+  /**
+   * Parses location information and sends a JSON object to the next page.
+   *
+   * @param {string} location - The location string in the format "SWG, EV, 711"
+   */
+  const handleGoToClass = (location) => {
+    const [campus, building, room] = location.split(" ");
+    const jsonData = {
+      Campus: campus,
+      Building: building.split("-")[0],
+      Room: building.includes("-") ? building.split("-")[1] : room,
+    };
+    alert(JSON.stringify(jsonData, null, 2));
+  };
 
   // Load stored calendars and selected calendar
   useEffect(() => {
@@ -65,7 +85,7 @@ export default function CalendarScreen() {
     loadStoredData();
   }, []);
 
-  // Fetch events for selected calendar
+  // Fetch events for selected calendar within the 10-day range
   useEffect(() => {
     const fetchEvents = async () => {
       if (!selectedCalendar) {
@@ -74,31 +94,16 @@ export default function CalendarScreen() {
       }
 
       setLoading(true);
-      const fetchedEvents = await fetchPublicCalendarEvents(selectedCalendar);
+      const startDate = currentStartDate.toISOString();
+      const endDate = currentStartDate.clone().add(10, "days").toISOString();
+
+      const fetchedEvents = await fetchPublicCalendarEvents(selectedCalendar, startDate, endDate);
       setEvents(fetchedEvents);
       setLoading(false);
     };
 
     fetchEvents();
-  }, [selectedCalendar]);
-
-  // Function to parse location into Campus, Building, and Room
-  const handleGoToClass = (location) => {
-    if (!location) {
-      alert("No location data available.");
-      return;
-    }
-
-    const parts = location.split(", ").map(part => part.trim());
-
-    const jsonData = {
-      Campus: parts[0] || "Unknown",
-      Building: parts[1] || "Unknown",
-      Room: parts[2] || "Unknown",
-    };
-
-    alert(JSON.stringify(jsonData, null, 2));
-  };
+  }, [selectedCalendar, currentStartDate]);
 
   if (loading) {
     return (
@@ -110,47 +115,62 @@ export default function CalendarScreen() {
 
   return (
     <View style={styles.screen}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Google Calendar</Text>
-        <Text style={styles.dateText}>{moment().format("DD")}</Text>
-      </View>
+      {/* Header with Pagination */}
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.paginationButton} onPress={() => setCurrentStartDate(currentStartDate.clone().subtract(10, "days"))}>
+            <Text style={styles.paginationButtonText}>Previous</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerText}>Google Calendar</Text>
+          <TouchableOpacity style={styles.paginationButton} onPress={() => setCurrentStartDate(currentStartDate.clone().add(10, "days"))}>
+            <Text style={styles.paginationButtonText}>Next</Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* Calendar Selection */}
-      <View style={styles.calendarListContainer}>
-        <FlatList
-          data={calendars}
-          keyExtractor={(item) => item.id}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[
-                styles.calendarButton,
-                selectedCalendar === item.id && styles.selectedCalendarButton,
-              ]}
-              onPress={async () => {
-                setSelectedCalendar(item.id);
-                await AsyncStorage.setItem("selectedCalendar", item.id);
-              }}
-            >
-              <Text
-                style={[
-                  styles.calendarButtonText,
-                  selectedCalendar === item.id && styles.selectedCalendarButtonText,
-                ]}
-              >
-                {item.name}
-              </Text>
-            </TouchableOpacity>
+
+
+      {/* Date Range Display */}
+        <View style={styles.centeredDateContainer}>
+          <Text style={styles.centeredDateText}>
+            {currentStartDate.format("MMM DD")} - {currentStartDate.clone().add(9, "days").format("MMM DD")}
+          </Text>
+        </View>
+
+
+        {/* Calendar Selection (Dropdown) */}
+        <View style={styles.dropdownContainer}>
+          <TouchableOpacity
+            style={styles.dropdownButton}
+            onPress={() => setDropdownOpen(!dropdownOpen)}
+          >
+            <Text style={styles.dropdownButtonText}>
+              {calendars.find(c => c.id === selectedCalendar)?.name || "Select Calendar"}
+            </Text>
+          </TouchableOpacity>
+
+          {dropdownOpen && (
+            <View style={styles.dropdownMenu}>
+              {calendars.map((calendar) => (
+                <TouchableOpacity
+                  key={calendar.id}
+                  style={styles.dropdownItem}
+                  onPress={async () => {
+                    setSelectedCalendar(calendar.id);
+                    await AsyncStorage.setItem("selectedCalendar", calendar.id);
+                    setDropdownOpen(false); // Close dropdown after selection
+                  }}
+                >
+                  <Text style={styles.dropdownItemText}>{calendar.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           )}
-        />
-      </View>
+        </View>
+
 
       {/* Events List */}
       <View style={styles.container}>
         {events.length === 0 ? (
-          <Text style={styles.noEventsText}>No events found for this calendar.</Text>
+          <Text style={styles.noEventsText}>No events found for this range.</Text>
         ) : (
           <FlatList
             data={events}
@@ -280,4 +300,56 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
+
+  centeredDateContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 10,
+  },
+  centeredDateText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#E6863C",
+    textAlign: "center",
+  },
+
+
+dropdownContainer: {
+  marginHorizontal: 16,
+  marginBottom: 10,
+},
+dropdownButton: {
+  backgroundColor: "#F0F0F0",
+  paddingVertical: 12,
+  paddingHorizontal: 16,
+  borderRadius: 8,
+  alignItems: "center",
+  justifyContent: "center",
+  width: "100%",
+},
+dropdownButtonText: {
+  fontSize: 16,
+  color: "#000",
+  fontWeight: "bold",
+},
+dropdownMenu: {
+  backgroundColor: "#FFF",
+  borderRadius: 8,
+  paddingVertical: 8,
+  elevation: 5,
+  marginTop: 5,
+  width: "100%",
+},
+dropdownItem: {
+  paddingVertical: 10,
+  paddingHorizontal: 16,
+  alignItems: "center",
+},
+dropdownItemText: {
+  fontSize: 16,
+  color: "#000",
+},
+
+
+
 });
