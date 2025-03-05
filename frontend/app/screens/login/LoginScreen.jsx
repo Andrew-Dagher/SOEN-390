@@ -20,6 +20,49 @@ import ConcordiaLogo from "../../components/ConcordiaLogo";
 import * as WebBrowser from "expo-web-browser";
 import ContinueWithGoogle from "../../components/ContinueWithGoogle";
 
+
+/**
+ * Fetches public Google Calendar events using the given Calendar ID.
+ *
+ * @param {string} calendarId - The public Google Calendar ID.
+ */
+async function fetchPublicCalendarEvents(calendarId) {
+  try {
+    const GOOGLE_API_KEY = process.env.EXPO_GOOGLE_API_KEY; // Ensure API key is set in environment variables
+
+
+    const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?key=${GOOGLE_API_KEY}&timeMin=2000-01-01T00:00:00Z&singleEvents=true&orderBy=startTime`;
+
+    console.log("fetching calendar for:", calendarId);
+
+    const response = await fetch(url);
+    const textResponse = await response.text();
+    console.log("raw response:", textResponse);
+
+    if (!response.ok) {
+      throw new Error(`Error fetching calendar events: ${response.status} - ${response.statusText}`);
+    }
+
+    const data = JSON.parse(textResponse);
+
+    console.log("\nfetched calendarrrr:");
+    if (!data.items || data.items.length === 0) {
+      console.log("No events found.");
+    } else {
+      data.items.forEach((event, index) => {
+        console.log(`\nevent ${index + 1}:`);
+        console.log(`title: ${event.summary}`);
+        console.log(`start Date: ${event.start?.date || event.start?.dateTime}`);
+        console.log(`end Date: ${event.end?.date || event.end?.dateTime}`);
+        console.log(`event Link: ${event.htmlLink}`);
+      });
+    }
+  } catch (error) {
+    console.error("error fetching public calendar:", error);
+  }
+}
+
+
 /**
  * LoginScreen component serves as the default export and wraps the LoginScreenContent.
  *
@@ -42,20 +85,11 @@ export default function LoginScreen() {
  * @returns {JSX.Element} The rendered LoginScreenContent component.
  */
 function LoginScreenContent() {
-  // Navigation hook for screen transitions.
   const navigation = useNavigation();
-
-  // Animated values for logo position and form opacity.
   const logoPosition = useRef(new Animated.Value(0)).current;
   const formOpacity = useRef(new Animated.Value(0)).current;
-
-  // State to manage loading indicator during session check.
   const [isCheckingSession, setIsCheckingSession] = useState(true);
 
-  /**
-   * Warm-up the WebBrowser for a smoother OAuth login experience.
-   * Cleans up by cooling down the WebBrowser when the component unmounts.
-   */
   useEffect(() => {
     WebBrowser.warmUpAsync();
     return () => {
@@ -63,10 +97,6 @@ function LoginScreenContent() {
     };
   }, []);
 
-  /**
-   * Checks for an existing user session or guest mode in AsyncStorage.
-   * If found, navigates directly to the Home screen.
-   */
   useEffect(() => {
     const checkExistingSession = async () => {
       try {
@@ -94,11 +124,6 @@ function LoginScreenContent() {
     checkExistingSession();
   }, [navigation]);
 
-  /**
-   * Performs a sequential animation:
-   * 1. Moves the logo upward.
-   * 2. Fades in the login form.
-   */
   useEffect(() => {
     Animated.sequence([
       Animated.timing(logoPosition, {
@@ -114,7 +139,6 @@ function LoginScreenContent() {
     ]).start();
   }, [logoPosition, formOpacity]);
 
-  // Set up OAuth login for Google with specified scope.
   const { startOAuthFlow } = useOAuth({
     strategy: "oauth_google",
     extraParams: {
@@ -123,10 +147,6 @@ function LoginScreenContent() {
     },
   });
 
-  /**
-   * Handles Google Sign-In using Clerk's OAuth flow.
-   * Stores the session ID in AsyncStorage and activates the session if login is successful.
-   */
   const handleGoogleSignIn = async () => {
     try {
       const { createdSessionId, setActive } = await startOAuthFlow();
@@ -145,13 +165,13 @@ function LoginScreenContent() {
     }
   };
 
-  // Retrieve user information and authentication state from Clerk.
   const { user } = useUser();
   const { isSignedIn } = useAuth();
 
   /**
    * Stores user data (name, email, image) in AsyncStorage once the user is signed in.
    * Navigates to the Home screen after successfully storing the user data.
+   * Fetches the public Google Calendar using the stored Calendar ID.
    */
   useEffect(() => {
     const storeUserData = async () => {
@@ -162,8 +182,13 @@ function LoginScreenContent() {
             email: user.primaryEmailAddress?.emailAddress,
             imageUrl: user.imageUrl,
           };
+
           await AsyncStorage.setItem("userData", JSON.stringify(userData));
           console.log("Stored User Data:\n", JSON.stringify(userData, null, 2));
+
+          const calendarId = process.env.EXPO_GOOGLE_CALENDAR_ID;
+          await fetchPublicCalendarEvents(calendarId);
+
           navigation.replace("Home");
         } catch (error) {
           console.error("Error storing user data:", error);
@@ -174,9 +199,6 @@ function LoginScreenContent() {
     storeUserData();
   }, [isSignedIn, user, navigation]);
 
-  /**
-   * Handles guest login by setting guest mode in AsyncStorage and navigating to Home.
-   */
   const handleGuestLogin = async () => {
     console.log("Guest Login Selected");
     try {
@@ -196,7 +218,6 @@ function LoginScreenContent() {
     }
   };
 
-  // Render a loading indicator while checking for an existing session.
   if (isCheckingSession) {
     return (
       <View className="flex-1 bg-[#862532] justify-center items-center">
@@ -207,23 +228,19 @@ function LoginScreenContent() {
 
   return (
     <View testID="login-screen" className="flex-1 bg-[#862532] justify-center items-center">
-      {/* Animated logo container */}
       <Animated.View style={{ transform: [{ translateY: logoPosition }] }}>
         <ConcordiaLogo width={288} height={96} />
       </Animated.View>
 
-      {/* Animated form container */}
       <Animated.View
         className="absolute bottom-0 w-full items-center"
         style={{ opacity: formOpacity }}
       >
         <View className="w-full bg-white rounded-t-[50px] py-32 px-6 items-center shadow-md">
-          {/* Google Sign-In Button */}
           <TouchableOpacity>
             <ContinueWithGoogle onPress={handleGoogleSignIn} />
           </TouchableOpacity>
 
-          {/* Guest Login Option */}
           <TouchableOpacity className="mt-5" onPress={handleGuestLogin}>
             <Text className="text-[#1A73E8] text-lg font-medium underline">
               Continue as Guest
