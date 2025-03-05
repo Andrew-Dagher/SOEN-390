@@ -19,49 +19,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import ConcordiaLogo from "../../components/ConcordiaLogo";
 import * as WebBrowser from "expo-web-browser";
 import ContinueWithGoogle from "../../components/ContinueWithGoogle";
-
-
-/**
- * Fetches public Google Calendar events using the given Calendar ID.
- *
- * @param {string} calendarId - The public Google Calendar ID.
- */
-async function fetchPublicCalendarEvents(calendarId) {
-  try {
-    const GOOGLE_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_API_KEY2; // Ensure API key is set in environment variables
-
-
-    const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?key=${GOOGLE_API_KEY}&timeMin=2000-01-01T00:00:00Z&singleEvents=true&orderBy=startTime`;
-
-    console.log("fetching calendar for:", calendarId);
-
-    const response = await fetch(url);
-    const textResponse = await response.text();
-    console.log("raw response:", textResponse);
-
-    if (!response.ok) {
-      throw new Error(`Error fetching calendar events: ${response.status} - ${response.statusText}`);
-    }
-
-    const data = JSON.parse(textResponse);
-
-    console.log("\nfetched calendarrrr:");
-    if (!data.items || data.items.length === 0) {
-      console.log("No events found.");
-    } else {
-      data.items.forEach((event, index) => {
-        console.log(`\nevent ${index + 1}:`);
-        console.log(`title: ${event.summary}`);
-        console.log(`start Date: ${event.start?.date || event.start?.dateTime}`);
-        console.log(`end Date: ${event.end?.date || event.end?.dateTime}`);
-        console.log(`event Link: ${event.htmlLink}`);
-      });
-    }
-  } catch (error) {
-    console.error("error fetching public calendar:", error);
-  }
-}
-
+import { fetchPublicCalendarEvents, getAvailableCalendars } from "./calendarApi"; // Import shared functions
 
 /**
  * LoginScreen component serves as the default export and wraps the LoginScreenContent.
@@ -171,33 +129,44 @@ function LoginScreenContent() {
   /**
    * Stores user data (name, email, image) in AsyncStorage once the user is signed in.
    * Navigates to the Home screen after successfully storing the user data.
-   * Fetches the public Google Calendar using the stored Calendar ID.
+   * Fetches the public Google Calendar events for all available calendars.
    */
-  useEffect(() => {
-    const storeUserData = async () => {
-      if (isSignedIn && user) {
-        try {
-          const userData = {
-            fullName: user.fullName,
-            email: user.primaryEmailAddress?.emailAddress,
-            imageUrl: user.imageUrl,
-          };
+useEffect(() => {
+  const storeUserData = async () => {
+    if (isSignedIn && user) {
+      try {
+        const userData = {
+          fullName: user.fullName,
+          email: user.primaryEmailAddress?.emailAddress,
+          imageUrl: user.imageUrl,
+        };
 
-          await AsyncStorage.setItem("userData", JSON.stringify(userData));
-          console.log("Stored User Data:\n", JSON.stringify(userData, null, 2));
+        await AsyncStorage.setItem("userData", JSON.stringify(userData));
+        console.log("Stored User Data:\n", JSON.stringify(userData, null, 2));
 
-          const calendarId = process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_ID;
-          await fetchPublicCalendarEvents(calendarId);
+        // Fetch available calendars
+        const calendars = await getAvailableCalendars();
+        if (calendars.length === 0) {
+          console.log("No calendars found in environment variables.");
+        } else {
+          // Store calendars in AsyncStorage
+          await AsyncStorage.setItem("availableCalendars", JSON.stringify(calendars));
+          console.log("Stored available calendars:", calendars);
 
-          navigation.replace("Home");
-        } catch (error) {
-          console.error("Error storing user data:", error);
+          // Set first calendar as default
+          await AsyncStorage.setItem("selectedCalendar", calendars[0]?.id || "");
         }
-      }
-    };
 
-    storeUserData();
-  }, [isSignedIn, user, navigation]);
+        navigation.replace("Home");
+      } catch (error) {
+        console.error("Error storing user data:", error);
+      }
+    }
+  };
+
+  storeUserData();
+}, [isSignedIn, user, navigation]);
+
 
   const handleGuestLogin = async () => {
     console.log("Guest Login Selected");
