@@ -1,32 +1,33 @@
 /**
- * @file CalendarScreen.test.jsx
+ * @file CalendarScreen-test.jsx
  * @description Tests for the Calendar component and CalendarScreen.
  * Verifies rendering, initial month display, and month change updates.
  */
 
-import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
-import { Calendar } from 'react-native-calendars';
-import { NavigationContainer } from '@react-navigation/native';
-import CalendarScreen from '../app/screens/calendar/CalendarScreen';
-import { AppSettingsProvider} from '../app/AppSettingsContext';
+import React from "react";
+import { render, fireEvent, act } from "@testing-library/react-native";
+import { Calendar } from "react-native-calendars";
+import { NavigationContainer } from "@react-navigation/native";
+import CalendarScreen from "../app/screens/calendar/CalendarScreen";
+import { AppSettingsProvider } from "../app/AppSettingsContext";
+import { ClerkProvider } from "@clerk/clerk-react";
 
 // Mock useRoute from React Navigation to simulate route information.
-jest.mock('@react-navigation/native', () => ({
-  ...jest.requireActual('@react-navigation/native'),
+jest.mock("@react-navigation/native", () => ({
+  ...jest.requireActual("@react-navigation/native"),
   useRoute: () => ({
-    name: 'CalendarScreen',
+    name: "CalendarScreen",
   }),
 }));
 
 /**
  * Test suite for the <Calendar /> component.
  */
-describe('<Calendar />', () => {
+describe("<Calendar />", () => {
   /**
    * Tests that the Calendar component renders correctly with the provided props.
    */
-  test('it renders the calendar component', () => {
+  test("it renders the calendar component", async () => {
     // Render the Calendar component directly with necessary props.
     const { getByTestId } = render(
       <Calendar
@@ -46,7 +47,7 @@ describe('<Calendar />', () => {
     );
 
     // Retrieve the Calendar component using its testID.
-    const calendarComponent = getByTestId('calendar-view');
+    const calendarComponent = getByTestId("calendar-view");
 
     // Verify that the Calendar component is rendered.
     expect(calendarComponent).toBeTruthy();
@@ -56,43 +57,49 @@ describe('<Calendar />', () => {
 /**
  * Test suite for the <CalendarScreen /> component.
  */
-describe('<CalendarScreen />', () => {
+describe("<CalendarScreen />", () => {
   /**
-   * Helper function to render CalendarScreen within a NavigationContainer.
+   * Helper function to render CalendarScreen within a NavigationContainer & ClerkProvider.
    *
    * @returns {RenderAPI} The render result from @testing-library/react-native.
    */
   const renderWithNavigation = () =>
     render(
-      <NavigationContainer>
-        <AppSettingsProvider>
-        <CalendarScreen />
-        </AppSettingsProvider>
-      </NavigationContainer>
+      <ClerkProvider>
+        <NavigationContainer>
+          <AppSettingsProvider>
+            <CalendarScreen />
+          </AppSettingsProvider>
+        </NavigationContainer>
+      </ClerkProvider>
     );
 
   /**
    * Tests that the CalendarScreen renders the Calendar component.
    */
-  test('it renders the calendar component', () => {
-    const { getByTestId } = renderWithNavigation();
-    const calendarComponent = getByTestId('calendar-view');
-    expect(calendarComponent).toBeTruthy();
+  test("it renders the calendar component", async () => {
+    await act(async () => {
+      const { getByTestId } = renderWithNavigation();
+      const calendarComponent = getByTestId("calendar-view");
+      expect(calendarComponent).toBeTruthy();
+    });
   });
 
   /**
    * Tests that the CalendarScreen updates the displayed month when the onMonthChange event is triggered.
    */
-  test('it updates the displayed month when navigating with arrows', () => {
-    const { getByText, getByTestId } = renderWithNavigation();
+  test("it updates the displayed month when navigating with arrows", async () => {
+    await act(async () => {
+      const { getByText, getByTestId } = renderWithNavigation();
 
-    // Check that the initial displayed month is "January".
-    expect(getByText('January')).toBeTruthy();
+      // Check that the initial displayed month is "January".
+      expect(getByText("January")).toBeTruthy();
 
-    // Simulate a month change event to February (month value 2, year 2025).
-    fireEvent(getByTestId('calendar-view'), 'onMonthChange', { month: 2, year: 2025 });
+      // Simulate a month change event to February (month value 2, year 2025).
+      fireEvent(getByTestId("calendar-view"), "onMonthChange", { month: 2, year: 2025 });
 
-    // Verify that the displayed month updates to "February".
-    expect(getByText('February')).toBeTruthy();
+      // Verify that the displayed month updates to "February".
+      expect(getByText("February")).toBeTruthy();
+    });
   });
 });
