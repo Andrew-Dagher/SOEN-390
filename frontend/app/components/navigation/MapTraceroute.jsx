@@ -27,10 +27,9 @@ import SmallNavigationIcon from "./Icons/SmallNavigationIcon";
 import SwapIcon from "./Icons/SwapIcon";
 import ArrowIcon from "./Icons/ArrowIcon";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
-import {
-  SGWShuttlePickup,
-  LoyolaShuttlePickup,
-} from "../../screens/navigation/navigationConfig";
+import { SGWShuttlePickup, LoyolaShuttlePickup } from '../../screens/navigation/navigationConfig';
+import { IsAtSGW } from '../../screens/navigation/navigationUtils';
+
 
 /**
  * MapTraceroute component for selecting start and destination locations and choosing a transportation mode.
@@ -63,26 +62,21 @@ import {
  *
  */
 const MapTraceroute = ({
+  isShuttle,
+  setWalkToBus,
+  setWalkFromBus,
+  setIsShuttle,
   setMode,
-  waypoints,
-  setWaypoints,
   location,
   reset,
-  isRoute,
-  setIsRoute,
-  setSelectedBuilding,
   panToMyLocation,
   end,
-  start,
   setEnd,
   setStart,
   startPosition,
   destinationPosition,
-  setStartPosition,
-  setDestinationPosition,
   closeTraceroute,
   setCloseTraceroute,
-  setIsSearch,
   carTravelTime,
   bikeTravelTime,
   metroTravelTime,
@@ -120,6 +114,9 @@ const MapTraceroute = ({
    */
   const handleCloseTraceroute = () => {
     slideOut();
+    setWalkFromBus({start:null,end:null});
+    setWalkToBus({start:null,end:null})
+    setIsShuttle(false);
     setCloseTraceroute(true);
     reset();
   };
@@ -166,13 +163,37 @@ const MapTraceroute = ({
     />
   );
 
-  /**
-   * Updates waypoints for the selected transportation method.
-   */
-  const updateDirections = () => {
-    console.log("Updating waypoints...");
-    setWaypoints([SGWShuttlePickup]);
-  };
+  const handleShuttleIntegration = () => {
+    if (isShuttle) {
+      setSelected("");
+      setIsShuttle(false);
+      return;
+    }
+    setSelected("car");
+    let isSGW = IsAtSGW(location.coords)
+    if (isSGW) {
+      setWalkToBus({
+        start: location.coords,
+        end: SGWShuttlePickup
+      })
+      setWalkFromBus({
+        start: LoyolaShuttlePickup,
+        end: end
+      })
+    } else {
+      setWalkToBus({
+        start: location.coords,
+        end: LoyolaShuttlePickup
+      })
+      setWalkFromBus({
+        start: SGWShuttlePickup,
+        end: end
+      })
+    }
+
+    setIsShuttle(true);
+
+  }
 
   return (
     <Animated.View
@@ -218,7 +239,7 @@ const MapTraceroute = ({
               <TouchableOpacity
                 testID="car-button"
                 onPress={() => {
-                  setSelected("car");
+                  handleShuttleIntegration();
                   setMode("DRIVING");
                 }}
                 className={`flex mr-1 p-2 rounded-3xl flex-row justify-around items-center ${

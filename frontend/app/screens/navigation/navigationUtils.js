@@ -1,3 +1,5 @@
+import { SGWLocation, LoyolaLocation } from "./navigationConfig";
+
 /**
  * Calculates the closest point from a reference location using the Haversine formula.
  *
@@ -58,4 +60,39 @@ export const findClosestPoint = (reference, points) => {
   
     return closestPoint;
   };
-  
+
+/**
+ * Determines if the current location is closer to SGW or Loyola based on the Euclidean distance.
+ *
+ * @param {Object} currentLocation - The current location.
+ * @param {number} currentLocation.latitude - The latitude of the current location.
+ * @param {number} currentLocation.longitude - The longitude of the current location.
+ * @returns {boolean} True if the current location is closer to SGW, false if it's closer to Loyola.
+ */
+export const IsAtSGW = (currentLocation) => {
+  if (currentLocation === null) return false;
+
+    /**
+   * Calculates the Euclidean distance between two geographic points.
+   *
+   * @param {Object} loc1 - The first location.
+   * @param {number} loc1.latitude - The latitude of the first location.
+   * @param {number} loc1.longitude - The longitude of the first location.
+   * @param {Object} loc2 - The second location.
+   * @param {number} loc2.latitude - The latitude of the second location.
+   * @param {number} loc2.longitude - The longitude of the second location.
+   * @returns {number} The Euclidean distance between the two locations.
+   */
+  const calculateDistance = (loc1, loc2) => {
+    return Math.sqrt(
+        Math.pow(loc1.latitude - loc2.latitude, 2) +
+        Math.pow(loc1.longitude - loc2.longitude, 2)
+    );
+  };
+
+  const distanceToSGW = calculateDistance(currentLocation, SGWLocation);
+  const distanceToLoyola = calculateDistance(currentLocation, LoyolaLocation);
+
+  return distanceToSGW < distanceToLoyola;
+
+}
