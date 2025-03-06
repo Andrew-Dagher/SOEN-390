@@ -14,6 +14,9 @@ import BottomNavBar from "../../components/BottomNavBar/BottomNavBar";
 import moment from "moment";
 import { fetchPublicCalendarEvents, handleGoToClass } from "../login/calendarApi";
 import { Modal } from "react-native";
+import GoToLoginButton from "../../components/Calendar/GoToLoginButton"
+
+
 export default function CalendarScreen() {
   const navigation = useNavigation();
   const { isSignedIn } = useAuth();
@@ -28,25 +31,35 @@ export default function CalendarScreen() {
 
 
 
-  // 🚀 Guest Mode Check: Redirect guests to login
-  useEffect(() => {
-    const checkGuestMode = async () => {
-      try {
-        const guestMode = await AsyncStorage.getItem("guestMode");
+if (!isSignedIn) {
+  return (
+    <View style={styles.guestContainer}>
+      <GoToLoginButton
+        onPress={async () => {
+          try {
+            await AsyncStorage.removeItem("sessionId");
+            await AsyncStorage.removeItem("userData");
+            await AsyncStorage.removeItem("guestMode");
+            console.log("🗑️ Cleared stored session data.");
 
-        if (guestMode === "true" || !isSignedIn) {
-          console.log("Guest mode detected. Redirecting to login...");
-          navigation.replace("Login");
-          return;
-        }
-      } catch (error) {
-        console.error("Error checking guest mode:", error);
-        navigation.replace("Login"); // Fallback redirect
-      }
-    };
+            if (isSignedIn) {
+              await signOut();
+              console.log("Successfully signed out!");
+            }
 
-    checkGuestMode();
-  }, [isSignedIn, navigation]);
+            navigation.reset({ index: 0, routes: [{ name: "Login" }] });
+
+          } catch (error) {
+            console.error("Login Redirect Error:", error);
+          }
+        }}
+      />
+    </View>
+  );
+}
+
+
+
 
 
   /**
@@ -137,47 +150,47 @@ export default function CalendarScreen() {
         </View>
 
 
-{/* Calendar Selection (iOS-Style Popup Modal) */}
-<View style={styles.dropdownContainer}>
-  <TouchableOpacity style={styles.dropdownButton} onPress={() => setModalVisible(true)}>
-    <Text style={styles.dropdownButtonText}>
-      {calendars.find(c => c.id === selectedCalendar)?.name || "Select Calendar"}
-    </Text>
-  </TouchableOpacity>
-
-  {/* iOS-Style Popup Modal */}
-  <Modal
-    animationType="fade"
-    transparent={true}
-    visible={modalVisible}
-    onRequestClose={() => setModalVisible(false)}
-  >
-    <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalVisible(false)}>
-      <View style={styles.modalDropdown}>
-        <Text style={styles.modalTitle}>Choose a Calendar</Text>
-        {calendars.map((calendar, index) => (
-          <TouchableOpacity
-            key={calendar.id}
-            style={[
-              styles.modalItem,
-              index === calendars.length - 1 ? styles.modalLastItem : null, // Removes border on last item
-            ]}
-            onPress={async () => {
-              setSelectedCalendar(calendar.id);
-              await AsyncStorage.setItem("selectedCalendar", calendar.id);
-              setModalVisible(false); // Close modal after selection
-            }}
-          >
-            <Text style={styles.modalItemText}>{calendar.name}</Text>
+        {/* Calendar Selection (iOS-Style Popup Modal) */}
+        <View style={styles.dropdownContainer}>
+          <TouchableOpacity style={styles.dropdownButton} onPress={() => setModalVisible(true)}>
+            <Text style={styles.dropdownButtonText}>
+              {calendars.find(c => c.id === selectedCalendar)?.name || "Select Calendar"}
+            </Text>
           </TouchableOpacity>
-        ))}
-        <TouchableOpacity style={styles.modalCancel} onPress={() => setModalVisible(false)}>
-          <Text style={styles.modalCancelText}>Cancel</Text>
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
-  </Modal>
-</View>
+
+          {/* iOS-Style Popup Modal */}
+          <Modal
+            animationType="fade"
+            transparent={true}
+            visible={modalVisible}
+            onRequestClose={() => setModalVisible(false)}
+          >
+            <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalVisible(false)}>
+              <View style={styles.modalDropdown}>
+                <Text style={styles.modalTitle}>Choose a Calendar</Text>
+                {calendars.map((calendar, index) => (
+                  <TouchableOpacity
+                    key={calendar.id}
+                    style={[
+                      styles.modalItem,
+                      index === calendars.length - 1 ? styles.modalLastItem : null, // Removes border on last item
+                    ]}
+                    onPress={async () => {
+                      setSelectedCalendar(calendar.id);
+                      await AsyncStorage.setItem("selectedCalendar", calendar.id);
+                      setModalVisible(false); // Close modal after selection
+                    }}
+                  >
+                    <Text style={styles.modalItemText}>{calendar.name}</Text>
+                  </TouchableOpacity>
+                ))}
+                <TouchableOpacity style={styles.modalCancel} onPress={() => setModalVisible(false)}>
+                  <Text style={styles.modalCancelText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          </Modal>
+        </View>
 
 
 
@@ -411,6 +424,53 @@ modalCancelText: {
   color: "#FFFFFF",
 },
 
+
+guestContainer: {
+  flex: 1,
+  justifyContent: "center",
+  alignItems: "center",
+  backgroundColor: "#F5F5F5",
+},
+
+googleLoginButton: {
+  flexDirection: "row",
+  alignItems: "center",
+  backgroundColor: "#862532",
+  paddingVertical: 14,
+  paddingHorizontal: 20,
+  borderRadius: 12,
+  elevation: 5,
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.2,
+  shadowRadius: 4,
+},
+
+googleLoginContent: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  width: "100%",
+},
+
+googleIcon: {
+  fontSize: 20,
+  fontWeight: "bold",
+  color: "#FFFFFF",
+  backgroundColor: "#FFFFFF",
+  borderRadius: 20,
+  width: 30,
+  height: 30,
+  textAlign: "center",
+  textAlignVertical: "center",
+  marginRight: 10,
+},
+
+googleLoginText: {
+  color: "#FFFFFF",
+  fontSize: 16,
+  fontWeight: "bold",
+},
 
 
 
