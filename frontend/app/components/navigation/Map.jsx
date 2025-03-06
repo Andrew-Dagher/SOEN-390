@@ -164,7 +164,7 @@ export default function Map() {
 
   const handleGetDirections = () => {
     try {
-      trackEvent("Get Directions", { selectedBuilding });
+      trackEvent("Get Directions", { "selected building":selectedBuilding.name });
       console.log("Event tracked");
       setIsRoute(true);
       setIsSearch(true);
@@ -198,12 +198,14 @@ export default function Map() {
   };
 
   const handleLoyola = () => {
+    trackEvent("Switched to Loyola", {})
     setCampus("loyola");
     ref.current?.animateToRegion(LoyolaLocation);
   };
 
   const handleSGW = () => {
     setCampus("sgw");
+    trackEvent("Switched to SGW", {})
     ref.current?.animateToRegion(SGWLocation);
   };
 
@@ -211,6 +213,7 @@ export default function Map() {
   const handleMarkerPress = (building) => {
     setIsSearch(false);
     setSelectedBuilding(building);
+    trackEvent("Selected building", {"building":building.name})
     setIsSelected(true);
   };
 
@@ -280,6 +283,7 @@ export default function Map() {
       }
 
       let location = await Location.getCurrentPositionAsync({});
+      trackEvent("Check current Location", {"Location":location})
       setLocation(location);
     }
     getCurrentLocation();

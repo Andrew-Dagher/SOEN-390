@@ -6,7 +6,7 @@
 import React from 'react';
 import { View, Text, Button } from 'react-native';
 import Map from '../../components/navigation/Map';
-
+import { trackEvent } from "@aptabase/react-native";
 /**
  * NavigationScreen component renders a full-screen view centered on the Map component.
  *
@@ -16,6 +16,7 @@ import Map from '../../components/navigation/Map';
  * @returns {JSX.Element} The rendered NavigationScreen component.
  */
 export default function NavigationScreen({ navigation }) {
+  trackEvent("Navigation Screen", {});
   return (
     <View
       className="h-full opacity-100"
