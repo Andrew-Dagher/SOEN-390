@@ -54,6 +54,11 @@ if (!isSignedIn) {
           }
         }}
       />
+
+      {/* Bottom Navigation Bar */}
+      <View style={styles.bottomNavBar}>
+        <BottomNavBar />
+      </View>
     </View>
   );
 }
