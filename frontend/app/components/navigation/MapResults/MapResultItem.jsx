@@ -9,6 +9,7 @@ import {
   PanResponder,
   Pressable,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import WheelChairIcon from "../Icons/WheelChairIcon";
 import BikeIcon from "../Icons/BikeIcon";
 import MetroIcon from "../Icons/MetroIcon";
@@ -103,7 +104,7 @@ const MapResultItem = ({
         </View>
         <View className="mb-4 flex flex-row">
           <SmallNavigationIcon />
-          <Text className="color-slate-400 text-xs">{address}</Text>
+          <Text className="color-slate-400 text-xs">{building.address}</Text>
         </View>
         <View className="flex flex-row justify-around items-center">
           <TouchableHighlight
@@ -150,46 +151,7 @@ const MapResultItem = ({
             </View>
           </TouchableHighlight>
         </View>
-
-        {/* Address information */}
-        <View className="mb-4 flex flex-row items-center">
-          <SmallNavigationIcon />
-          <Text className="color-slate-400 text-xs ml-2">
-            {building.address}
-          </Text>
-        </View>
       </Pressable>
-
-      {/* Action buttons for setting start and getting directions */}
-      <View className="flex flex-row justify-around items-center">
-        {/* Button to set start or destination */}
-        <TouchableHighlight
-          onPress={handleSetStart}
-          style={styles.shadow}
-          className="mr-4 rounded-xl p-4 bg-primary-red"
-        >
-          <View className="flex flex-row justify-around items-center">
-            <Text className="color-white mr-4 font-bold">
-              {start != null && start !== location?.coords
-                ? "Set Destination"
-                : "Set Start"}
-            </Text>
-            <NavigationIcon />
-          </View>
-        </TouchableHighlight>
-
-        {/* Button to get directions */}
-        <TouchableHighlight
-          onPress={handleGetDirections}
-          style={styles.shadow}
-          className="rounded-xl p-4 bg-primary-red"
-        >
-          <View className="flex flex-row justify-around items-center">
-            <Text className="color-white mr-4 font-bold">Get Directions</Text>
-            <DirectionsIcon />
-          </View>
-        </TouchableHighlight>
-      </View>
     </View>
   );
 };

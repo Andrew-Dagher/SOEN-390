@@ -47,11 +47,31 @@ const MapCard = ({ building, isCallout = false }) => {
    */
   const CardContent = () => {
     const iconComponents = [
-      { key: "handicap", show: buildingData.isHandicap === "true", component: <WheelChairIcon /> },
-      { key: "bike", show: buildingData.isBike === "true", component: <BikeIcon /> },
-      { key: "parking", show: buildingData.isParking === "true", component: <ParkingIcon /> },
-      { key: "info", show: buildingData.isInfo === "true", component: <InformationIcon /> },
-      { key: "credit", show: buildingData.isCredit === "true", component: <CreditCardIcon /> },
+      {
+        key: "handicap",
+        show: buildingData.isHandicap === true,
+        component: <WheelChairIcon />,
+      },
+      {
+        key: "bike",
+        show: buildingData.isBike === true,
+        component: <BikeIcon />,
+      },
+      {
+        key: "parking",
+        show: buildingData.isParking === true,
+        component: <ParkingIcon />,
+      },
+      {
+        key: "info",
+        show: buildingData.isInfo === true,
+        component: <InformationIcon />,
+      },
+      {
+        key: "credit",
+        show: buildingData.isCredit === true,
+        component: <CreditCardIcon />,
+      },
     ];
 
     return (
@@ -59,9 +79,11 @@ const MapCard = ({ building, isCallout = false }) => {
         <View className="flex flex-row items-center">
           <Text className="font-bold">{buildingData.name}</Text>
           <View className="flex flex-row items-center gap-2 ml-4">
-            {iconComponents.filter((icon) => icon.show).map((icon) => (
-              <View key={icon.key}>{icon.component}</View>
-            ))}
+            {iconComponents
+              .filter((icon) => icon.show)
+              .map((icon) => (
+                <View key={icon.key}>{icon.component}</View>
+              ))}
           </View>
         </View>
         <View className="mt-2 flex flex-row items-center">
