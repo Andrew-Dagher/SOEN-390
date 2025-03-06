@@ -13,7 +13,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import BottomNavBar from "../../components/BottomNavBar/BottomNavBar";
 import moment from "moment";
 import { fetchPublicCalendarEvents, handleGoToClass } from "../login/calendarApi";
-
+import { Modal } from "react-native";
 export default function CalendarScreen() {
   const navigation = useNavigation();
   const { isSignedIn } = useAuth();
@@ -23,7 +23,8 @@ export default function CalendarScreen() {
   const [calendars, setCalendars] = useState([]);
   const [selectedCalendar, setSelectedCalendar] = useState(null);
   const [currentStartDate, setCurrentStartDate] = useState(moment().startOf("day")); // Start today
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+
 
 
 
@@ -136,35 +137,51 @@ export default function CalendarScreen() {
         </View>
 
 
-        {/* Calendar Selection (Dropdown) */}
-        <View style={styles.dropdownContainer}>
-          <TouchableOpacity
-            style={styles.dropdownButton}
-            onPress={() => setDropdownOpen(!dropdownOpen)}
-          >
-            <Text style={styles.dropdownButtonText}>
-              {calendars.find(c => c.id === selectedCalendar)?.name || "Select Calendar"}
-            </Text>
-          </TouchableOpacity>
+{/* Calendar Selection (iOS-Style Popup Modal) */}
+<View style={styles.dropdownContainer}>
+  <TouchableOpacity style={styles.dropdownButton} onPress={() => setModalVisible(true)}>
+    <Text style={styles.dropdownButtonText}>
+      {calendars.find(c => c.id === selectedCalendar)?.name || "Select Calendar"}
+    </Text>
+  </TouchableOpacity>
 
-          {dropdownOpen && (
-            <View style={styles.dropdownMenu}>
-              {calendars.map((calendar) => (
-                <TouchableOpacity
-                  key={calendar.id}
-                  style={styles.dropdownItem}
-                  onPress={async () => {
-                    setSelectedCalendar(calendar.id);
-                    await AsyncStorage.setItem("selectedCalendar", calendar.id);
-                    setDropdownOpen(false); // Close dropdown after selection
-                  }}
-                >
-                  <Text style={styles.dropdownItemText}>{calendar.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </View>
+  {/* iOS-Style Popup Modal */}
+  <Modal
+    animationType="fade"
+    transparent={true}
+    visible={modalVisible}
+    onRequestClose={() => setModalVisible(false)}
+  >
+    <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setModalVisible(false)}>
+      <View style={styles.modalDropdown}>
+        <Text style={styles.modalTitle}>Choose a Calendar</Text>
+        {calendars.map((calendar, index) => (
+          <TouchableOpacity
+            key={calendar.id}
+            style={[
+              styles.modalItem,
+              index === calendars.length - 1 ? styles.modalLastItem : null, // Removes border on last item
+            ]}
+            onPress={async () => {
+              setSelectedCalendar(calendar.id);
+              await AsyncStorage.setItem("selectedCalendar", calendar.id);
+              setModalVisible(false); // Close modal after selection
+            }}
+          >
+            <Text style={styles.modalItemText}>{calendar.name}</Text>
+          </TouchableOpacity>
+        ))}
+        <TouchableOpacity style={styles.modalCancel} onPress={() => setModalVisible(false)}>
+          <Text style={styles.modalCancelText}>Cancel</Text>
+        </TouchableOpacity>
+      </View>
+    </TouchableOpacity>
+  </Modal>
+</View>
+
+
+
+
 
 
       {/* Events List */}
@@ -313,42 +330,88 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-
 dropdownContainer: {
   marginHorizontal: 16,
   marginBottom: 10,
 },
 dropdownButton: {
   backgroundColor: "#F0F0F0",
-  paddingVertical: 12,
+  paddingVertical: 14,
   paddingHorizontal: 16,
   borderRadius: 8,
   alignItems: "center",
   justifyContent: "center",
   width: "100%",
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.2,
+  shadowRadius: 4,
+  elevation: 5,
 },
 dropdownButtonText: {
   fontSize: 16,
   color: "#000",
   fontWeight: "bold",
 },
-dropdownMenu: {
-  backgroundColor: "#FFF",
-  borderRadius: 8,
-  paddingVertical: 8,
-  elevation: 5,
-  marginTop: 5,
-  width: "100%",
-},
-dropdownItem: {
-  paddingVertical: 10,
-  paddingHorizontal: 16,
+
+// iOS-Style Modal Styles
+modalOverlay: {
+  flex: 1,
+  backgroundColor: "rgba(0, 0, 0, 0.6)", // Fullscreen overlay for proper pop-up
+  justifyContent: "center",
   alignItems: "center",
 },
-dropdownItemText: {
-  fontSize: 16,
-  color: "#000",
+modalDropdown: {
+  backgroundColor: "#f5f5f5",
+  borderRadius: 14,
+  width: "90%",
+  paddingTop: 12, // Added spacing at the top
+  alignItems: "center",
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.3,
+  shadowRadius: 6,
+  elevation: 8,
+  overflow: "hidden", // Ensures no weird borders appear
 },
+
+modalTitle: {
+  fontSize: 18,
+  fontWeight: "bold",
+  color: "#151114",
+  marginBottom: 10,
+},
+modalItem: {
+  width: "100%",
+  paddingVertical: 14,
+  alignItems: "center",
+  borderBottomWidth: 1,
+  borderBottomColor: "#a1a1a1", // Subtle separator like iOS
+},
+modalItemText: {
+  fontSize: 17,
+  color: "#151114",
+  fontWeight: "500",
+},
+modalLastItem: {
+  borderBottomWidth: 0, // Removes bottom border from last item
+},
+modalCancel: {
+  backgroundColor: "#842534",
+  paddingVertical: 14,
+  width: "100%",
+  alignItems: "center",
+  justifyContent: "center",
+  borderBottomLeftRadius: 14,
+  borderBottomRightRadius: 14,
+},
+modalCancelText: {
+  fontSize: 16,
+  fontWeight: "bold",
+  color: "#FFFFFF",
+},
+
+
 
 
 
