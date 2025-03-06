@@ -11,6 +11,7 @@ import BottomNavBar from "../../components/BottomNavBar/BottomNavBar"; // Ensure
 import CalendarDirectionsIcon from "../../components/Calendar/CalendarIcons/CalendarDirectionsIcon.jsx"; // Import CalendarDirectionsIcon
 import { useAppSettings } from "../../AppSettingsContext";
 import getThemeColors from "../../ColorBindTheme";
+import { trackEvent } from "@aptabase/react-native";
 
 /**
  * Fetches public Google Calendar events using the given Calendar ID.
@@ -90,6 +91,7 @@ export default function CalendarScreen() {
     // Convert month number to month name and update state.
     setCurrentMonth(monthNames[monthData.month - 1]);
   };
+  trackEvent("Calendar Screen selected", {})
 
   return (
     <View style={{ flex: 1, backgroundColor: "#FFFFFF", flexDirection: "column" }}>
@@ -120,7 +122,9 @@ export default function CalendarScreen() {
       <View style={{ position: "absolute", bottom: "10%", left: 0, right: 0 }}>
         <TouchableOpacity
           style={[styles.buttonContainer, { backgroundColor: theme.backgroundColor }]}
-          onPress={() => alert("Directions are coming soon!")}
+          onPress={() =>{
+            trackEvent("Get Directions to next class", {}) 
+            alert("Directions are coming soon!")}}
         >
           <Text style={[styles.buttonText, { backgroundColor: theme.backgroundColor }, { fontSize: textSize }]}>
             Get Directions to My Next Class
