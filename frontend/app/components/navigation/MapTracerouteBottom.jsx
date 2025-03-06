@@ -3,9 +3,16 @@
  * @description A React Native component for displaying the bottom navigation bar of the traceroute feature.
  */
 
-import React, { useRef, useEffect } from 'react';
-import { Animated, StyleSheet, View, Dimensions, TouchableOpacity, Text } from 'react-native';
-import StartIcon from './Icons/StartIcon';
+import React, { useRef, useEffect } from "react";
+import {
+  Animated,
+  StyleSheet,
+  View,
+  Dimensions,
+  TouchableOpacity,
+  Text,
+} from "react-native";
+import StartIcon from "./Icons/StartIcon";
 
 /**
  * MapTracerouteBottom component for displaying route details and starting navigation.
@@ -19,18 +26,27 @@ import StartIcon from './Icons/StartIcon';
  * @param {Boolean} props.closeTraceroute - Flag to indicate if the traceroute should be closed
  * @param {Function} props.setCloseTraceroute - Function to close the traceroute panel
  */
-const MapTracerouteBottom = ({ isRoute, setIsRoute, end, start, panToStart, closeTraceroute, setCloseTraceroute }) => {
-  const screenHeight = Dimensions.get('window').height;
-  const slideAnim = useRef(new Animated.Value(screenHeight)).current; // Start off-screen
+
+const MapTracerouteBottom = ({
+  isRoute,
+  setIsRoute,
+  end,
+  start,
+  panToStart,
+  closeTraceroute,
+  setCloseTraceroute,
+}) => {
+  const screenHeight = Dimensions.get("window").height;
+  const slideAnim = useRef(new Animated.Value(100)).current;
 
   /**
    * Slides the component into view.
    */
   const slideUp = () => {
     Animated.timing(slideAnim, {
-      toValue: screenHeight * 0.9, // Show 10% of the screen
+      toValue: 0,
       duration: 1000,
-      useNativeDriver: false, 
+      useNativeDriver: true,
     }).start();
   };
 
@@ -39,15 +55,15 @@ const MapTracerouteBottom = ({ isRoute, setIsRoute, end, start, panToStart, clos
    */
   const slideOut = () => {
     Animated.timing(slideAnim, {
-      toValue: screenHeight, // Move off-screen
+      toValue: 100,
       duration: 500,
-      useNativeDriver: false, 
+      useNativeDriver: true,
     }).start();
   };
 
   // Slide up when start or end location changes
   useEffect(() => {
-    slideUp(); 
+    slideUp();
   }, [end, start]);
 
   // Slide out when closeTraceroute is set to true
@@ -66,18 +82,25 @@ const MapTracerouteBottom = ({ isRoute, setIsRoute, end, start, panToStart, clos
   };
 
   return (
-    <Animated.View className='absolute mb-10 bottom-20' style={[styles.slidingView, { top: slideAnim }]}>
-      <View className='w-4/6 mb-10 flex flex-row justify-around'>
-        <View className='flex flex-row justify-around items-center'>
-          <Text className='color-green-500 font-medium mr-2'>30 min</Text>
-          <Text className='font-medium'>(20.0 km)</Text>
+    <Animated.View
+      style={[
+        styles.container,
+        {
+          transform: [{ translateY: slideAnim }],
+        },
+      ]}
+    >
+      <View style={styles.contentWrapper}>
+        <View style={styles.timeDistanceContainer}>
+          <Text style={styles.timeText}>30 min</Text>
+          <Text style={styles.distanceText}>(20.0 km)</Text>
         </View>
-        <TouchableOpacity 
-          onPress={handleStartTraceroute} 
-          className='bg-primary-red p-3 rounded-3xl pr-4 pl-4 flex flex-row justify-around items-center'
+        <TouchableOpacity
+          onPress={handleStartTraceroute}
+          style={styles.startButton}
         >
           <StartIcon />
-          <Text className='ml-2 color-selected text-lg'>Start</Text>
+          <Text style={styles.startButtonText}>Start</Text>
         </TouchableOpacity>
       </View>
     </Animated.View>
@@ -85,13 +108,58 @@ const MapTracerouteBottom = ({ isRoute, setIsRoute, end, start, panToStart, clos
 };
 
 const styles = StyleSheet.create({
-  slidingView: {
-    position: 'absolute',
-    height: '30%', // Height relative to screen
-    width: '100%', // Full width
-    backgroundColor: 'white',
-    justifyContent: 'center',
-    alignItems: 'center',
+  container: {
+    position: "absolute",
+    width: "100%",
+    backgroundColor: "white",
+    justifyContent: "center",
+    alignItems: "center",
+    bottom: 40,
+    paddingBottom: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  contentWrapper: {
+    width: "66.67%",
+    paddingVertical: 20,
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+  },
+  timeDistanceContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+  },
+  timeText: {
+    color: "green",
+    fontWeight: "500",
+    marginRight: 8,
+  },
+  distanceText: {
+    fontWeight: "500",
+  },
+  startButton: {
+    backgroundColor: "rgba(108, 12, 12, 0.8)",
+    padding: 12,
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+  },
+  startButtonText: {
+    marginLeft: 8,
+    color: "white",
+    fontSize: 18,
   },
 });
 

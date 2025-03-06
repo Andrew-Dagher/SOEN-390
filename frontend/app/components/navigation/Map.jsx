@@ -38,8 +38,7 @@ import { trackEvent } from "@aptabase/react-native";
 import { useAppSettings } from "../../AppSettingsContext";
 import getThemeColors from "../../ColorBindTheme";
 export default function Map() {
-
-  const {textSize} = useAppSettings();
+  const { textSize } = useAppSettings();
   const theme = getThemeColors();
   const navigation = useNavigation();
 
@@ -79,43 +78,51 @@ export default function Map() {
 
     // Check if start and end locations are the same
     if (start.latitude === end.latitude && start.longitude === end.longitude) {
-      console.log(`Start and end locations are the same. Setting travel time to 0 min.`);
+      console.log(
+        `Start and end locations are the same. Setting travel time to 0 min.`
+      );
       setTravelTime[mode]?.("0 min");
       return;
-  }
-  
-    // Base URL defined as a global constant
-    const GOOGLE_DIRECTIONS_API_BASE_URL = "https://maps.googleapis.com/maps/api/directions/json";
-    
-    const travelMode = mode.toLowerCase();
-    
-    let url = `${GOOGLE_DIRECTIONS_API_BASE_URL}?origin=${start.latitude},${start.longitude}` +
-          `&destination=${end.latitude},${end.longitude}` +
-          `&mode=${travelMode}` +
-          `&key=${process.env.EXPO_PUBLIC_GOOGLE_API_KEY}`;
-    
-    // specific parameters for transit mode
-    if (travelMode === 'transit') {
-      url += '&transit_mode=bus|subway|train';
     }
-  
+
+    // Base URL defined as a global constant
+    const GOOGLE_DIRECTIONS_API_BASE_URL =
+      "https://maps.googleapis.com/maps/api/directions/json";
+
+    const travelMode = mode.toLowerCase();
+
+    let url =
+      `${GOOGLE_DIRECTIONS_API_BASE_URL}?origin=${start.latitude},${start.longitude}` +
+      `&destination=${end.latitude},${end.longitude}` +
+      `&mode=${travelMode}` +
+      `&key=${process.env.EXPO_PUBLIC_GOOGLE_API_KEY}`;
+
+    // specific parameters for transit mode
+    if (travelMode === "transit") {
+      url += "&transit_mode=bus|subway|train";
+    }
+
     try {
       const response = await fetch(url);
       const data = await response.json();
-  
+
       if (data.status !== "OK") {
-        console.error(`Error fetching ${mode} directions:`, data.status, data.error_message);
+        console.error(
+          `Error fetching ${mode} directions:`,
+          data.status,
+          data.error_message
+        );
         // Set appropriate state to indicate no route found
         setTravelTime[mode]?.("No route");
         return;
       }
-  
+
       const route = data.routes[0];
       if (!route || !route.legs || !route.legs[0]) {
-        console.error('No valid route found');
+        console.error("No valid route found");
         return;
       }
-  
+
       const duration = route.legs[0].duration.text;
       // Update the appropriate state based on the mode
       setTravelTime[mode]?.(duration);
@@ -126,67 +133,67 @@ export default function Map() {
     }
   };
 
- const handleSetStart = () => {
-  if (start != null && start !== location?.coords) {
-    setIsRoute(true);
-    setIsSearch(true);
-    setDestinationPosition(selectedBuilding.name);
-    setEnd(selectedBuilding.point);
+  const handleSetStart = () => {
+    if (start != null && start !== location?.coords) {
+      setIsRoute(true);
+      setIsSearch(true);
+      setDestinationPosition(selectedBuilding.name);
+      setEnd(selectedBuilding.point);
 
-    // Reset travel times
-    setCarTravelTime(null);
-    setBikeTravelTime(null);
-    setMetroTravelTime(null);
-    setWalkTravelTime(null);
+      // Reset travel times
+      setCarTravelTime(null);
+      setBikeTravelTime(null);
+      setMetroTravelTime(null);
+      setWalkTravelTime(null);
 
-    // Fetch times from start point to selected building
-    const fetchAllTravelTimes = async () => {
-      await Promise.all([
-        fetchTravelTime(start, selectedBuilding.point, 'DRIVING'),
-        fetchTravelTime(start, selectedBuilding.point, 'BICYCLING'),
-        fetchTravelTime(start, selectedBuilding.point, 'TRANSIT'),
-        fetchTravelTime(start, selectedBuilding.point, 'WALKING'),
-      ]);
-    };
-    fetchAllTravelTimes();
-    return;
-  }
-  setStart(selectedBuilding.point);
-  setStartPosition(selectedBuilding.name);
-};
+      // Fetch times from start point to selected building
+      const fetchAllTravelTimes = async () => {
+        await Promise.all([
+          fetchTravelTime(start, selectedBuilding.point, "DRIVING"),
+          fetchTravelTime(start, selectedBuilding.point, "BICYCLING"),
+          fetchTravelTime(start, selectedBuilding.point, "TRANSIT"),
+          fetchTravelTime(start, selectedBuilding.point, "WALKING"),
+        ]);
+      };
+      fetchAllTravelTimes();
+      return;
+    }
+    setStart(selectedBuilding.point);
+    setStartPosition(selectedBuilding.name);
+  };
 
   const handleGetDirections = () => {
     try {
       trackEvent("Get Directions", { selectedBuilding });
       console.log("Event tracked");
-    setIsRoute(true);
-    setIsSearch(true);
-    setEnd(selectedBuilding.point);
-    setDestinationPosition(selectedBuilding.name);
-    if (location != null) {
-      setStart(location.coords);
-    }
-    setStartPosition("Your Location");
+      setIsRoute(true);
+      setIsSearch(true);
+      setEnd(selectedBuilding.point);
+      setDestinationPosition(selectedBuilding.name);
+      if (location != null) {
+        setStart(location.coords);
+      }
+      setStartPosition("Your Location");
 
-    // Reset all travel times before fetching new ones
-    setCarTravelTime(null);
-    setBikeTravelTime(null);
-    setMetroTravelTime(null);
-    setWalkTravelTime(null);
+      // Reset all travel times before fetching new ones
+      setCarTravelTime(null);
+      setBikeTravelTime(null);
+      setMetroTravelTime(null);
+      setWalkTravelTime(null);
 
-    // Fetch travel times for all modes
-    const fetchAllTravelTimes = async () => {
-      await Promise.all([
-        fetchTravelTime(location.coords, selectedBuilding.point, 'DRIVING'),
-        fetchTravelTime(location.coords, selectedBuilding.point, 'BICYCLING'),
-        fetchTravelTime(location.coords, selectedBuilding.point, 'TRANSIT'),
-        fetchTravelTime(location.coords, selectedBuilding.point, 'WALKING'),
-      ]);
-    };
+      // Fetch travel times for all modes
+      const fetchAllTravelTimes = async () => {
+        await Promise.all([
+          fetchTravelTime(location.coords, selectedBuilding.point, "DRIVING"),
+          fetchTravelTime(location.coords, selectedBuilding.point, "BICYCLING"),
+          fetchTravelTime(location.coords, selectedBuilding.point, "TRANSIT"),
+          fetchTravelTime(location.coords, selectedBuilding.point, "WALKING"),
+        ]);
+      };
 
-    fetchAllTravelTimes();
-  } catch (e) {
-    console.error(e);
+      fetchAllTravelTimes();
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -231,8 +238,8 @@ export default function Map() {
         <Polygon
           coordinates={building.boundaries}
           strokeWidth={2}
-          strokeColor= {theme.backgroundColor}
-          fillColor= {theme.polygonFillColor}
+          strokeColor={theme.backgroundColor}
+          fillColor={theme.polygonFillColor}
         />
       </View>
     );
@@ -421,25 +428,48 @@ export default function Map() {
         <View className="absolute w-full bottom-20">
           <View className="flex flex-row justify-center items-center">
             <TouchableHighlight
-
-              style={[styles.shadow, { backgroundColor: theme.backgroundColor }]}
-              className='mr-4 rounded-xl p-4 bg-primary-red'
+              style={[
+                styles.shadow,
+                { backgroundColor: theme.backgroundColor },
+              ]}
+              className="mr-4 rounded-xl p-4 bg-primary-red"
               onPress={handleSetStart}
             >
-              <View className='flex flex-row justify-around items-center'>
-                {start != null && start != location?.coords ? <Text style={[{ fontSize: textSize }]} className='color-white mr-4 font-bold'>Set Destination</Text> : <Text style={[{ fontSize: textSize }]} className='color-white mr-4 font-bold'>Set Start</Text>}
+              <View className="flex flex-row justify-around items-center">
+                {start != null && start != location?.coords ? (
+                  <Text
+                    style={[{ fontSize: textSize }]}
+                    className="color-white mr-4 font-bold"
+                  >
+                    Set Destination
+                  </Text>
+                ) : (
+                  <Text
+                    style={[{ fontSize: textSize }]}
+                    className="color-white mr-4 font-bold"
+                  >
+                    Set Start
+                  </Text>
+                )}
 
                 <NavigationIcon />
               </View>
             </TouchableHighlight>
             <TouchableHighlight
-
-              style={[styles.shadow, { backgroundColor: theme.backgroundColor }]}
-              className='rounded-xl p-4 bg-primary-red'
+              style={[
+                styles.shadow,
+                { backgroundColor: theme.backgroundColor },
+              ]}
+              className="rounded-xl p-4 bg-primary-red"
               onPress={handleGetDirections}
             >
-              <View className='flex flex-row justify-around items-center'>
-                <Text style={[{ fontSize: textSize }]} className='color-white mr-4 font-bold'>Get Directions</Text>
+              <View className="flex flex-row justify-around items-center">
+                <Text
+                  style={[{ fontSize: textSize }]}
+                  className="color-white mr-4 font-bold"
+                >
+                  Get Directions
+                </Text>
 
                 <DirectionsIcon />
               </View>
