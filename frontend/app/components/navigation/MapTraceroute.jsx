@@ -17,6 +17,7 @@ import {
   TextInput,
   ScrollView,
 } from "react-native";
+import PropTypes from "prop-types";
 import CarIcon from "./Icons/CarIcon";
 import BikeNavIcon from "./Icons/BikeNavIcon";
 import MetroNavIcon from "./Icons/MetroNavIcon";
@@ -28,327 +29,7 @@ import SwapIcon from "./Icons/SwapIcon";
 import ArrowIcon from "./Icons/ArrowIcon";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 
-import {
-  SGWShuttlePickup,
-  LoyolaShuttlePickup,
-} from "../../screens/navigation/navigationConfig";
-
-/**
- * MapTraceroute component for selecting start and destination locations and choosing a transportation mode.
- *
- * @param {Object} props - Component props
- * @param {Function} props.setMode - Sets the transportation mode (DRIVING, WALKING, etc).
- * @param {Array} props.waypoints - Array of waypoints for the route.
- * @param {Function} props.setWaypoints - Sets the waypoints for the route.
- * @param {Object} props.location - Current location of the user.
- * @param {Function} props.reset - Function to reset the component state.
- * @param {boolean} props.isRoute - Indicates if a route is currently active.
- * @param {Function} props.setIsRoute - Sets the route active state.
- * @param {Function} props.setSelectedBuilding - Sets the selected building.
- * @param {Function} props.panToMyLocation - Function to pan the map to user's current location.
- * @param {Function} props.panToRegion - Function to pan the map to a specific region.
- * @param {Object} props.end - Coordinates of the destination.
- * @param {Object} props.start - Coordinates of the starting point.
- * @param {Function} props.setEnd - Sets the destination coordinates.
- * @param {Function} props.setStart - Sets the starting point coordinates.
- * @param {string} props.startPosition - The text representation of the starting position.
- * @param {string} props.destinationPosition - The text representation of the destination position.
- * @param {Function} props.setStartPosition - Sets the text representation of the starting position.
- * @param {Function} props.setDestinationPosition - Sets the text representation of the destination position.
- * @param {boolean} props.closeTraceroute - Indicates if the traceroute panel should be closed.
- * @param {Function} props.setCloseTraceroute - Sets the traceroute panel close state.
- * @param {Function} props.setIsSearch - Sets the search active state.
- * @param {string} props.carTravelTime - Estimated travel time by car.
- * @param {string} props.bikeTravelTime - Estimated travel time by bike.
- * @param {string} props.metroTravelTime - Estimated travel time by public transit.
- * @param {string} props.walkTravelTime - Estimated travel time by walking.
- * @returns {JSX.Element} A React Native component for route selection and display.
- */
-const MapTraceroute = ({
-  setMode,
-  waypoints,
-  setWaypoints,
-  location,
-  reset,
-  isRoute,
-  setIsRoute,
-  setSelectedBuilding,
-  panToMyLocation,
-  panToRegion,
-  end,
-  start,
-  setEnd,
-  setStart,
-  startPosition,
-  destinationPosition,
-  setStartPosition,
-  setDestinationPosition,
-  closeTraceroute,
-  setCloseTraceroute,
-  setIsSearch,
-  carTravelTime,
-  bikeTravelTime,
-  metroTravelTime,
-  walkTravelTime,
-}) => {
-  const [selected, setSelected] = useState("");
-  const slideAnim = useRef(
-    new Animated.Value(-Dimensions.get("window").height * 0.3)
-  ).current; // Initially set off-screen
-
-  /**
-   * Animates the traceroute panel sliding in.
-   */
-  const slideIn = () => {
-    Animated.timing(slideAnim, {
-      toValue: 0, // Slide to visible position
-      duration: 1000,
-      useNativeDriver: false,
-    }).start();
-  };
-
-  /**
-   * Animates the traceroute panel sliding out.
-   */
-  const slideOut = () => {
-    Animated.timing(slideAnim, {
-      toValue: -Dimensions.get("window").height * 0.3, // Slide back up
-      duration: 500,
-      useNativeDriver: false,
-    }).start();
-  };
-
-  /**
-   * Handles closing traceroute.
-   */
-  const handleCloseTraceroute = () => {
-    slideOut();
-    setCloseTraceroute(true);
-    reset();
-  };
-
-  useEffect(() => {
-    if (!closeTraceroute) {
-      slideIn();
-    }
-  }, [closeTraceroute]);
-
-  /**
-   * Handles place selection from Google Places Autocomplete.
-   * @param {Object} details - Place details.
-   * @param {string} flag - Indicates whether it's the origin or destination.
-   */
-  const onPlaceSelected = (details, flag) => {
-    const set = flag === "origin" ? setStart : setEnd;
-    const setPosition =
-      flag === "origin" ? setStartPosition : setDestinationPosition;
-
-    const position = {
-      latitude: details?.geometry.location.lat || 0,
-      longitude: details?.geometry.location.lng || 0,
-    };
-
-    // Update the coordinates for the selected point
-    set(position);
-
-    // Update the text display in the input field
-    setPosition(details?.formatted_address || details?.name || "");
-  };
-
-  /**
-   * Input component for selecting locations.
-   * @param {Object} props - Component props.
-   * @param {string} props.placeholder - Placeholder text.
-   * @param {Function} props.onPlaceSelected - Function to handle place selection.
-   * @param {string} props.flag - Indicates whether it's origin or destination.
-   */
-  const InputAutocomplete = ({ placeholder, flag }) => (
-    <GooglePlacesAutocomplete
-      enableHighAccuracyLocation={true}
-      styles={{
-        textInput: styles.input,
-        container: styles.autocompleteContainer,
-        listView: styles.listView,
-        row: styles.row,
-        poweredContainer: styles.poweredContainer,
-        separator: styles.separator,
-        description: styles.description,
-        predefinedPlacesDescription: {
-          color: "#1faadb",
-        },
-      }}
-      placeholder={placeholder ? placeholder : "Search location..."}
-      fetchDetails
-      enablePoweredByContainer={true}
-      minLength={2}
-      nearbyPlacesAPI="GooglePlacesSearch"
-      debounce={300}
-      numberOfLines={2}
-      listViewDisplayed="auto"
-      onPress={(data, details = null) => onPlaceSelected(details, flag)}
-      textInputProps={{
-        placeholderTextColor: "#999",
-        returnKeyType: "search",
-        autoCapitalize: "none",
-        autoCorrect: false,
-        defaultValue: placeholder || "",
-      }}
-      query={{
-        key: process.env.EXPO_PUBLIC_GOOGLE_API_KEY,
-        language: "en-us",
-        types: "geocode|establishment",
-      }}
-    />
-  );
-
-  return (
-    <Animated.View
-      className="rounded-xl p-3"
-      testID="sliding-view"
-      style={[styles.slidingView, styles.shadow, { top: slideAnim }]}
-    >
-      <View className="flex h-full w-full flex-col p-2">
-        <View className="mt-2 h-5/6 flex flex-row justify-center items-center">
-          <TouchableOpacity
-            testID="back-button"
-            className="mr-4 mb-8"
-            onPress={handleCloseTraceroute}
-          >
-            <ArrowIcon />
-          </TouchableOpacity>
-          <View className="flex flex-col justify-center items-center mr-4">
-            <CircleIcon />
-            <DotsIcon />
-            <SmallNavigationIcon />
-          </View>
-
-          {/* Search fields container */}
-          <View style={styles.searchContainer} className="w-2/3 mt-14">
-            {/* Origin field - higher z-index */}
-            <View style={styles.originContainer}>
-              <InputAutocomplete
-                placeholder={startPosition || ""}
-                flag="origin"
-              />
-            </View>
-
-            {/* Destination field - lower z-index */}
-            <View style={styles.destinationContainer}>
-              <InputAutocomplete
-                placeholder={destinationPosition || ""}
-                flag="destination"
-              />
-            </View>
-          </View>
-
-          <View className="ml-4">
-            <TouchableOpacity
-              testID="swap-button"
-              onPress={() => {
-                // Swap start and end positions
-                const tempStart = start;
-                const tempStartPosition = startPosition;
-
-                setStart(end);
-                setStartPosition(destinationPosition);
-
-                setEnd(tempStart);
-                setDestinationPosition(tempStartPosition);
-              }}
-            >
-              <SwapIcon />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Transportation Mode Selection */}
-        <View className="flex h-1/6">
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View className="flex flex-row items-center justify-around">
-              <TouchableOpacity
-                testID="car-button"
-                onPress={() => {
-                  setSelected("car");
-                  setMode("DRIVING");
-                }}
-                className={`flex mr-1 p-2 rounded-3xl flex-row justify-around items-center ${
-                  selected === "car" ? "bg-primary-red" : ""
-                }`}
-              >
-                <CarIcon isSelected={selected === "car"} />
-                <Text
-                  className={`ml-2 font-semibold ${
-                    selected === "car" ? "color-selected" : ""
-                  }`}
-                >
-                  {carTravelTime ? carTravelTime : "Calculating..."}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                testID="bike-button"
-                onPress={() => {
-                  setSelected("bike");
-                  setMode("BICYCLING");
-                }}
-                className={`flex mr-1 p-2 rounded-3xl flex-row justify-around items-center ${
-                  selected === "bike" ? "bg-primary-red" : ""
-                }`}
-              >
-                <BikeNavIcon isSelected={selected === "bike"} />
-                <Text
-                  className={`ml-2 font-semibold ${
-                    selected === "bike" ? "color-selected" : ""
-                  }`}
-                >
-                  {bikeTravelTime ? bikeTravelTime : "Calculating..."}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                testID="metro-button"
-                onPress={() => {
-                  setSelected("metro");
-                  setMode("TRANSIT");
-                }}
-                className={`flex p-2 rounded-3xl flex-row justify-around items-center ${
-                  selected === "metro" ? "bg-primary-red" : ""
-                }`}
-              >
-                <MetroNavIcon isSelected={selected === "metro"} />
-                <Text
-                  className={`ml-2 font-semibold ${
-                    selected === "metro" ? "color-selected" : ""
-                  }`}
-                >
-                  {metroTravelTime ? metroTravelTime : "Calculating..."}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                testID="walk-button"
-                onPress={() => {
-                  setSelected("walk");
-                  setMode("WALKING");
-                }}
-                className={`flex p-2 rounded-3xl flex-row justify-around items-center ${
-                  selected === "walk" ? "bg-primary-red" : ""
-                }`}
-              >
-                <WalkIcon isSelected={selected === "walk"} />
-                <Text
-                  className={`ml-2 font-semibold ${
-                    selected === "walk" ? "color-selected" : ""
-                  }`}
-                >
-                  {walkTravelTime ? walkTravelTime : "Calculating..."}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </ScrollView>
-        </View>
-      </View>
-    </Animated.View>
-  );
-};
-
+// Define the styles outside of the component
 const styles = StyleSheet.create({
   shadow: {
     boxShadow:
@@ -456,5 +137,363 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
 });
+
+/**
+ * Input component for selecting locations.
+ * Using JavaScript default parameters instead of defaultProps
+ *
+ * @param {Object} props - Component props.
+ * @param {string} props.placeholder - Placeholder text.
+ * @param {string} props.flag - Indicates whether it's origin or destination.
+ * @param {Function} props.onPlaceSelected - Function to handle place selection.
+ */
+const InputAutocomplete = ({
+  placeholder = "Search location...",
+  flag,
+  onPlaceSelected,
+}) => (
+  <GooglePlacesAutocomplete
+    enableHighAccuracyLocation={true}
+    styles={{
+      textInput: styles.input,
+      container: styles.autocompleteContainer,
+      listView: styles.listView,
+      row: styles.row,
+      poweredContainer: styles.poweredContainer,
+      separator: styles.separator,
+      description: styles.description,
+      predefinedPlacesDescription: {
+        color: "#1faadb",
+      },
+    }}
+    placeholder={placeholder || "Search location..."}
+    fetchDetails
+    enablePoweredByContainer={true}
+    minLength={2}
+    nearbyPlacesAPI="GooglePlacesSearch"
+    debounce={300}
+    numberOfLines={2}
+    listViewDisplayed="auto"
+    onPress={(data, details = null) => onPlaceSelected(details, flag)}
+    textInputProps={{
+      placeholderTextColor: "#999",
+      returnKeyType: "search",
+      autoCapitalize: "none",
+      autoCorrect: false,
+      defaultValue: placeholder || "",
+    }}
+    query={{
+      key: process.env.EXPO_PUBLIC_GOOGLE_API_KEY,
+      language: "en-us",
+      types: "geocode|establishment",
+    }}
+  />
+);
+
+// Define PropTypes for InputAutocomplete component
+InputAutocomplete.propTypes = {
+  placeholder: PropTypes.string,
+  flag: PropTypes.oneOf(["origin", "destination"]).isRequired,
+  onPlaceSelected: PropTypes.func.isRequired,
+};
+
+/**
+ * MapTraceroute component for selecting start and destination locations and choosing a transportation mode.
+ * Using JavaScript default parameters instead of defaultProps
+ *
+ * @param {Object} props - Component props
+ * @param {Function} props.setMode - Sets the transportation mode (DRIVING, WALKING, etc).
+ * @param {Array} props.waypoints - Array of waypoints for the route.
+ * @param {Function} props.setWaypoints - Sets the waypoints for the route.
+ * @param {Object} props.location - Current location of the user.
+ * @param {Function} props.reset - Function to reset the component state.
+ * @param {boolean} props.isRoute - Indicates if a route is currently active.
+ * @param {Function} props.setIsRoute - Sets the route active state.
+ * @param {Function} props.setSelectedBuilding - Sets the selected building.
+ * @param {Function} props.panToMyLocation - Function to pan the map to user's current location.
+ * @param {Object} props.end - Coordinates of the destination.
+ * @param {Object} props.start - Coordinates of the starting point.
+ * @param {Function} props.setEnd - Sets the destination coordinates.
+ * @param {Function} props.setStart - Sets the starting point coordinates.
+ * @param {string} props.startPosition - The text representation of the starting position.
+ * @param {string} props.destinationPosition - The text representation of the destination position.
+ * @param {Function} props.setStartPosition - Sets the text representation of the starting position.
+ * @param {Function} props.setDestinationPosition - Sets the text representation of the destination position.
+ * @param {boolean} props.closeTraceroute - Indicates if the traceroute panel should be closed.
+ * @param {Function} props.setCloseTraceroute - Sets the traceroute panel close state.
+ * @param {Function} props.setIsSearch - Sets the search active state.
+ * @param {string} props.carTravelTime - Estimated travel time by car.
+ * @param {string} props.bikeTravelTime - Estimated travel time by bike.
+ * @param {string} props.metroTravelTime - Estimated travel time by public transit.
+ * @param {string} props.walkTravelTime - Estimated travel time by walking.
+ * @returns {JSX.Element} A React Native component for route selection and display.
+ */
+const MapTraceroute = ({
+  setMode,
+  waypoints = [],
+  setWaypoints,
+  location,
+  reset,
+  isRoute = false,
+  setIsRoute,
+  setSelectedBuilding,
+  panToMyLocation,
+  end,
+  start,
+  setEnd,
+  setStart,
+  startPosition = "",
+  destinationPosition = "",
+  setStartPosition,
+  setDestinationPosition,
+  closeTraceroute,
+  setCloseTraceroute,
+  setIsSearch,
+  carTravelTime = "",
+  bikeTravelTime = "",
+  metroTravelTime = "",
+  walkTravelTime = "",
+}) => {
+  const [selected, setSelected] = useState("");
+  const slideAnim = useRef(
+    new Animated.Value(-Dimensions.get("window").height * 0.3)
+  ).current; // Initially set off-screen
+
+  /**
+   * Animates the traceroute panel sliding in.
+   */
+  const slideIn = () => {
+    Animated.timing(slideAnim, {
+      toValue: 0, // Slide to visible position
+      duration: 1000,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  /**
+   * Animates the traceroute panel sliding out.
+   */
+  const slideOut = () => {
+    Animated.timing(slideAnim, {
+      toValue: -Dimensions.get("window").height * 0.3, // Slide back up
+      duration: 500,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  /**
+   * Handles closing traceroute.
+   */
+  const handleCloseTraceroute = () => {
+    slideOut();
+    setCloseTraceroute(true);
+    reset();
+  };
+
+  useEffect(() => {
+    if (!closeTraceroute) {
+      slideIn();
+    }
+  }, [closeTraceroute]);
+
+  /**
+   * Handles place selection from Google Places Autocomplete.
+   * @param {Object} details - Place details.
+   * @param {string} flag - Indicates whether it's the origin or destination.
+   */
+  const onPlaceSelected = (details, flag) => {
+    const set = flag === "origin" ? setStart : setEnd;
+    const setPosition =
+      flag === "origin" ? setStartPosition : setDestinationPosition;
+
+    const position = {
+      latitude: details?.geometry.location.lat || 0,
+      longitude: details?.geometry.location.lng || 0,
+    };
+
+    // Update the coordinates for the selected point
+    set(position);
+
+    // Update the text display in the input field
+    setPosition(details?.formatted_address || details?.name || "");
+  };
+
+  return (
+    <Animated.View
+      className="rounded-xl p-3"
+      testID="sliding-view"
+      style={[styles.slidingView, styles.shadow, { top: slideAnim }]}
+    >
+      <View className="flex h-full w-full flex-col p-2">
+        <View className="mt-2 h-5/6 flex flex-row justify-center items-center">
+          <TouchableOpacity
+            testID="back-button"
+            className="mr-4 mb-8"
+            onPress={handleCloseTraceroute}
+          >
+            <ArrowIcon />
+          </TouchableOpacity>
+          <View className="flex flex-col justify-center items-center mr-4">
+            <CircleIcon />
+            <DotsIcon />
+            <SmallNavigationIcon />
+          </View>
+
+          {/* Search fields container */}
+          <View style={styles.searchContainer} className="w-2/3 mt-14">
+            {/* Origin field - higher z-index */}
+            <View style={styles.originContainer}>
+              <InputAutocomplete
+                placeholder={startPosition}
+                flag="origin"
+                onPlaceSelected={onPlaceSelected}
+              />
+            </View>
+
+            {/* Destination field - lower z-index */}
+            <View style={styles.destinationContainer}>
+              <InputAutocomplete
+                placeholder={destinationPosition}
+                flag="destination"
+                onPlaceSelected={onPlaceSelected}
+              />
+            </View>
+          </View>
+
+          <View className="ml-4">
+            <TouchableOpacity
+              testID="swap-button"
+              onPress={() => {
+                // Swap start and end positions
+                const tempStart = start;
+                const tempStartPosition = startPosition;
+
+                setStart(end);
+                setStartPosition(destinationPosition);
+
+                setEnd(tempStart);
+                setDestinationPosition(tempStartPosition);
+              }}
+            >
+              <SwapIcon />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Transportation Mode Selection */}
+        <View className="flex h-1/6">
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View className="flex flex-row items-center justify-around">
+              <TouchableOpacity
+                testID="car-button"
+                onPress={() => {
+                  setSelected("car");
+                  setMode("DRIVING");
+                }}
+                className={`flex mr-1 p-2 rounded-3xl flex-row justify-around items-center ${
+                  selected === "car" ? "bg-primary-red" : ""
+                }`}
+              >
+                <CarIcon isSelected={selected === "car"} />
+                <Text
+                  className={`ml-2 font-semibold ${
+                    selected === "car" ? "color-selected" : ""
+                  }`}
+                >
+                  {carTravelTime || "Calculating..."}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                testID="bike-button"
+                onPress={() => {
+                  setSelected("bike");
+                  setMode("BICYCLING");
+                }}
+                className={`flex mr-1 p-2 rounded-3xl flex-row justify-around items-center ${
+                  selected === "bike" ? "bg-primary-red" : ""
+                }`}
+              >
+                <BikeNavIcon isSelected={selected === "bike"} />
+                <Text
+                  className={`ml-2 font-semibold ${
+                    selected === "bike" ? "color-selected" : ""
+                  }`}
+                >
+                  {bikeTravelTime || "Calculating..."}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                testID="metro-button"
+                onPress={() => {
+                  setSelected("metro");
+                  setMode("TRANSIT");
+                }}
+                className={`flex p-2 rounded-3xl flex-row justify-around items-center ${
+                  selected === "metro" ? "bg-primary-red" : ""
+                }`}
+              >
+                <MetroNavIcon isSelected={selected === "metro"} />
+                <Text
+                  className={`ml-2 font-semibold ${
+                    selected === "metro" ? "color-selected" : ""
+                  }`}
+                >
+                  {metroTravelTime || "Calculating..."}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                testID="walk-button"
+                onPress={() => {
+                  setSelected("walk");
+                  setMode("WALKING");
+                }}
+                className={`flex p-2 rounded-3xl flex-row justify-around items-center ${
+                  selected === "walk" ? "bg-primary-red" : ""
+                }`}
+              >
+                <WalkIcon isSelected={selected === "walk"} />
+                <Text
+                  className={`ml-2 font-semibold ${
+                    selected === "walk" ? "color-selected" : ""
+                  }`}
+                >
+                  {walkTravelTime || "Calculating..."}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </View>
+      </View>
+    </Animated.View>
+  );
+};
+
+// Define PropTypes for the main MapTraceroute component
+MapTraceroute.propTypes = {
+  setMode: PropTypes.func.isRequired,
+  waypoints: PropTypes.array,
+  setWaypoints: PropTypes.func,
+  location: PropTypes.object,
+  reset: PropTypes.func.isRequired,
+  isRoute: PropTypes.bool,
+  setIsRoute: PropTypes.func,
+  setSelectedBuilding: PropTypes.func,
+  panToMyLocation: PropTypes.func,
+  end: PropTypes.object,
+  start: PropTypes.object,
+  setEnd: PropTypes.func.isRequired,
+  setStart: PropTypes.func.isRequired,
+  startPosition: PropTypes.string,
+  destinationPosition: PropTypes.string,
+  setStartPosition: PropTypes.func.isRequired,
+  setDestinationPosition: PropTypes.func.isRequired,
+  closeTraceroute: PropTypes.bool.isRequired,
+  setCloseTraceroute: PropTypes.func.isRequired,
+  setIsSearch: PropTypes.func,
+  carTravelTime: PropTypes.string,
+  bikeTravelTime: PropTypes.string,
+  metroTravelTime: PropTypes.string,
+  walkTravelTime: PropTypes.string,
+};
 
 export default MapTraceroute;
