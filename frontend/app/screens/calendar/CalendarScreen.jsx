@@ -3,7 +3,7 @@
  * @description Renders a calendar view with month display, date selection, and navigation options.
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { useNavigation } from "@react-navigation/native";
@@ -11,6 +11,46 @@ import BottomNavBar from "../../components/BottomNavBar/BottomNavBar"; // Ensure
 import CalendarDirectionsIcon from "../../components/Calendar/CalendarIcons/CalendarDirectionsIcon.jsx"; // Import CalendarDirectionsIcon
 import { useAppSettings } from "../../AppSettingsContext";
 import getThemeColors from "../../ColorBindTheme";
+
+/**
+ * Fetches public Google Calendar events using the given Calendar ID.
+ *
+ * @param {string} calendarId
+ */
+async function fetchPublicCalendarEvents(calendarId) {
+  try {
+    const GOOGLE_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_API_KEY2;
+
+    const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?key=${GOOGLE_API_KEY}&timeMin=2000-01-01T00:00:00Z&singleEvents=true&orderBy=startTime`;
+
+    console.log("Fetching calendar for:", calendarId);
+
+    const response = await fetch(url);
+    const textResponse = await response.text();
+    console.log("Raw response:", textResponse);
+
+    if (!response.ok) {
+      throw new Error(`Error fetching calendar events: ${response.status} - ${response.statusText}`);
+    }
+
+    const data = JSON.parse(textResponse);
+
+    console.log("\nFetched Calendar Events:");
+    if (!data.items || data.items.length === 0) {
+      console.log("No events found.");
+    } else {
+      data.items.forEach((event, index) => {
+        console.log(`\nEvent ${index + 1}:`);
+        console.log(`Title: ${event.summary}`);
+        console.log(`Start Date: ${event.start?.date || event.start?.dateTime}`);
+        console.log(`End Date: ${event.end?.date || event.end?.dateTime}`);
+        console.log(`Event Link: ${event.htmlLink}`);
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching public calendar:", error);
+  }
+}
 
 /**
  * CalendarScreen component renders a calendar with navigation and a directions button.
@@ -22,11 +62,13 @@ export default function CalendarScreen() {
   // React Navigation hook to manage navigation.
   const navigation = useNavigation();
   const theme = getThemeColors();
-  const {
-      textSize
-    } = useAppSettings();
-  // Google API issues no need for current sprint
-  // Here we would put the code to fetch the calendar with Google API
+  const { textSize } = useAppSettings();
+
+  // Fetch Google Calendar events when the calendar screen is accessed.
+  useEffect(() => {
+    const calendarId = process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_ID;
+    fetchPublicCalendarEvents(calendarId);
+  }, []);
 
   // Get screen height and width for multiple phones
   const screenHeight = Dimensions.get("window").height;
@@ -76,12 +118,13 @@ export default function CalendarScreen() {
 
       {/* Button with icon to trigger directions alert. Positioned near the bottom of the screen. */}
       <View style={{ position: "absolute", bottom: "10%", left: 0, right: 0 }}>
-
-      <TouchableOpacity
-        style={[styles.buttonContainer, { backgroundColor: theme.backgroundColor }]}
-        onPress={() => alert("Directions are coming soon!")}
-      >
-          <Text style={[styles.buttonText, { backgroundColor: theme.backgroundColor }, {fontSize: textSize }]}>Get Directions to My Next Class</Text>
+        <TouchableOpacity
+          style={[styles.buttonContainer, { backgroundColor: theme.backgroundColor }]}
+          onPress={() => alert("Directions are coming soon!")}
+        >
+          <Text style={[styles.buttonText, { backgroundColor: theme.backgroundColor }, { fontSize: textSize }]}>
+            Get Directions to My Next Class
+          </Text>
           {/* Add the icon after the text */}
           <CalendarDirectionsIcon width={25} height={25} />
         </TouchableOpacity>

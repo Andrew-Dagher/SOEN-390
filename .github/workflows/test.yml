@@ -16,7 +16,7 @@ jobs:
       - name: Setup Node.js for Backend
         uses: actions/setup-node@v3
         with:
-          node-version: '20.11'
+          node-version: "20.11"
 
       - name: Install Backend Dependencies
         run: |
@@ -75,7 +75,7 @@ jobs:
       - name: Setup Node.js for Frontend
         uses: actions/setup-node@v4
         with:
-          node-version: '22.11'
+          node-version: "22.11"
 
       - name: Install Frontend Dependencies
         run: |
@@ -149,13 +149,13 @@ jobs:
           sonar-scanner --version
 
       - name: Download Backend Coverage Report
-        uses: actions/download-artifact@v4  
+        uses: actions/download-artifact@v4
         with:
           name: backend-coverage
           path: backend/coverage
 
       - name: Download Frontend Coverage Report
-        uses: actions/download-artifact@v4  
+        uses: actions/download-artifact@v4
         with:
           name: frontend-coverage
           path: frontend/coverage
@@ -179,6 +179,6 @@ jobs:
             -Dsonar.exclusions=**/__tests__/**,**/*.test.js \
             -Dsonar.coverage.exclusions=**/__tests__/**,**/*.test.js \
             || (echo "SonarCloud analysis failed" && exit 1)
-      
+
       - name: Get SonarCloud Results
         run: "echo 'Check SonarCloud Report: https://sonarcloud.io/dashboard?id=Andrew-Dagher_SOEN-390&branch=${GITHUB_REF##*/}'"
