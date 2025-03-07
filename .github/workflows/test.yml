@@ -1,4 +1,3 @@
-copy paste new pipeline in your branches
 name: Testing and Code Analysis
 
 on: [push, pull_request]
