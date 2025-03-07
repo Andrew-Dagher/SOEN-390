@@ -373,6 +373,7 @@ export default function Map() {
           console.log("rendering bus marker", bus);
           return (
             <Marker
+              testID="bus-marker"
               key={bus.id} // Add a key prop
               coordinate={{
                 latitude: bus.latitude,
