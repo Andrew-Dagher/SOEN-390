@@ -204,11 +204,13 @@ const MapTraceroute = ({
   return (
     <Animated.View
       className="rounded-xl p-3"
+      testID="sliding-view"
       style={[styles.slidingView, styles.shadow, { top: slideAnim }]}
     >
       <View className="flex h-full w-full flex-col p-2">
         <View className="mt-2 h-5/6 flex flex-row justify-center items-center">
           <TouchableOpacity
+            testID="back-button"
             className="mr-4 mb-8"
             onPress={handleCloseTraceroute}
           >
@@ -241,6 +243,7 @@ const MapTraceroute = ({
 
           <View className="ml-4">
             <TouchableOpacity
+              testID="swap-button"
               onPress={() => {
                 // Swap start and end positions
                 const tempStart = start;
