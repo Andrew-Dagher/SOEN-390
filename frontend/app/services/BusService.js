@@ -87,6 +87,10 @@ class BusService {
     this.observers.forEach((observer) => observer.update(data));
   }
 
+  clearObservers() {
+    this.observers = [];
+  }
+
   start() {
     if (BusService.intervalId) {
       console.log("Already started");
