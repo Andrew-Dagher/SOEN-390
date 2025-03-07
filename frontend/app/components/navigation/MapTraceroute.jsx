@@ -27,6 +27,7 @@ import SmallNavigationIcon from "./Icons/SmallNavigationIcon";
 import SwapIcon from "./Icons/SwapIcon";
 import ArrowIcon from "./Icons/ArrowIcon";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
+
 import {
   SGWShuttlePickup,
   LoyolaShuttlePickup,
