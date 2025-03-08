@@ -39,6 +39,8 @@ import BottomNavBar from "../BottomNavBar/BottomNavBar";
 import { trackEvent } from "@aptabase/react-native";
 import { useAppSettings } from "../../AppSettingsContext";
 import getThemeColors from "../../ColorBindTheme";
+import MapPolygonHighlight from './MapPolygonHighlight';
+
 export default function Map() {
   const { textSize } = useAppSettings();
   const theme = getThemeColors();
@@ -225,89 +227,22 @@ export default function Map() {
     ref.current?.animateToRegion(location.coords);
   };
 
-  //Check whether the user's location is inside a concordia building
-  const isPointInPolygon = (point, polygon) => {
-    let x = point.latitude, y = point.longitude;
-    let inside = false;
-    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-      let xi = polygon[i].latitude, yi = polygon[i].longitude;
-      let xj = polygon[j].latitude, yj = polygon[j].longitude;
-  
-      let intersect = ((yi > y) !== (yj > y)) &&
-        (x < ((xj - xi) * (y - yi)) / (yj - yi) + xi);
-      if (intersect) inside = !inside;
-    }
-    return inside;
-  };  
-
-  useEffect(() => {
-    if (location) {
-      console.log("Checking location inside polygons...");
-    }
-  }, [location]);
-
-  useEffect(() => {
-    if (!activePolygon) return; // No active polygon, stop animation
-  
-    // Start the animation from 0 to 1 and loop
-    Animated.loop(
-      Animated.timing(animation, {
-        toValue: 1,
-        duration: 2500, // Transition time in milliseconds
-        easing: Easing.linear,
-        useNativeDriver: false,
-      })
-    ).start();
-  
-    return () => animation.setValue(0); // Reset when user leaves
-  }, [activePolygon]);
-
-  useEffect(() => {
-    const animationListener = animation.addListener(({ value }) => {
-      const interpolatedColor = `rgba(39, 103, 207, ${0.3 + (0.9 * value)})`;
-      setHighlightedPolygonColor((prev) => ({
-        ...prev,
-        [activePolygon]: interpolatedColor,
-      }));
-    });
-  
-    return () => animation.removeListener(animationListener);
-  }, [activePolygon]);
-
-
-  const renderPolygons = polygons.map((building, idx) => {
-    const isInside = location && isPointInPolygon(location.coords, building.boundaries);
-  
-    useEffect(() => {
-      if (isInside && activePolygon !== building.name) {
-        setActivePolygon(building.name); // Start animation
-      } else if (!isInside && activePolygon === building.name) {
-        setActivePolygon(null); // Stop animation when user leaves
-      }
-    }, [isInside]);
-  
-    return (
-      <View key={idx}>
-        {end == null ? (
-          <Marker
-            coordinate={building.point}
-            onPress={() => handleMarkerPress(building)}
-            image={require("../../../assets/concordia-logo.png")}
-          >
-            <Callout tooltip={true}>
+  const renderPolygons = polygons.map((building, idx) => (
+    <View key={idx}>
+      {end == null ? (
+        <Marker
+          coordinate={building.point}
+          onPress={() => handleMarkerPress(building)}
+          image={require("../../../assets/concordia-logo.png")}
+        >
+          <Callout tooltip={true}>
             <MapCard building={building} isCallout={true} />
-              </Callout>
-            </Marker>
-          ) : null}
-        <Polygon
-          coordinates={building.boundaries}
-          strokeWidth={2}
-          strokeColor={ isInside ? "blue" : theme.backgroundColor}
-          fillColor={ isInside ? highlightedPolygonColor[building.name] : theme.polygonFillColor}
-        />
-      </View>
-    );
-  });
+          </Callout>
+        </Marker>
+      ) : null}
+      <MapPolygonHighlight building={building} location={location} theme={theme} />
+    </View>
+  ));
   
   const traceRouteOnReady = (args) => {
     console.log("Directions are ready!");
