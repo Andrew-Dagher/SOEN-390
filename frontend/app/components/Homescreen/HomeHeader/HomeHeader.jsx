@@ -1,32 +1,47 @@
 /**
  * @file HomeHeader.jsx
- * @description Renders the header component for the home screen. This header displays a welcome message,
- * the user's name, and the Concordia logo. The background color is dynamically determined by the current theme.
+ * @description Renders the header component for the home screen with welcome message,
+ * user's name, and Concordia logo. Background color adapts to current theme.
  */
 
 import React from "react";
-import { View, Text, StyleSheet, Dimensions } from "react-native";
+import { View, Text, Dimensions } from "react-native";
 import Concordia50 from "./Icons/Concordia50/Concordia50";
 import getThemeColors from "../../../ColorBindTheme";
-
 import { useAppSettings } from "../../../AppSettingsContext";
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
-export default function HomeHeader(props) {
+const { width, height } = Dimensions.get("window");
+
+/**
+ * HomeHeader component for the application's home screen
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {string} props.name - User's name to display in the welcome message
+ * @returns {React.ReactElement} Rendered HomeHeader component
+ *
+ * @example
+ * // Basic usage
+ * <HomeHeader name="John Doe" />
+ */
+const HomeHeader = ({ name }) => {
+  /**
+   * Get current theme colors from the theme provider
+   * @type {Object}
+   */
   const theme = getThemeColors();
-  const {
-      textSize
-    } = useAppSettings();
+
+  /**
+   * Get text size from app settings context
+   * @type {Object}
+   */
+  const { textSize } = useAppSettings();
 
   return (
     <View
+      className="h-[194px] items-center flex-row rounded-bl-[60px] rounded-br-[60px]"
       style={{
-        height: 194,
-        alignItems: "center",
-        flexDirection: "row",
         backgroundColor: theme.backgroundColor,
-        borderBottomLeftRadius: 60,
-        borderBottomRightRadius: 60,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 1,
@@ -35,50 +50,29 @@ export default function HomeHeader(props) {
         gap: 120,
       }}
     >
-      <View testID="home-header" className="flex pl-6 pt-5">
+      {/* Welcome message container */}
+      <View testID="home-header" className="pl-6 pt-5">
         <Text className="text-white font-bold text-3xl">Welcome Back</Text>
-        <Text style={[{ fontSize: textSize }]} className="text-white font-bold text-2xl">{props.name}</Text>
-
+        <Text
+          className="text-white font-bold text-2xl"
+          style={{ fontSize: textSize }}
+        >
+          {name}
+        </Text>
       </View>
-      <View style={styles.logoContainer}>
+
+      {/* Logo container */}
+      <View
+        className="flex-1 items-end"
+        style={{
+          paddingRight: width * 0.05,
+          paddingTop: height * 0.03,
+        }}
+      >
         <Concordia50 />
       </View>
     </View>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  header: {
-    height: screenHeight * 0.25,
-    maxHeight: 194,
-    alignItems: "center",
-    flexDirection: "row",
-    borderBottomLeftRadius: 40,
-    borderBottomRightRadius: 40,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 200,
-    elevation: 10,
-  },
-  welcomeContainer: {
-    flex: 2,
-    paddingLeft: screenWidth * 0.05,
-    paddingTop: screenHeight * 0.02,
-  },
-  welcomeText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: Math.min(screenWidth * 0.08, 30),
-  },
-  nameText: {
-    color: "white",
-    fontSize: Math.min(screenWidth * 0.06, 24),
-  },
-  logoContainer: {
-    flex: 1,
-    alignItems: "flex-end",
-    paddingRight: screenWidth * 0.05,
-    paddingTop: screenHeight * 0.03,
-  },
-});
+export default HomeHeader;
