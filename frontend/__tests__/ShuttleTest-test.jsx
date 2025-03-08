@@ -33,7 +33,7 @@ jest.mock('@react-navigation/native', () => ({
 }));
 
 /**
- * Test suite for the <CalendarScreen /> component.
+ * Test suite for the NavigationScreen
  */
 describe('<NavigationScreen />', () => {
   /**
@@ -51,7 +51,7 @@ describe('<NavigationScreen />', () => {
     );
 
   /**
-   * Tests that the CalendarScreen renders the Calendar component.
+   * Tests that the NavigationSCreen renders the Map component.
    */
   test('it renders the Map component', () => {
     const { getByTestId } = renderWithNavigation();
@@ -109,6 +109,59 @@ describe('math', () => {
 
   let value2 = IsAtSGW(locationLoyola.coords);
   expect(value2).toBeFalsy();
-
-
 })
+
+/**
+ * Test suite for the NavigationScreen
+ */
+describe('<NavigationScreen />', () => {
+  /**
+   * Helper function to render CalendarScreen within a NavigationContainer.
+   *
+   * @returns {RenderAPI} The render result from @testing-library/react-native.
+   */
+  const renderWithNavigation = () =>
+    render(
+      <NavigationContainer>
+        <AppSettingsProvider>
+        <NavigationScreen />
+        </AppSettingsProvider>
+      </NavigationContainer>
+    );
+
+  /**
+   * Tests that the NavigationSCreen renders the Map component.
+   */
+  test('it renders the Map component', () => {
+    const { getByTestId } = renderWithNavigation();
+    const navComponent = getByTestId('navigation-view');
+    expect(navComponent).toBeTruthy();
+  });
+
+  test('it renders all the buildings from first to last', () => {
+    const {getByTestId} = renderWithNavigation();
+    const building1 = getByTestId('building-0');
+    const building55 = getByTestId('building-55');
+    expect(building1).toBeTruthy();
+    expect(building55).toBeTruthy();
+  })
+
+  test('get directions from one building with shuttle',() => {
+    const {getByText,getByTestId} = renderWithNavigation();
+    const building1 = getByTestId('building-0');
+
+    fireEvent(building1, 'onPress');
+    fireEvent(building1, 'onPress');
+    expect(getByText('Set Start')).toBeTruthy();
+
+    const setStart = getByTestId("set-start-end");
+    fireEvent(setStart, 'onPress');
+
+    expect(getByText('Set Destination')).toBeTruthy();
+
+    const setEnd = getByTestId("set-start-end");
+    fireEvent(setEnd, 'onPress');    
+
+  })
+ 
+});

@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   Dimensions,
-  TouchableOpacity,
   TouchableHighlight,
 } from "react-native";
 import MapView, {
@@ -215,17 +214,6 @@ export default function Map() {
     setSelectedBuilding(building);
     setIsSelected(true);
   };
-
-  async function getCurrentLocation() {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        console.error("Permission to access location was denied");
-        return;
-      }
-  
-      let location = await Location.getCurrentPositionAsync({});
-      setLocation(location);
-  }
 
   const panToMyLocation = () => {
     ref.current?.animateToRegion(location.coords);
@@ -473,7 +461,7 @@ export default function Map() {
         <View className="absolute w-full bottom-20">
           <View className="flex flex-row justify-center items-center">
             <TouchableHighlight
-
+              testID="set-start-end"
               style={[styles.shadow, { backgroundColor: theme.backgroundColor }]}
               className='mr-4 rounded-xl p-4 bg-primary-red'
               onPress={handleSetStart}
