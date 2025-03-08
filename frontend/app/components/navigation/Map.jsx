@@ -270,15 +270,19 @@ export default function Map() {
   }, [isRoute, waypoints, mode]);
 
   useEffect(() => {
-    // Set a fixed location instead of fetching the user's location
-    setLocation({
-      coords: {
-        latitude: 45.4943,  // Example: Concordia University SGW Campus
-        longitude: -73.5770
+    if (location != null && start != location.coords) return;
+    async function getCurrentLocation() {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setErrorMsg('Permission to access location was denied');
+        return;
       }
-    });
-  }, []);
   
+      let location = await Location.getCurrentPositionAsync({});
+      setLocation(location);
+    }
+    getCurrentLocation();
+  }, []);
 
   return (
     <View style={styles.container}>
