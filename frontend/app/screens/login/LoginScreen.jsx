@@ -19,7 +19,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import ConcordiaLogo from "../../components/ConcordiaLogo";
 import * as WebBrowser from "expo-web-browser";
 import ContinueWithGoogle from "../../components/ContinueWithGoogle";
-import { fetchPublicCalendarEvents, getAvailableCalendars } from "./calendarApi"; // Import shared functions
+import { checkExistingSession, storeUserData, handleGuestLogin } from "./LoginHelper"; // Import refactored functions
 
 /**
  * LoginScreen component serves as the default export and wraps the LoginScreenContent.
@@ -56,30 +56,12 @@ function LoginScreenContent() {
   }, []);
 
   useEffect(() => {
-    const checkExistingSession = async () => {
-      try {
-        const sessionId = await AsyncStorage.getItem("sessionId");
-        const guestMode = await AsyncStorage.getItem("guestMode");
-
-        if (sessionId) {
-          console.log("Existing session found, navigating to Home");
-          navigation.replace("Home");
-          return;
-        }
-
-        if (guestMode === "true") {
-          console.log("Guest mode detected, navigating to Home");
-          navigation.replace("Home");
-          return;
-        }
-      } catch (error) {
-        console.error("Error checking session:", error);
-      } finally {
-        setIsCheckingSession(false);
-      }
+    const checkSession = async () => {
+      await checkExistingSession(navigation);
+      setIsCheckingSession(false);
     };
 
-    checkExistingSession();
+    checkSession();
   }, [navigation]);
 
   useEffect(() => {
@@ -126,66 +108,11 @@ function LoginScreenContent() {
   const { user } = useUser();
   const { isSignedIn } = useAuth();
 
-  /**
-   * Stores user data (name, email, image) in AsyncStorage once the user is signed in.
-   * Navigates to the Home screen after successfully storing the user data.
-   * Fetches the public Google Calendar events for all available calendars.
-   */
-useEffect(() => {
-  const storeUserData = async () => {
+  useEffect(() => {
     if (isSignedIn && user) {
-      try {
-        const userData = {
-          fullName: user.fullName,
-          email: user.primaryEmailAddress?.emailAddress,
-          imageUrl: user.imageUrl,
-        };
-
-        await AsyncStorage.setItem("userData", JSON.stringify(userData));
-        console.log("Stored User Data:\n", JSON.stringify(userData, null, 2));
-
-        // Fetch available calendars
-        const calendars = await getAvailableCalendars();
-        if (calendars.length === 0) {
-          console.log("No calendars found in environment variables.");
-        } else {
-          // Store calendars in AsyncStorage
-          await AsyncStorage.setItem("availableCalendars", JSON.stringify(calendars));
-          console.log("Stored available calendars:", calendars);
-
-          // Set first calendar as default
-          await AsyncStorage.setItem("selectedCalendar", calendars[0]?.id || "");
-        }
-
-        navigation.replace("Home");
-      } catch (error) {
-        console.error("Error storing user data:", error);
-      }
+      storeUserData(user, navigation);
     }
-  };
-
-  storeUserData();
-}, [isSignedIn, user, navigation]);
-
-
-  const handleGuestLogin = async () => {
-    console.log("Guest Login Selected");
-    try {
-      const guestData = {
-        guest: true,
-        fullName: "Guest User",
-        email: "guest@demo.com",
-        imageUrl: null,
-      };
-
-      await AsyncStorage.setItem("guestMode", "true");
-      await AsyncStorage.setItem("userData", JSON.stringify(guestData));
-
-      navigation.replace("Home");
-    } catch (error) {
-      console.error("Error setting guest mode:", error);
-    }
-  };
+  }, [isSignedIn, user, navigation]);
 
   if (isCheckingSession) {
     return (
@@ -210,7 +137,7 @@ useEffect(() => {
             <ContinueWithGoogle onPress={handleGoogleSignIn} />
           </TouchableOpacity>
 
-          <TouchableOpacity className="mt-5" onPress={handleGuestLogin}>
+          <TouchableOpacity className="mt-5" onPress={() => handleGuestLogin(navigation)}>
             <Text className="text-[#1A73E8] text-lg font-medium underline">
               Continue as Guest
             </Text>

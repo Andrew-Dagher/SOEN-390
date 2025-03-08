@@ -23,7 +23,6 @@ import HomeScreen from "./screens/home/HomeScreen";
 import CalendarScreen from "./screens/calendar/CalendarScreen";
 import NavigationScreen from "./screens/navigation/NavigationScreen";
 import LoginScreen from "./screens/login/LoginScreen";
-import LoadingScreen from "./screens/login/LoadingScreen";
 import SettingsScreen from "./screens/settings/settingsScreen";
 import BuildingInfoScreen from "./screens/Info/BuildingInfoScreen";
 
@@ -56,7 +55,6 @@ export default function App() {
                 screenOptions={{ headerShown: false }}
               >
                 {/* Define each screen in the navigation stack */}
-                <Stack.Screen name="Loading" component={LoadingScreen} />
                 <Stack.Screen name="Home" component={HomeScreen} />
                 <Stack.Screen name="Calendar" component={CalendarScreen} />
                 <Stack.Screen name="Navigation" component={NavigationScreen} />

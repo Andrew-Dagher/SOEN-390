@@ -37,7 +37,10 @@ import BottomNavBar from "../BottomNavBar/BottomNavBar";
 import { trackEvent } from "@aptabase/react-native";
 import { useAppSettings } from "../../AppSettingsContext";
 import getThemeColors from "../../ColorBindTheme";
-export default function Map() {
+import { useRoute } from "@react-navigation/native";
+export default function Map({ navigationParams }) {
+  const route = useRoute();
+  const params = navigationParams || route.params; // Ensure params are retrieved
   const { textSize } = useAppSettings();
   const theme = getThemeColors();
   const navigation = useNavigation();
@@ -132,6 +135,35 @@ export default function Map() {
       setTravelTime[mode]?.("Error");
     }
   };
+
+    useEffect(() => {
+      if (params?.campus === "loyola") {
+        handleLoyola();
+      } else if (params?.campus === "sgw") {
+        handleSGW();
+      }
+
+      if (params?.currentLocation && params?.buildingName) {
+        const selectedBuilding = polygons.find(
+          (b) => b.name.toLowerCase() === params.buildingName.toLowerCase()
+        );
+
+        if (selectedBuilding) {
+          setStart(params.currentLocation);
+          setStartPosition("Your Location");
+
+          setEnd(selectedBuilding.point);
+          setDestinationPosition(selectedBuilding.name);
+          setSelectedBuilding(selectedBuilding);
+
+          setIsRoute(true); // Automatically start route
+          setIsSearch(true);
+        } else {
+          console.warn("Building not found:", params.buildingName);
+        }
+      }
+    }, [params]);
+
 
   const handleSetStart = () => {
     if (start != null && start !== location?.coords) {

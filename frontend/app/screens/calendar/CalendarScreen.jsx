@@ -12,10 +12,10 @@ import { useAuth } from "@clerk/clerk-expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import BottomNavBar from "../../components/BottomNavBar/BottomNavBar";
 import moment from "moment";
-import { fetchPublicCalendarEvents, handleGoToClass } from "../login/calendarApi";
+import { fetchPublicCalendarEvents, handleGoToClass } from "../login/LoginHelper";
 import { Modal } from "react-native";
 import GoToLoginButton from "../../components/Calendar/GoToLoginButton"
-
+import * as Location from 'expo-location';
 
 export default function CalendarScreen() {
   const navigation = useNavigation();
@@ -67,20 +67,31 @@ if (!isSignedIn) {
 
 
 
-  /**
-   * Parses location information and sends a JSON object to the next page.
-   *
-   * @param {string} location - The location string in the format "SWG, EV, 711"
-   */
-  const handleGoToClass = (location) => {
-    const [campus, building, room] = location.split(" ");
-    const jsonData = {
-      Campus: campus,
-      Building: building.split("-")[0],
-      Room: building.includes("-") ? building.split("-")[1] : room,
-    };
-    alert(JSON.stringify(jsonData, null, 2));
-  };
+/**
+ * Parses location information and sends a JSON object to the next page.
+ *
+ * @param {string} locationString - The location string in the format "SGW, Hall Building, 913"
+ */
+const handleGoToClass = async (locationString) => {
+  try {
+    const [campus, buildingName, room] = locationString.split(",").map((str) => str.trim());
+
+    const currentLocation = await Location.getCurrentPositionAsync({});
+
+    navigation.navigate("Navigation", {
+      campus: campus.toLowerCase().replace("<pre>", "").trim(), // Ensure it's either "sgw" or "loyola"
+      buildingName: buildingName.replace("<pre>", "").replace("</pre>", "").trim(),
+      currentLocation: {
+        latitude: currentLocation.coords.latitude,
+        longitude: currentLocation.coords.longitude,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching location or parsing location string:", error);
+  }
+};
+
+
 
   // Load stored calendars and selected calendar
   useEffect(() => {
@@ -218,7 +229,7 @@ if (!isSignedIn) {
                 </TouchableOpacity>
                 {expandedEvent === item.id && (
                   <View>
-                    <Text style={styles.eventLocation}>📍 {item.description}</Text>
+                    <Text style={styles.eventLocation}>📍 {item.description.replace(/<\/?pre>/g, "").trim()}</Text>
                     <Text style={styles.eventTime}>
                       {moment(item.start.dateTime).format("YYYY-MM-DD HH:mm")} - {moment(item.end.dateTime).format("HH:mm")}
                     </Text>

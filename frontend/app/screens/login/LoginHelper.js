@@ -1,4 +1,5 @@
 import moment from "moment";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 /**
  * Fetches the calendar metadata (including the name) using the Google Calendar API.
@@ -23,10 +24,10 @@ async function fetchCalendarName(calendarId, index) {
     }
 
     const data = await response.json();
-    return data.summary || `Calendar ${index}`; // Use the summary as the name, fallback to "Calendar {index}"
+    return data.summary || `Calendar ${index}`;
   } catch (error) {
     console.error(`Error fetching calendar name for ${calendarId}:`, error);
-    return `Calendar ${index}`; // Fallback name in case of error
+    return `Calendar ${index}`;
   }
 }
 
@@ -39,21 +40,19 @@ export async function getAvailableCalendars() {
   const calendars = [];
   let index = 1;
 
-  // Collect all calendar IDs from environment variables dynamically
   while (true) {
     const calendarIdKey = `EXPO_PUBLIC_GOOGLE_CALENDAR_ID${index}`;
     const calendarId = process.env[calendarIdKey];
 
-    if (!calendarId) break; // Stop when no more IDs are found
+    if (!calendarId) break;
 
     calendars.push({
       id: calendarId,
-      name: "", // Placeholder, will be updated after fetching
+      name: "",
     });
     index++;
   }
 
-  // Fetch names for all calendars with error handling
   await Promise.all(
     calendars.map(async (calendar, idx) => {
       calendar.name = await fetchCalendarName(calendar.id, idx + 1);
@@ -80,7 +79,6 @@ export async function fetchPublicCalendarEvents(calendarId, startDate, endDate) 
       return [];
     }
 
-    // Construct the API URL with dynamic time range filtering
     const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(
       calendarId
     )}/events?key=${GOOGLE_API_KEY}&timeMin=${startDate}&timeMax=${endDate}&singleEvents=true&orderBy=startTime`;
@@ -117,9 +115,93 @@ export async function fetchPublicCalendarEvents(calendarId, startDate, endDate) 
     }));
   } catch (error) {
     console.error(`Error fetching public calendar (${calendarId}):`, error);
-    return []; // Return empty array on error to prevent UI crashes
+    return [];
   }
 }
 
+/**
+ * Checks if there is an existing user session or guest mode.
+ * If a session or guest mode is found, navigates to the Home screen.
+ *
+ * @param {Function} navigation - React Navigation function for navigation control.
+ */
+export async function checkExistingSession(navigation) {
+  try {
+    const sessionId = await AsyncStorage.getItem("sessionId");
+    const guestMode = await AsyncStorage.getItem("guestMode");
 
+    if (sessionId) {
+      console.log("Existing session found, navigating to Home");
+      navigation.replace("Home");
+      return;
+    }
 
+    if (guestMode === "true") {
+      console.log("Guest mode detected, navigating to Home");
+      navigation.replace("Home");
+      return;
+    }
+  } catch (error) {
+    console.error("Error checking session:", error);
+  }
+}
+
+/**
+ * Stores user data (name, email, image) in AsyncStorage once the user is signed in.
+ * Fetches available calendars and sets the default calendar.
+ *
+ * @param {Object} user - The signed-in user object.
+ * @param {Function} navigation - React Navigation function for navigation control.
+ */
+export async function storeUserData(user, navigation) {
+  if (!user) return;
+
+  try {
+    const userData = {
+      fullName: user.fullName,
+      email: user.primaryEmailAddress?.emailAddress,
+      imageUrl: user.imageUrl,
+    };
+
+    await AsyncStorage.setItem("userData", JSON.stringify(userData));
+    console.log("Stored User Data:\n", JSON.stringify(userData, null, 2));
+
+    const calendars = await getAvailableCalendars();
+    if (calendars.length > 0) {
+      await AsyncStorage.setItem("availableCalendars", JSON.stringify(calendars));
+      console.log("Stored available calendars:", calendars);
+      await AsyncStorage.setItem("selectedCalendar", calendars[0]?.id || "");
+    } else {
+      console.log("No calendars found.");
+    }
+
+    navigation.replace("Home");
+  } catch (error) {
+    console.error("Error storing user data:", error);
+  }
+}
+
+/**
+ * Handles guest login by storing guest user data in AsyncStorage.
+ * Navigates the user to the Home screen.
+ *
+ * @param {Function} navigation - React Navigation function for navigation control.
+ */
+export async function handleGuestLogin(navigation) {
+  console.log("Guest Login Selected");
+  try {
+    const guestData = {
+      guest: true,
+      fullName: "Guest User",
+      email: "guest@demo.com",
+      imageUrl: null,
+    };
+
+    await AsyncStorage.setItem("guestMode", "true");
+    await AsyncStorage.setItem("userData", JSON.stringify(guestData));
+
+    navigation.replace("Home");
+  } catch (error) {
+    console.error("Error setting guest mode:", error);
+  }
+}
