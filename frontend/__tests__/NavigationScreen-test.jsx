@@ -60,9 +60,13 @@ describe("<MapCard />", () => {
   describe("<MapTraceroute />", () => {
     it("updates the selected transportation mode when clicked", () => {
       const setModeMock = jest.fn();
+      const setWalkToBus = jest.fn();
+      const setWalkFromBus = jest.fn();
+      const setIsShuttle = jest.fn();
+
       const { getByTestId } = render(
         <NavigationContainer>
-          <MapTraceroute setMode={setModeMock} />
+          <MapTraceroute setMode={setModeMock} setIsShuttle={setIsShuttle} setWalkToBus={setWalkToBus} setWalkFromBus={setWalkFromBus}/>
         </NavigationContainer>
       );
   
