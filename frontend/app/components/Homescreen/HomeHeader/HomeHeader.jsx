@@ -14,7 +14,8 @@ import { useAppSettings } from "../../../AppSettingsContext";
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 export default function HomeHeader(props) {
   const theme = getThemeColors();
-  const {
+
+    const {
       textSize
     } = useAppSettings();
 

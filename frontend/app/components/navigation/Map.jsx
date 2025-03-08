@@ -6,6 +6,8 @@ import {
   Dimensions,
   TouchableOpacity,
   TouchableHighlight,
+  Animated,
+  Easing
 } from "react-native";
 import MapView, {
   Marker,
@@ -50,6 +52,11 @@ export default function Map() {
   const [start, setStart] = useState(); // start lat lng of traceroute
   const [end, setEnd] = useState(); // destination lt lng of traceroute
   const [location, setLocation] = useState(null); // current user location
+
+  const [highlightedPolygonColor, setHighlightedPolygonColor] = useState({});
+  const [activePolygon, setActivePolygon] = useState(null);
+  const animation = useRef(new Animated.Value(0)).current; // Animated value for gradient effect
+
   const [errorMsg, setErrorMsg] = useState(null); // error message when getting location
   const [searchText, setSearchText] = useState(""); // textinput value
   const [closeTraceroute, setCloseTraceroute] = useState(false); // bool to hide traceroute
@@ -218,7 +225,67 @@ export default function Map() {
     ref.current?.animateToRegion(location.coords);
   };
 
+  //Check whether the user's location is inside a concordia building
+  const isPointInPolygon = (point, polygon) => {
+    let x = point.latitude, y = point.longitude;
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+      let xi = polygon[i].latitude, yi = polygon[i].longitude;
+      let xj = polygon[j].latitude, yj = polygon[j].longitude;
+  
+      let intersect = ((yi > y) !== (yj > y)) &&
+        (x < ((xj - xi) * (y - yi)) / (yj - yi) + xi);
+      if (intersect) inside = !inside;
+    }
+    return inside;
+  };  
+
+  useEffect(() => {
+    if (location) {
+      console.log("Checking location inside polygons...");
+    }
+  }, [location]);
+
+  useEffect(() => {
+    if (!activePolygon) return; // No active polygon, stop animation
+  
+    // Start the animation from 0 to 1 and loop
+    Animated.loop(
+      Animated.timing(animation, {
+        toValue: 1,
+        duration: 2500, // Transition time in milliseconds
+        easing: Easing.linear,
+        useNativeDriver: false,
+      })
+    ).start();
+  
+    return () => animation.setValue(0); // Reset when user leaves
+  }, [activePolygon]);
+
+  useEffect(() => {
+    const animationListener = animation.addListener(({ value }) => {
+      const interpolatedColor = `rgba(39, 103, 207, ${0.3 + (0.9 * value)})`;
+      setHighlightedPolygonColor((prev) => ({
+        ...prev,
+        [activePolygon]: interpolatedColor,
+      }));
+    });
+  
+    return () => animation.removeListener(animationListener);
+  }, [activePolygon]);
+
+
   const renderPolygons = polygons.map((building, idx) => {
+    const isInside = location && isPointInPolygon(location.coords, building.boundaries);
+  
+    useEffect(() => {
+      if (isInside && activePolygon !== building.name) {
+        setActivePolygon(building.name); // Start animation
+      } else if (!isInside && activePolygon === building.name) {
+        setActivePolygon(null); // Stop animation when user leaves
+      }
+    }, [isInside]);
+  
     return (
       <View key={idx}>
         {end == null ? (
@@ -227,24 +294,21 @@ export default function Map() {
             onPress={() => handleMarkerPress(building)}
             image={require("../../../assets/concordia-logo.png")}
           >
-            <Callout
-              tooltip={true}
-              onPress={() => navigation.navigate("Building Details", building)}
-            >
-              <MapCard building={building} isCallout={true} />
-            </Callout>
-          </Marker>
-        ) : null}
+            <Callout tooltip={true}>
+            <MapCard building={building} isCallout={true} />
+              </Callout>
+            </Marker>
+          ) : null}
         <Polygon
           coordinates={building.boundaries}
           strokeWidth={2}
-          strokeColor={theme.backgroundColor}
-          fillColor={theme.polygonFillColor}
+          strokeColor={ isInside ? "blue" : theme.backgroundColor}
+          fillColor={ isInside ? highlightedPolygonColor[building.name] : theme.polygonFillColor}
         />
       </View>
     );
   });
-
+  
   const traceRouteOnReady = (args) => {
     console.log("Directions are ready!");
   };
@@ -271,19 +335,15 @@ export default function Map() {
   }, [isRoute, waypoints, mode]);
 
   useEffect(() => {
-    if (location != null && start != location.coords) return;
-    async function getCurrentLocation() {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        setErrorMsg("Permission to access location was denied");
-        return;
+    // Set a fixed location instead of fetching the user's location
+    setLocation({
+      coords: {
+        latitude: 45.4943,  // Example: Concordia University SGW Campus
+        longitude: -73.5770
       }
-
-      let location = await Location.getCurrentPositionAsync({});
-      setLocation(location);
-    }
-    getCurrentLocation();
+    });
   }, []);
+  
 
   return (
     <View style={styles.container}>
