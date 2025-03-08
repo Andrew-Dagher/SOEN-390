@@ -227,6 +227,7 @@ export default function Map() {
       <View key={idx}>
         {end == null ? (
           <Marker
+            testID={"building-"+idx}
             coordinate={building.point}
             onPress={() => handleMarkerPress(building)}
             image={require("../../../assets/concordia-logo.png")}
@@ -331,6 +332,7 @@ export default function Map() {
           mode={"WALKING"}
         />) : null}
         {start != null && end != null && isShuttle ? (<MapViewDirections
+          testID='walkfrombus'
           origin={walkFromBus.start}
           destination={walkFromBus.end}
           apikey={process.env.EXPO_PUBLIC_GOOGLE_API_KEY}
@@ -339,6 +341,7 @@ export default function Map() {
           mode={"WALKING"}
         />) : null}
         {start != null && end != null && isShuttle ? (<MapViewDirections
+          testID='walktobus'
           origin={SGWShuttlePickup}
           destination={LoyolaShuttlePickup}
           apikey={process.env.EXPO_PUBLIC_GOOGLE_API_KEY}
@@ -472,7 +475,7 @@ export default function Map() {
               </View>
             </TouchableHighlight>
             <TouchableHighlight
-
+              testID="get-directions"
               style={[styles.shadow, { backgroundColor: theme.backgroundColor }]}
               className='rounded-xl p-4 bg-primary-red'
               onPress={handleGetDirections}

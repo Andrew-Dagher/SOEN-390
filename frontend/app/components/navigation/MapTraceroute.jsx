@@ -170,10 +170,10 @@ const MapTraceroute = ({
       return;
     }
     setSelected("car");
-    let isSGW = IsAtSGW(location.coords)
+    let isSGW = IsAtSGW(location?.coords)
     if (isSGW) {
       setWalkToBus({
-        start: location.coords,
+        start: location?.coords,
         end: SGWShuttlePickup
       })
       setWalkFromBus({
@@ -182,7 +182,7 @@ const MapTraceroute = ({
       })
     } else {
       setWalkToBus({
-        start: location.coords,
+        start: location?.coords,
         end: LoyolaShuttlePickup
       })
       setWalkFromBus({
@@ -190,9 +190,7 @@ const MapTraceroute = ({
         end: end
       })
     }
-
     setIsShuttle(true);
-
   }
 
   return (

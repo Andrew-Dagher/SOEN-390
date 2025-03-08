@@ -70,7 +70,7 @@ export const findClosestPoint = (reference, points) => {
  * @returns {boolean} True if the current location is closer to SGW, false if it's closer to Loyola.
  */
 export const IsAtSGW = (currentLocation) => {
-  if (currentLocation === null) return false;
+  if (currentLocation === undefined || currentLocation === null) return false;
 
     /**
    * Calculates the Euclidean distance between two geographic points.

@@ -44,5 +44,32 @@ describe('<NavigationScreen />', () => {
     const navComponent = getByTestId('navigation-view');
     expect(navComponent).toBeTruthy();
   });
+
+  test('it renders all the buildings from first to last', () => {
+    const {getByTestId} = renderWithNavigation();
+    const building1 = getByTestId('building-0');
+    const building55 = getByTestId('building-55');
+    expect(building1).toBeTruthy();
+    expect(building55).toBeTruthy();
+  })
+
+  test('get directions from one building with shuttle',() => {
+    const {getByText,getByTestId} = renderWithNavigation();
+    const building1 = getByTestId('building-0');
+
+    fireEvent(building1, 'onPress');
+    fireEvent(building1, 'onPress');
+    expect(getByText('Get Directions')).toBeTruthy();
+
+    const getDirections = getByTestId("get-directions");
+    fireEvent(getDirections, 'onPress');
+
+    const shuttleButton = getByTestId('car-button');
+
+    expect(shuttleButton).toBeTruthy();
+
+    fireEvent(shuttleButton, 'onPress');
+
+  })
  
 });
