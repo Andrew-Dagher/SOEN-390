@@ -186,10 +186,10 @@ export default function Map() {
     // Fetch travel times for all modes
     const fetchAllTravelTimes = async () => {
       await Promise.all([
-        fetchTravelTime(location.coords, selectedBuilding.point, 'DRIVING'),
-        fetchTravelTime(location.coords, selectedBuilding.point, 'BICYCLING'),
-        fetchTravelTime(location.coords, selectedBuilding.point, 'TRANSIT'),
-        fetchTravelTime(location.coords, selectedBuilding.point, 'WALKING'),
+        fetchTravelTime(location?.coords, selectedBuilding.point, 'DRIVING'),
+        fetchTravelTime(location?.coords, selectedBuilding.point, 'BICYCLING'),
+        fetchTravelTime(location?.coords, selectedBuilding.point, 'TRANSIT'),
+        fetchTravelTime(location?.coords, selectedBuilding.point, 'WALKING'),
       ]);
     };
 

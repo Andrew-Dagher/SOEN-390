@@ -9,8 +9,22 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import NavigationScreen from '../app/screens/navigation/NavigationScreen'
 import { AppSettingsProvider} from '../app/AppSettingsContext';
+import { IsAtSGW } from '../app/screens/navigation/navigationUtils';
 
 // Mock useRoute from React Navigation to simulate route information.
+jest.mock('expo-location', () => ({
+  ...jest.requireActual('expo-location'),
+  requestForegroundPermissionsAsync: () => ({
+    status: 'granted',
+  }),
+  getCurrentPositionAsync: ({}) => {
+    return {coords: {
+      latitude: 0,
+      longitude: 0
+    }}
+  } 
+}));
+
 jest.mock('@react-navigation/native', () => ({
   ...jest.requireActual('@react-navigation/native'),
   useRoute: () => ({
@@ -73,3 +87,28 @@ describe('<NavigationScreen />', () => {
   })
  
 });
+
+
+describe('math', () => {
+  const locationSGW = {
+    coords: {
+      latitude: 45.49756381515472,
+      longitude: -73.57477513448553
+    }
+  }
+
+  const locationLoyola = {
+    coords: {
+      latitude: 45.45897397807306, 
+      longitude:-73.65065753775421
+    }
+  }
+
+  let value1 = IsAtSGW(locationSGW.coords);
+  expect(value1).toBeTruthy();
+
+  let value2 = IsAtSGW(locationLoyola.coords);
+  expect(value2).toBeFalsy();
+
+
+})
