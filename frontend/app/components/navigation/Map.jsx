@@ -403,6 +403,11 @@ export default function Map() {
 
       {isSearch && end == null && (
         <MapResults
+          fetchTravelTime={fetchTravelTime}
+          setCarTravelTime={setCarTravelTime}
+          setBikeTravelTime={setBikeTravelTime}
+          setMetroTravelTime={setMetroTravelTime}
+          setWalkTravelTime={setWalkTravelTime}
           location={location}
           setIsRoute={setIsRoute}
           isRoute={isRoute}
