@@ -6,6 +6,7 @@
 import { Text, View, StyleSheet, TouchableOpacity } from "react-native";
 import LocationIcon from "./Icons/LocationIcon";
 import * as Location from "expo-location";
+import { useEffect } from "react";
 
 /**
  * MapLocation component provides a button to pan to the user's current location.
@@ -28,14 +29,11 @@ const MapLocation = ({ panToMyLocation, setLocation }) => {
     let location = await Location.getCurrentPositionAsync({});
     setLocation(location);
   }
-
   /**
    * Handles the button click event to fetch and center the user's location.
    */
   const handleClick = () => {
-    getCurrentLocation().then(() => {
-      panToMyLocation();
-    });
+    panToMyLocation();
   };
 
   return (
@@ -43,7 +41,7 @@ const MapLocation = ({ panToMyLocation, setLocation }) => {
       <TouchableOpacity
         onPress={handleClick}
         style={styles.shadow}
-        className="mb-40 rounded-3xl bg-white p-2 mr-4"
+        className="mb-40 flex items-center justify-center rounded-3xl bg-white p-2 mr-4"
       >
         <LocationIcon />
       </TouchableOpacity>

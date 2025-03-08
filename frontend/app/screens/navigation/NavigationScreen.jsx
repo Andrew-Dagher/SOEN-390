@@ -20,6 +20,7 @@ export default function NavigationScreen({ navigation }) {
     <View
       className="h-full opacity-100"
       style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+      testID='navigation-view'
     >
       {/* Render the Map component to display navigation details */}
       <Map />
