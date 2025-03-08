@@ -47,6 +47,11 @@ import { polygons } from "../../screens/navigation/navigationConfig";
  * @param {Function} props.setIsSearch - Controls the search view visibility
  */
 const MapResults = ({
+  fetchTravelTime,
+  setCarTravelTime,
+  setBikeTravelTime,
+  setMetroTravelTime,
+  setWalkTravelTime,
   location,
   setIsRoute,
   isRoute,
@@ -123,6 +128,11 @@ const MapResults = ({
    */
   const renderResults = searchResult.map((building, idx) => (
     <MapResultItem
+      fetchTravelTime={fetchTravelTime}
+      setCarTravelTime={setCarTravelTime}
+      setBikeTravelTime={setBikeTravelTime}
+      setMetroTravelTime={setMetroTravelTime}
+      setWalkTravelTime={setWalkTravelTime}
       key={idx}
       setIsSearch={setIsSearch}
       location={location}
