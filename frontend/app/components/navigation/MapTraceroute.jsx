@@ -286,6 +286,8 @@ const MapTraceroute = ({
    */
   const handleCloseTraceroute = () => {
     slideOut();
+    setEnd(null);
+    setStart(null);
     setWalkFromBus({start:null,end:null});
     setWalkToBus({start:null,end:null})
     setIsShuttle(false);

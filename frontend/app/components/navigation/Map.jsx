@@ -282,7 +282,7 @@ export default function Map() {
 
   useEffect(() => {
     console.log("is route: " + isRoute);
-  }, [isRoute, waypoints, mode, isShuttle,location]);
+  }, [isRoute, waypoints, mode, isShuttle, end]);
 
   useEffect(() => {
     if (location != null && start != location.coords) return;
