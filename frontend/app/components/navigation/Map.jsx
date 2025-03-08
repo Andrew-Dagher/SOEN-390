@@ -50,9 +50,7 @@ export default function Map() {
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [start, setStart] = useState(); // start lat lng of traceroute
   const [end, setEnd] = useState(); // destination lt lng of traceroute
-  const [location, setLocation] = useState({
-    coords:{}
-  }); // current user location
+  const [location, setLocation] = useState(null); // current user location
   const [errorMsg, setErrorMsg] = useState(null); // error message when getting location
   const [searchText, setSearchText] = useState(""); // textinput value
   const [closeTraceroute, setCloseTraceroute] = useState(false); // bool to hide traceroute
@@ -218,6 +216,17 @@ export default function Map() {
     setIsSelected(true);
   };
 
+  async function getCurrentLocation() {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        console.error("Permission to access location was denied");
+        return;
+      }
+  
+      let location = await Location.getCurrentPositionAsync({});
+      setLocation(location);
+  }
+
   const panToMyLocation = () => {
     ref.current?.animateToRegion(location.coords);
   };
@@ -273,7 +282,7 @@ export default function Map() {
 
   useEffect(() => {
     console.log("is route: " + isRoute);
-  }, [isRoute, waypoints, mode, isShuttle]);
+  }, [isRoute, waypoints, mode, isShuttle,location]);
 
   useEffect(() => {
     if (location != null && start != location.coords) return;
@@ -385,6 +394,7 @@ export default function Map() {
           setStart={setStart}
           setEnd={setEnd}
           destinationPosition={destinationPosition}
+          setDestinationPosition={setDestinationPosition}
           setStartPosition={setStartPosition}
           closeTraceroute={closeTraceroute}
           setCloseTraceroute={setCloseTraceroute}
@@ -456,7 +466,7 @@ export default function Map() {
       )}
 
       {!isSearch && (
-        <MapLocation panToMyLocation={panToMyLocation} setLocation={() => {}} />
+        <MapLocation panToMyLocation={panToMyLocation} setLocation={setLocation} />
       )}
 
       {selectedBuilding && !isSearch && (
