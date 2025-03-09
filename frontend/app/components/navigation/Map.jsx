@@ -139,7 +139,7 @@ export default function CampusMap({ navigationParams }) {
   };
 
     useEffect(() => {
-      if (params?.campus === "loyola") {
+      if (params?.campus === "loy") {
         handleLoyola();
       } else if (params?.campus === "sgw") {
         handleSGW();

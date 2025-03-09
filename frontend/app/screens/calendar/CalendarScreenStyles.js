@@ -52,6 +52,7 @@ export default StyleSheet.create({
     flex: 1,
     marginTop: 10,
     paddingHorizontal: 16,
+    paddingBottom: 60,
   },
   eventBox: {
     backgroundColor: "#F5F5F5",

@@ -19,6 +19,7 @@ import styles from "./CalendarScreenStyles";
 import EventObserver from "./EventObserver";
 import { NotificationObserver } from "./NotificationObserver";
 import InAppNotification from "../../components/InAppNotification";
+import NextClassButton from "../../components/Calendar/NextClassButton";
 
 export default function CalendarScreen() {
   // 1. Always call hooks at the top
@@ -96,29 +97,38 @@ export default function CalendarScreen() {
     loadStoredData();
   }, []);
 
-  // Fetch events from public calendar
-  useEffect(() => {
-    const fetchEvents = async () => {
-      if (!selectedCalendar) {
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      const startDate = currentStartDate.toISOString();
-      const endDate = currentStartDate.clone().add(10, "days").toISOString();
-
-      const fetchedEvents = await fetchPublicCalendarEvents(
-        selectedCalendar,
-        startDate,
-        endDate
-      );
-      setEvents(fetchedEvents);
+useEffect(() => {
+  const fetchEvents = async () => {
+    if (!selectedCalendar) {
       setLoading(false);
-    };
+      return;
+    }
 
-    fetchEvents();
-  }, [selectedCalendar, currentStartDate]);
+    setLoading(true);
+    const startDate = currentStartDate.toISOString();
+    const endDate = currentStartDate.clone().add(10, "days").toISOString();
+
+    let fetchedEvents = await fetchPublicCalendarEvents(
+      selectedCalendar,
+      startDate,
+      endDate
+    );
+
+    // Ensure the description follows "Campus, Building, Room" format
+    const regex = /^[^,]+,[^,]+,[^,]+$/;
+    fetchedEvents = fetchedEvents.filter(event => {
+      const description = event.description?.trim() || "";
+      return regex.test(description);
+    });
+
+    setEvents(fetchedEvents);
+    setLoading(false);
+  };
+
+  fetchEvents();
+}, [selectedCalendar, currentStartDate]);
+
+
 
   // 3. Now handle the conditional UI rendering
   if (!isSignedIn) {
@@ -286,6 +296,7 @@ export default function CalendarScreen() {
           />
         )}
       </View>
+      <NextClassButton eventObserver={eventsObserver} />
 
       <View style={styles.bottomNavBar}>
         <BottomNavBar />
