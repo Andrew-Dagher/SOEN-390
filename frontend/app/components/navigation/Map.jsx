@@ -12,7 +12,7 @@ import MapView, {
   Polygon,
   Callout,
 } from "react-native-maps";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import MapViewDirections from "react-native-maps-directions";
 import NavigationIcon from "./Icons/NavigationIcon";
 import DirectionsIcon from "./Icons/DirectionsIcon";
@@ -36,9 +36,12 @@ import BottomNavBar from "../BottomNavBar/BottomNavBar";
 import { trackEvent } from "@aptabase/react-native";
 import { useAppSettings } from "../../AppSettingsContext";
 import getThemeColors from "../../ColorBindTheme";
-export default function Map() {
+import PropTypes from "prop-types";
 
-  const {textSize} = useAppSettings();
+export default function CampusMap({ navigationParams }) {
+  const route = useRoute();
+  const params = navigationParams || route.params; // Ensure params are retrieved
+  const { textSize } = useAppSettings();
   const theme = getThemeColors();
   const navigation = useNavigation();
 
@@ -74,6 +77,7 @@ export default function Map() {
   const [isShuttle,setIsShuttle] = useState(false);
   const ref = useRef(null);
   const polygonRef = useRef(null);
+  const hasRoute = start && end;
   //Aptabase.init("A-US-0837971026")
   const fetchTravelTime = async (start, end, mode) => {
     if (!start || !end) return;
@@ -91,39 +95,39 @@ export default function Map() {
       setTravelTime[mode]?.("0 min");
       return;
   }
-  
+
     // Base URL defined as a global constant
     const GOOGLE_DIRECTIONS_API_BASE_URL = "https://maps.googleapis.com/maps/api/directions/json";
-    
+
     const travelMode = mode.toLowerCase();
-    
+
     let url = `${GOOGLE_DIRECTIONS_API_BASE_URL}?origin=${start.latitude},${start.longitude}` +
           `&destination=${end.latitude},${end.longitude}` +
           `&mode=${travelMode}` +
           `&key=${process.env.EXPO_PUBLIC_GOOGLE_API_KEY}`;
-    
+
     // specific parameters for transit mode
     if (travelMode === 'transit') {
       url += '&transit_mode=bus|subway|train';
     }
-  
+
     try {
       const response = await fetch(url);
       const data = await response.json();
-  
+
       if (data.status !== "OK") {
         console.error(`Error fetching ${mode} directions:`, data.status, data.error_message);
         // Set appropriate state to indicate no route found
         setTravelTime[mode]?.("No route");
         return;
       }
-  
+
       const route = data.routes[0];
       if (!route || !route.legs || !route.legs[0]) {
         console.error('No valid route found');
         return;
       }
-  
+
       const duration = route.legs[0].duration.text;
       // Update the appropriate state based on the mode
       setTravelTime[mode]?.(duration);
@@ -134,12 +138,41 @@ export default function Map() {
     }
   };
 
- const handleSetStart = () => {
-  if (start != null && start !== location?.coords) {
-    setIsRoute(true);
-    setIsSearch(true);
-    setDestinationPosition(selectedBuilding.name);
-    setEnd(selectedBuilding.point);
+    useEffect(() => {
+      if (params?.campus === "loyola") {
+        handleLoyola();
+      } else if (params?.campus === "sgw") {
+        handleSGW();
+      }
+
+      if (params?.currentLocation && params?.buildingName) {
+        const selectedBuilding = polygons.find(
+          (b) => b.name.toLowerCase() === params.buildingName.toLowerCase()
+        );
+
+        if (selectedBuilding) {
+          setStart(params.currentLocation);
+          setStartPosition("Your Location");
+
+          setEnd(selectedBuilding.point);
+          setDestinationPosition(selectedBuilding.name);
+          setSelectedBuilding(selectedBuilding);
+
+          setIsRoute(true); // Automatically start route
+          setIsSearch(true);
+        } else {
+          console.warn("Building not found:", params.buildingName);
+        }
+      }
+    }, [params]);
+
+
+  const handleSetStart = () => {
+    if (start != null && start !== location?.coords) {
+      setIsRoute(true);
+      setIsSearch(true);
+      setDestinationPosition(selectedBuilding.name);
+      setEnd(selectedBuilding.point);
 
     // Reset travel times
     setCarTravelTime(null);
@@ -318,9 +351,9 @@ export default function Map() {
           coordinate={LoyolaShuttlePickup}
           image={require("../../../assets/shuttle.png")}
         />
-        {start != null && end != null ? <Marker coordinate={end} /> : null}
-        {start != null && end != null ? <Marker coordinate={start} /> : null}
-        {start != null && end != null && isShuttle ? (<MapViewDirections
+        {hasRoute  ? <Marker coordinate={end} /> : null}
+        {hasRoute  ? <Marker coordinate={start} /> : null}
+        {hasRoute && isShuttle ? (<MapViewDirections
           origin={walkToBus.start}
           destination={walkToBus.end}
           apikey={process.env.EXPO_PUBLIC_GOOGLE_API_KEY}
@@ -328,7 +361,7 @@ export default function Map() {
           strokeWidth={6}
           mode={"WALKING"}
         />) : null}
-        {start != null && end != null && isShuttle ? (<MapViewDirections
+        {hasRoute && isShuttle ? (<MapViewDirections
           testID='walkfrombus'
           origin={walkFromBus.start}
           destination={walkFromBus.end}
@@ -337,7 +370,7 @@ export default function Map() {
           strokeWidth={6}
           mode={"WALKING"}
         />) : null}
-        {start != null && end != null && isShuttle ? (<MapViewDirections
+        {hasRoute && isShuttle ? (<MapViewDirections
           testID='walktobus'
           origin={SGWShuttlePickup}
           destination={LoyolaShuttlePickup}
@@ -346,7 +379,7 @@ export default function Map() {
           strokeWidth={6}
           mode={"DRIVING"}
         />) : null}
-        {start != null && end != null && !isShuttle ? (
+        {hasRoute && !isShuttle ? (
           <MapViewDirections
             origin={start}
             destination={end}
@@ -499,6 +532,17 @@ export default function Map() {
     </View>
   );
 }
+
+CampusMap.propTypes = {
+  navigationParams: PropTypes.shape({
+    campus: PropTypes.string,
+    buildingName: PropTypes.string,
+    currentLocation: PropTypes.shape({
+      latitude: PropTypes.number,
+      longitude: PropTypes.number,
+    }),
+  }),
+};
 
 const styles = StyleSheet.create({
   container: {
