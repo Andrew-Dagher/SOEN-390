@@ -84,7 +84,6 @@ export default function CampusMap({ navigationParams }) {
   // Add to busService observer list
   const [busMarkers, setBusMarkers] = useState([]);
 
-  const route = useRoute();
   const observerRef = useRef(null);
 
   useEffect(() => {
