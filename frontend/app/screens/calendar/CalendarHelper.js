@@ -10,7 +10,7 @@ import * as Location from "expo-location";
  */
 export async function handleGoToClass(locationString, navigation) {
   try {
-    const [campus, buildingName, room] = locationString
+    const [campus, buildingName] = locationString
       .split(",")
       .map((str) => str.trim());
 

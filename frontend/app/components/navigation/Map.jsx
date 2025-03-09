@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import PropTypes from "prop-types";
 import {
   View,
   Text,
@@ -36,9 +37,8 @@ import BottomNavBar from "../BottomNavBar/BottomNavBar";
 import { trackEvent } from "@aptabase/react-native";
 import { useAppSettings } from "../../AppSettingsContext";
 import getThemeColors from "../../ColorBindTheme";
-import MapPolygonHighlight from "./MapPolygonHighlight";
 
-export default function Map({ navigationParams }) {
+export default function campusMap({ navigationParams }) {
   const route = useRoute();
   const params = navigationParams || route.params; // Ensure params are retrieved
   const { textSize } = useAppSettings();
@@ -166,69 +166,63 @@ export default function Map({ navigationParams }) {
     }, [params]);
 
 
-  const handleSetStart = () => {
-    if (start != null && start !== location?.coords) {
-      setIsRoute(true);
-      setIsSearch(true);
-      setDestinationPosition(selectedBuilding.name);
-      setEnd(selectedBuilding.point);
+// 1) Create a small helper function to reset times and fetch them all:
+const fetchAllTravelModes = async (startCoord, endCoord) => {
+  // Reset travel times at once
+  setCarTravelTime(null);
+  setBikeTravelTime(null);
+  setMetroTravelTime(null);
+  setWalkTravelTime(null);
 
-    // Reset travel times
-    setCarTravelTime(null);
-    setBikeTravelTime(null);
-    setMetroTravelTime(null);
-    setWalkTravelTime(null);
+  // Fetch each mode in parallel
+  await Promise.all([
+    fetchTravelTime(startCoord, endCoord, "DRIVING"),
+    fetchTravelTime(startCoord, endCoord, "BICYCLING"),
+    fetchTravelTime(startCoord, endCoord, "TRANSIT"),
+    fetchTravelTime(startCoord, endCoord, "WALKING"),
+  ]);
+};
 
-    // Fetch times from start point to selected building
-    const fetchAllTravelTimes = async () => {
-      await Promise.all([
-        fetchTravelTime(start, selectedBuilding.point, 'DRIVING'),
-        fetchTravelTime(start, selectedBuilding.point, 'BICYCLING'),
-        fetchTravelTime(start, selectedBuilding.point, 'TRANSIT'),
-        fetchTravelTime(start, selectedBuilding.point, 'WALKING'),
-      ]);
-    };
-    fetchAllTravelTimes();
+// 2) Use that helper inside `handleSetStart`:
+const handleSetStart = () => {
+  if (start != null && start !== location?.coords) {
+    setIsRoute(true);
+    setIsSearch(true);
+    setDestinationPosition(selectedBuilding.name);
+    setEnd(selectedBuilding.point);
+
+    // Replace multiple lines with our helper
+    fetchAllTravelModes(start, selectedBuilding.point);
     return;
   }
   setStart(selectedBuilding.point);
   setStartPosition(selectedBuilding.name);
 };
 
-  const handleGetDirections = () => {
-    try {
-      trackEvent("Get Directions", { selectedBuilding });
-      console.log("Event tracked");
+// 3) Use the same helper inside `handleGetDirections`:
+const handleGetDirections = () => {
+  try {
+    trackEvent("Get Directions", { selectedBuilding });
+    console.log("Event tracked");
+
     setIsRoute(true);
     setIsSearch(true);
     setEnd(selectedBuilding.point);
     setDestinationPosition(selectedBuilding.name);
+
     if (location != null) {
       setStart(location.coords);
     }
     setStartPosition("Your Location");
 
-    // Reset all travel times before fetching new ones
-    setCarTravelTime(null);
-    setBikeTravelTime(null);
-    setMetroTravelTime(null);
-    setWalkTravelTime(null);
+    // Again, we rely on the helper
+    fetchAllTravelModes(location?.coords, selectedBuilding.point);
 
-    // Fetch travel times for all modes
-    const fetchAllTravelTimes = async () => {
-      await Promise.all([
-        fetchTravelTime(location?.coords, selectedBuilding.point, 'DRIVING'),
-        fetchTravelTime(location?.coords, selectedBuilding.point, 'BICYCLING'),
-        fetchTravelTime(location?.coords, selectedBuilding.point, 'TRANSIT'),
-        fetchTravelTime(location?.coords, selectedBuilding.point, 'WALKING'),
-      ]);
-    };
-
-    fetchAllTravelTimes();
   } catch (e) {
     console.error(e);
-    }
-  };
+  }
+};
+
 
   const handleLoyola = () => {
     setCampus("loyola");
@@ -531,6 +525,17 @@ export default function Map({ navigationParams }) {
     </View>
   );
 }
+// Declare PropTypes (optional but recommended for linting & documentation)
+campusMap.propTypes = {
+  navigationParams: PropTypes.shape({
+    campus: PropTypes.string,
+    buildingName: PropTypes.string,
+    currentLocation: PropTypes.shape({
+      latitude: PropTypes.number,
+      longitude: PropTypes.number,
+    }),
+  }),
+};
 
 const styles = StyleSheet.create({
   container: {
