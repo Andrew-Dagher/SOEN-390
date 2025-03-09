@@ -22,6 +22,7 @@ import { useAppSettings } from "../../AppSettingsContext";
 import getThemeColors from "../../ColorBindTheme";
 import BottomNavBar from "../../components/BottomNavBar/BottomNavBar";
 import { loadUserData, pickImage, handleLogout } from "../../settingsUtils";
+import PropTypes from "prop-types"; 
 
 export default function SettingsScreen() {
   const {
@@ -85,7 +86,7 @@ export default function SettingsScreen() {
             }}
             textSize={textSize}
           />
-
+          
           {/* Color Vision Options */}
           {isColorBlindModeEnabled && (
            ["Deuteranomaly", "Protanomaly", "Tritanomaly"].map((type) => (
@@ -152,6 +153,13 @@ const SettingToggle = ({ label, description, value, onChange, textSize }) => (
   </View>
 );
 
+SettingToggle.propTypes = {
+  label: PropTypes.string.isRequired,
+  description: PropTypes.string,
+  value: PropTypes.bool.isRequired,
+  onChange: PropTypes.func.isRequired,
+  textSize: PropTypes.number.isRequired,
+};
 
 const RadioOption = ({ label, selected, onPress, textSize }) => (
   <View className="flex-row justify-between items-center h-12">
@@ -164,6 +172,13 @@ const RadioOption = ({ label, selected, onPress, textSize }) => (
   </View>
 );
 
+RadioOption.propTypes = {
+  label: PropTypes.string.isRequired,
+  selected: PropTypes.bool.isRequired,
+  onPress: PropTypes.func.isRequired,
+  textSize: PropTypes.number.isRequired,
+};
+
 const ActionButton = ({ label, onPress, theme, textSize }) => (
   <TouchableOpacity 
     onPress={onPress} 
@@ -173,6 +188,15 @@ const ActionButton = ({ label, onPress, theme, textSize }) => (
     <Text style={[{ fontSize: textSize }]} className="text-white text-lg font-medium">{label}</Text>
   </TouchableOpacity>
 );
+
+ActionButton.propTypes = {
+  label: PropTypes.string.isRequired,
+  onPress: PropTypes.func.isRequired,
+  theme: PropTypes.shape({
+    backgroundColor: PropTypes.string.isRequired,
+  }).isRequired,
+  textSize: PropTypes.number.isRequired,
+};
 
 const styles = StyleSheet.create({
   header: { backgroundColor: "#7c2933" },
