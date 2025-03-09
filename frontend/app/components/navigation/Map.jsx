@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Dimensions,
   TouchableHighlight,
-  Animated,
 } from "react-native";
 import MapView, {
   Marker,
@@ -23,7 +22,6 @@ import {
   SGWShuttlePickup,
   LoyolaShuttlePickup,
 } from "../../screens/navigation/navigationConfig";
-import MapCard from "./MapCard";
 import MapSearch from "./MapSearch";
 import SGWIcon from "./Icons/SGWIcon";
 import LoyolaIcon from "./Icons/LoyolaIcon";
