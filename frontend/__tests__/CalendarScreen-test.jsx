@@ -1,72 +1,13 @@
 import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
-import CalendarScreen from "../app/screens/calendar/CalendarScreen";
-import GoToClassButton from "../app/components/Calendar/GoToClassButton";
-import GoToLoginButton from "../app/components/Calendar/GoToLoginButton";
 import { NavigationContainer } from "@react-navigation/native";
-import { createStackNavigator } from "@react-navigation/stack";
+import CalendarScreen from "../app/screens/calendar/CalendarScreen";
 import { useAuth } from "@clerk/clerk-expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as CalendarHelper from "../app/screens/calendar/CalendarHelper";
 import { fetchPublicCalendarEvents } from "../app/screens/login/LoginHelper";
 
-// Mock react-native-gesture-handler
-jest.mock("react-native-gesture-handler", () => {
-  const { View, TouchableOpacity, FlatList } = require("react-native");
-  return {
-    GestureHandlerRootView: ({ children }) => <View>{children}</View>,
-    PanGestureHandler: ({ children }) => <View>{children}</View>,
-    TouchableOpacity: TouchableOpacity,
-    FlatList: FlatList,
-    RNGestureHandlerModule: {
-      install: jest.fn(),
-      attachGestureHandler: jest.fn(),
-      createGestureHandler: jest.fn(),
-      dropGestureHandler: jest.fn(),
-      updateGestureHandler: jest.fn(),
-      State: {},
-      Directions: {},
-    },
-  };
-});
-
-// Mock react-native Image
-jest.mock("react-native", () => {
-  const RN = jest.requireActual("react-native");
-  return {
-    ...RN,
-    Image: ({ source, style, resizeMode }) => (
-      <RN.View testID="mock-image" style={style} />
-    ),
-  };
-});
-
-// Mock geolocation (allow failure case)
-global.navigator = global.navigator || {};
-global.navigator.geolocation = {
-  getCurrentPosition: jest.fn((success, error) => error(new Error("Geolocation failed"))),
-};
-
-// Mock additional components
-jest.mock("../../components/BottomNavBar/BottomNavBar", () => () => (
-  <View testID="bottom-nav-bar" />
-));
-jest.mock("../../components/InAppNotification", () => ({ visible, message }) =>
-  visible ? <Text testID="notification">{message}</Text> : null
-);
-
-// Mock Navigation
-jest.mock("@react-navigation/native", () => {
-  const actualNav = jest.requireActual("@react-navigation/native");
-  return {
-    ...actualNav,
-    useNavigation: () => ({
-      navigate: jest.fn(),
-      reset: jest.fn(),
-    }),
-  };
-});
-
+// ---- Mock all dependencies so no real network calls/storage happen ----
 jest.mock("@clerk/clerk-expo", () => ({
   useAuth: jest.fn(),
 }));
@@ -77,107 +18,103 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
   removeItem: jest.fn(),
 }));
 
-jest.mock("../app/screens/calendar/CalendarHelper", () => ({
-  handleGoToClass: jest.fn(),
-}));
-
 jest.mock("../app/screens/login/LoginHelper", () => ({
   fetchPublicCalendarEvents: jest.fn(),
 }));
 
-jest.mock("moment", () => () => ({
-  format: () => "Mar 08",
-  startOf: () => ({ toISOString: () => "2025-03-08T00:00:00Z" }),
-  clone: () => ({
-    add: () => ({ format: () => "Mar 17", toISOString: () => "2025-03-17T00:00:00Z" }),
-    subtract: () => ({ format: () => "Feb 27" }),
-  }),
+jest.mock("../app/screens/calendar/CalendarHelper", () => ({
+  handleGoToClass: jest.fn(),
 }));
 
-const mockEvents = [
-  {
-    id: "1",
-    title: "Sample Event",
-    description: "SGW, Hall Building, 913",
-    start: { dateTime: "2025-03-10T10:00:00Z" },
-    end: { dateTime: "2025-03-10T11:00:00Z" },
-  },
-];
-
-const Stack = createStackNavigator();
-
-describe("<CalendarScreen />", () => {
+describe("CalendarScreen Tests", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    AsyncStorage.getItem.mockResolvedValue(null); // Default: no stored data
   });
 
-  test("renders GoToLoginButton when user is not signed in", () => {
+  it("shows the guest screen (GoToLoginButton) if user is not signed in", async () => {
+    // Mock that user is NOT signed in
     useAuth.mockReturnValue({ isSignedIn: false });
 
     const { getByText } = render(
       <NavigationContainer>
-        <Stack.Navigator>
-          <Stack.Screen name="CalendarScreen" component={CalendarScreen} />
-        </Stack.Navigator>
+        <CalendarScreen />
       </NavigationContainer>
     );
 
-    expect(getByText("Go to Login")).toBeTruthy();
+    // Since user is not signed in, we expect to see the 'Login' button
+    expect(getByText("Login")).toBeTruthy();
   });
 
-  test("renders calendar and events when user is signed in", async () => {
+  it("renders events when user is signed in and fetches from mock", async () => {
+    // Mock that user IS signed in
     useAuth.mockReturnValue({ isSignedIn: true });
-    fetchPublicCalendarEvents.mockResolvedValue(mockEvents);
-    AsyncStorage.getItem
-      .mockResolvedValueOnce(JSON.stringify([{ id: "cal1", name: "Test Calendar" }])) // availableCalendars
-      .mockResolvedValueOnce("cal1"); // selectedCalendar
 
-    const { getByText } = render(
+    // Provide mock calendar events
+    fetchPublicCalendarEvents.mockResolvedValueOnce([
+      {
+        id: "1",
+        title: "Sample Event",
+        description: "<pre>Class Link Goes Here</pre>",
+        start: { dateTime: "2025-01-01T10:00:00Z" },
+        end: { dateTime: "2025-01-01T11:00:00Z" },
+      },
+    ]);
+
+    const { getByText, findByText } = render(
       <NavigationContainer>
-        <Stack.Navigator>
-          <Stack.Screen name="CalendarScreen" component={CalendarScreen} />
-        </Stack.Navigator>
+        <CalendarScreen />
       </NavigationContainer>
     );
 
-    expect(getByText("Google Calendar")).toBeTruthy();
-    await waitFor(() => expect(getByText("Sample Event")).toBeTruthy());
+    // Wait for the event title to appear
+    const eventTitle = await findByText("Sample Event");
+    expect(eventTitle).toBeTruthy();
+
+    // Expand the event to reveal the description and the "Go to Class" button
+    fireEvent.press(eventTitle);
+
+    // Now we can see the description (the <pre> tags are removed by .replace in your code)
+    expect(getByText("📍 Class Link Goes Here")).toBeTruthy();
+
+    // Check if "Go to Class" button is there
+    const goToClassBtn = getByText("Go to Class");
+    expect(goToClassBtn).toBeTruthy();
   });
-});
 
-describe("<GoToClassButton />", () => {
-  test("renders correctly and triggers navigation on press", async () => {
-    // Assuming GoToClassButton logs an error but still calls handleGoToClass on failure
-    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+  it('calls handleGoToClass when "Go to Class" button is pressed', async () => {
+    useAuth.mockReturnValue({ isSignedIn: true });
 
-    const { getByText } = render(<GoToClassButton locationString="SGW, Hall Building, 913" />);
+    // Mock event with a specific description
+    fetchPublicCalendarEvents.mockResolvedValueOnce([
+      {
+        id: "2",
+        title: "Another Event",
+        description: "<pre>Zoom Link: XYZ</pre>",
+        start: { dateTime: "2025-01-02T10:00:00Z" },
+        end: { dateTime: "2025-01-02T11:00:00Z" },
+      },
+    ]);
 
-    const button = getByText("Go to Class");
-    expect(button).toBeTruthy();
+    const { findByText, getByText } = render(
+      <NavigationContainer>
+        <CalendarScreen />
+      </NavigationContainer>
+    );
 
-    fireEvent.press(button);
-    await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "Error fetching location or parsing location string:",
-        expect.any(Error)
-      );
-      expect(CalendarHelper.handleGoToClass).toHaveBeenCalledWith("SGW, Hall Building, 913");
-    });
+    // Wait for event title
+    const eventTitle = await findByText("Another Event");
 
-    consoleErrorSpy.mockRestore();
-  });
-});
+    // Expand the event
+    fireEvent.press(eventTitle);
 
-describe("<GoToLoginButton />", () => {
-  test("renders correctly and calls onPress function when pressed", () => {
-    const mockOnPress = jest.fn();
-    const { getByText } = render(<GoToLoginButton onPress={mockOnPress} />);
+    // Press "Go to Class"
+    fireEvent.press(getByText("Go to Class"));
 
-    const button = getByText("Go to Login");
-    expect(button).toBeTruthy();
-
-    fireEvent.press(button);
-    expect(mockOnPress).toHaveBeenCalled();
+    // Verify it calls handleGoToClass with the description and navigation object
+    expect(CalendarHelper.handleGoToClass).toHaveBeenCalledTimes(1);
+    expect(CalendarHelper.handleGoToClass).toHaveBeenCalledWith(
+      "Zoom Link: XYZ",
+      expect.any(Object) // Because navigation is passed in
+    );
   });
 });
