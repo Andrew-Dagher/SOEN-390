@@ -6,12 +6,10 @@ import {
   Dimensions,
   TouchableHighlight,
   Animated,
-  Easing
 } from "react-native";
 import MapView, {
   Marker,
   PROVIDER_DEFAULT,
-  Polygon,
   Callout,
 } from "react-native-maps";
 import { useNavigation } from "@react-navigation/native";
@@ -54,10 +52,6 @@ export default function Map() {
   const [start, setStart] = useState(); // start lat lng of traceroute
   const [end, setEnd] = useState(); // destination lt lng of traceroute
   const [location, setLocation] = useState(null); // current user location
-
-  const [highlightedPolygonColor, setHighlightedPolygonColor] = useState({});
-  const [activePolygon, setActivePolygon] = useState(null);
-  const animation = useRef(new Animated.Value(0)).current; // Animated value for gradient effect
 
   const [errorMsg, setErrorMsg] = useState(null); // error message when getting location
   const [searchText, setSearchText] = useState(""); // textinput value
@@ -236,8 +230,9 @@ export default function Map() {
           onPress={() => handleMarkerPress(building)}
           image={require("../../../assets/concordia-logo.png")}
         >
-          <Callout tooltip={true}>
-            <MapCard building={building} isCallout={true} />
+          <Callout tooltip={true}
+          onPress={() => navigation.navigate("Building Details", building)}
+          >
           </Callout>
         </Marker>
       ) : null}

@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Animated, Easing } from 'react-native';
 import { Polygon } from 'react-native-maps';
 import getThemeColors from "../../ColorBindTheme";
+import PropTypes from 'prop-types';
+
 
 // Function to check if a point is inside a polygon
 export const isPointInPolygon = (point, polygon) => {
@@ -18,9 +20,8 @@ export const isPointInPolygon = (point, polygon) => {
   return inside;
 };
 
-
 // Component to handle polygon highlighting
-const MapPolygonHighlight = ({ building, location}) => {
+const MapPolygonHighlight = ({ building, location }) => {
   const theme = getThemeColors();
   const [highlightedPolygonColor, setHighlightedPolygonColor] = useState(theme.polygonFillColor);
   const animation = useRef(new Animated.Value(0)).current;
@@ -63,6 +64,24 @@ const MapPolygonHighlight = ({ building, location}) => {
       fillColor={highlightedPolygonColor}
     />
   );
+};
+
+MapPolygonHighlight.propTypes = {
+  building: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    boundaries: PropTypes.arrayOf(
+      PropTypes.shape({
+        latitude: PropTypes.number.isRequired,
+        longitude: PropTypes.number.isRequired,
+      })
+    ).isRequired,
+  }).isRequired,
+  location: PropTypes.shape({
+    coords: PropTypes.shape({
+      latitude: PropTypes.number.isRequired,
+      longitude: PropTypes.number.isRequired,
+    }),
+  }),
 };
 
 export default MapPolygonHighlight;
