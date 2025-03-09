@@ -121,7 +121,7 @@ const MapResultItem = ({
       >
         {/* Building name and associated icons */}
         <View className="flex flex-row items-center mb-4">
-          <Text className="font-bold">{building.name}</Text>
+          <Text className="font-bold" style={[{ fontSize: textSize }]}>{building.name}</Text>
           <View className="flex flex-row items-center gap-2 ml-4">{icons}</View>
         </View>
         <View className="mb-4 flex flex-row">

@@ -31,6 +31,7 @@ const HomeHeader = ({ name }) => {
    */
   const theme = getThemeColors();
 
+
   /**
    * Get text size from app settings context
    * @type {Object}
