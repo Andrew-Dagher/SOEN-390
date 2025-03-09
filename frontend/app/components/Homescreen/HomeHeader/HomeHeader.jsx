@@ -9,7 +9,7 @@ import { View, Text, Dimensions } from "react-native";
 import Concordia50 from "./Icons/Concordia50/Concordia50";
 import getThemeColors from "../../../ColorBindTheme";
 import { useAppSettings } from "../../../AppSettingsContext";
-
+import PropTypes from "prop-types";
 const { width, height } = Dimensions.get("window");
 
 /**
@@ -73,6 +73,10 @@ const HomeHeader = ({ name }) => {
       </View>
     </View>
   );
+};
+
+HomeHeader.propTypes = {
+  name: PropTypes.string.isRequired, //Proptype validation for name to be string
 };
 
 export default HomeHeader;
