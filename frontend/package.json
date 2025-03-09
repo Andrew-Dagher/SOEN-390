@@ -11,13 +11,13 @@
     "web": "expo start --web"
   },
   "jest": {
-  "preset": "jest-expo",
-  "transformIgnorePatterns": [
-    "node_modules/(?!(?:.pnpm/)?((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg|react-native-color-matrix-image-filters|react-native-google-places-autocomplete))/"
-  ],
-  "setupFiles": [
-    "./jestSetup.js"
-  ]
+    "preset": "jest-expo",
+    "transformIgnorePatterns": [
+      "node_modules/(?!(?:.pnpm/)?((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg|react-native-color-matrix-image-filters|react-native-google-places-autocomplete))/"
+    ],
+    "setupFiles": [
+      "./jestSetup.js"
+    ]
   },
   "dependencies": {
     "@aptabase/react-native": "^0.3.10",
@@ -46,7 +46,7 @@
     "expo-web-browser": "~14.0.2",
     "install": "^0.13.0",
     "jest-expo": "~52.0.3",
-    "lightningcss": "^1.29.1",
+    "lightningcss": "^1.29.2",
     "nativewind": "^4.1.23",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
