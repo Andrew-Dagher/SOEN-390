@@ -28,6 +28,9 @@ import SmallNavigationIcon from "./Icons/SmallNavigationIcon";
 import SwapIcon from "./Icons/SwapIcon";
 import ArrowIcon from "./Icons/ArrowIcon";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
+import { SGWShuttlePickup, LoyolaShuttlePickup } from '../../screens/navigation/navigationConfig';
+import { IsAtSGW } from '../../screens/navigation/navigationUtils';
+
 
 // Define the styles outside of the component
 const styles = StyleSheet.create({
@@ -229,30 +232,27 @@ InputAutocomplete.propTypes = {
  * @returns {JSX.Element} A React Native component for route selection and display.
  */
 const MapTraceroute = ({
+  isShuttle,
+  setWalkToBus,
+  setWalkFromBus,
+  setIsShuttle,
   setMode,
-  waypoints = [],
-  setWaypoints,
   location,
   reset,
-  isRoute = false,
-  setIsRoute,
-  setSelectedBuilding,
   panToMyLocation,
   end,
-  start,
   setEnd,
   setStart,
-  startPosition = "",
-  destinationPosition = "",
+  startPosition,
   setStartPosition,
+  destinationPosition,
   setDestinationPosition,
   closeTraceroute,
   setCloseTraceroute,
-  setIsSearch,
-  carTravelTime = "",
-  bikeTravelTime = "",
-  metroTravelTime = "",
-  walkTravelTime = "",
+  carTravelTime,
+  bikeTravelTime,
+  metroTravelTime,
+  walkTravelTime,
 }) => {
   const [selected, setSelected] = useState("");
   const slideAnim = useRef(
@@ -286,6 +286,11 @@ const MapTraceroute = ({
    */
   const handleCloseTraceroute = () => {
     slideOut();
+    setEnd(null);
+    setStart(null);
+    setWalkFromBus({start:null,end:null});
+    setWalkToBus({start:null,end:null})
+    setIsShuttle(false);
     setCloseTraceroute(true);
     reset();
   };
@@ -295,6 +300,43 @@ const MapTraceroute = ({
       slideIn();
     }
   }, [closeTraceroute]);
+
+  /*
+    Handles the shuttle integration. If the user is closer to SGW they will have to walk to SGW bus stop.
+    If they are closer to loyola they will have to walk to Loyola shuttle pickup. This renders 3 Map directions
+    1 to walk to bus from start
+    1 bus ride
+    1 to walk from bus to destination
+  */
+  const handleShuttleIntegration = () => {
+    if (isShuttle) {
+      setSelected("");
+      setIsShuttle(false);
+      return;
+    }
+    setSelected("car");
+    let isSGW = IsAtSGW(location?.coords)
+    if (isSGW) {
+      setWalkToBus({
+        start: location?.coords,
+        end: SGWShuttlePickup
+      })
+      setWalkFromBus({
+        start: LoyolaShuttlePickup,
+        end: end
+      })
+    } else {
+      setWalkToBus({
+        start: location?.coords,
+        end: LoyolaShuttlePickup
+      })
+      setWalkFromBus({
+        start: SGWShuttlePickup,
+        end: end
+      })
+    }
+    setIsShuttle(true);
+  }
 
   /**
    * Handles place selection from Google Places Autocomplete.
@@ -387,7 +429,7 @@ const MapTraceroute = ({
               <TouchableOpacity
                 testID="car-button"
                 onPress={() => {
-                  setSelected("car");
+                  handleShuttleIntegration();
                   setMode("DRIVING");
                 }}
                 className={`flex mr-1 p-2 rounded-3xl flex-row justify-around items-center ${
