@@ -6,11 +6,7 @@ import {
   Dimensions,
   TouchableHighlight,
 } from "react-native";
-import MapView, {
-  Marker,
-  PROVIDER_DEFAULT,
-  Callout,
-} from "react-native-maps";
+import MapView, { Marker, PROVIDER_DEFAULT, Callout } from "react-native-maps";
 import { useNavigation } from "@react-navigation/native";
 import MapViewDirections from "react-native-maps-directions";
 import NavigationIcon from "./Icons/NavigationIcon";
@@ -34,11 +30,11 @@ import BottomNavBar from "../BottomNavBar/BottomNavBar";
 import { trackEvent } from "@aptabase/react-native";
 import { useAppSettings } from "../../AppSettingsContext";
 import getThemeColors from "../../ColorBindTheme";
-import MapPolygonHighlight from './MapPolygonHighlight';
+import MapPolygonHighlight from "./MapPolygonHighlight";
+import MapCard from "./MapCard";
 
 export default function Map() {
-
-  const {textSize} = useAppSettings();
+  const { textSize } = useAppSettings();
   const theme = getThemeColors();
   const navigation = useNavigation();
 
@@ -65,14 +61,14 @@ export default function Map() {
   const [metroTravelTime, setMetroTravelTime] = useState(null); //Estimated travel time by public transit
   const [walkTravelTime, setWalkTravelTime] = useState(null); //Estimated travel time on foot
   const [walkToBus, setWalkToBus] = useState({
-    start:null,
-    end:null
+    start: null,
+    end: null,
   });
   const [walkFromBus, setWalkFromBus] = useState({
-    start:null,
-    end:null
+    start: null,
+    end: null,
   });
-  const [isShuttle,setIsShuttle] = useState(false);
+  const [isShuttle, setIsShuttle] = useState(false);
   const ref = useRef(null);
   const polygonRef = useRef(null);
   //Aptabase.init("A-US-0837971026")
@@ -88,43 +84,51 @@ export default function Map() {
 
     // Check if start and end locations are the same
     if (start.latitude === end.latitude && start.longitude === end.longitude) {
-      console.log(`Start and end locations are the same. Setting travel time to 0 min.`);
+      console.log(
+        `Start and end locations are the same. Setting travel time to 0 min.`
+      );
       setTravelTime[mode]?.("0 min");
       return;
-  }
-  
-    // Base URL defined as a global constant
-    const GOOGLE_DIRECTIONS_API_BASE_URL = "https://maps.googleapis.com/maps/api/directions/json";
-    
-    const travelMode = mode.toLowerCase();
-    
-    let url = `${GOOGLE_DIRECTIONS_API_BASE_URL}?origin=${start.latitude},${start.longitude}` +
-          `&destination=${end.latitude},${end.longitude}` +
-          `&mode=${travelMode}` +
-          `&key=${process.env.EXPO_PUBLIC_GOOGLE_API_KEY}`;
-    
-    // specific parameters for transit mode
-    if (travelMode === 'transit') {
-      url += '&transit_mode=bus|subway|train';
     }
-  
+
+    // Base URL defined as a global constant
+    const GOOGLE_DIRECTIONS_API_BASE_URL =
+      "https://maps.googleapis.com/maps/api/directions/json";
+
+    const travelMode = mode.toLowerCase();
+
+    let url =
+      `${GOOGLE_DIRECTIONS_API_BASE_URL}?origin=${start.latitude},${start.longitude}` +
+      `&destination=${end.latitude},${end.longitude}` +
+      `&mode=${travelMode}` +
+      `&key=${process.env.EXPO_PUBLIC_GOOGLE_API_KEY}`;
+
+    // specific parameters for transit mode
+    if (travelMode === "transit") {
+      url += "&transit_mode=bus|subway|train";
+    }
+
     try {
       const response = await fetch(url);
       const data = await response.json();
-  
+
       if (data.status !== "OK") {
-        console.error(`Error fetching ${mode} directions:`, data.status, data.error_message);
+        console.error(
+          `Error fetching ${mode} directions:`,
+          data.status,
+          data.error_message
+        );
         // Set appropriate state to indicate no route found
         setTravelTime[mode]?.("No route");
         return;
       }
-  
+
       const route = data.routes[0];
       if (!route || !route.legs || !route.legs[0]) {
-        console.error('No valid route found');
+        console.error("No valid route found");
         return;
       }
-  
+
       const duration = route.legs[0].duration.text;
       // Update the appropriate state based on the mode
       setTravelTime[mode]?.(duration);
@@ -135,67 +139,71 @@ export default function Map() {
     }
   };
 
- const handleSetStart = () => {
-  if (start != null && start !== location?.coords) {
-    setIsRoute(true);
-    setIsSearch(true);
-    setDestinationPosition(selectedBuilding.name);
-    setEnd(selectedBuilding.point);
+  const handleSetStart = () => {
+    if (start != null && start !== location?.coords) {
+      setIsRoute(true);
+      setIsSearch(true);
+      setDestinationPosition(selectedBuilding.name);
+      setEnd(selectedBuilding.point);
 
-    // Reset travel times
-    setCarTravelTime(null);
-    setBikeTravelTime(null);
-    setMetroTravelTime(null);
-    setWalkTravelTime(null);
+      // Reset travel times
+      setCarTravelTime(null);
+      setBikeTravelTime(null);
+      setMetroTravelTime(null);
+      setWalkTravelTime(null);
 
-    // Fetch times from start point to selected building
-    const fetchAllTravelTimes = async () => {
-      await Promise.all([
-        fetchTravelTime(start, selectedBuilding.point, 'DRIVING'),
-        fetchTravelTime(start, selectedBuilding.point, 'BICYCLING'),
-        fetchTravelTime(start, selectedBuilding.point, 'TRANSIT'),
-        fetchTravelTime(start, selectedBuilding.point, 'WALKING'),
-      ]);
-    };
-    fetchAllTravelTimes();
-    return;
-  }
-  setStart(selectedBuilding.point);
-  setStartPosition(selectedBuilding.name);
-};
+      // Fetch times from start point to selected building
+      const fetchAllTravelTimes = async () => {
+        await Promise.all([
+          fetchTravelTime(start, selectedBuilding.point, "DRIVING"),
+          fetchTravelTime(start, selectedBuilding.point, "BICYCLING"),
+          fetchTravelTime(start, selectedBuilding.point, "TRANSIT"),
+          fetchTravelTime(start, selectedBuilding.point, "WALKING"),
+        ]);
+      };
+      fetchAllTravelTimes();
+      return;
+    }
+    setStart(selectedBuilding.point);
+    setStartPosition(selectedBuilding.name);
+  };
 
   const handleGetDirections = () => {
     try {
       trackEvent("Get Directions", { selectedBuilding });
       console.log("Event tracked");
-    setIsRoute(true);
-    setIsSearch(true);
-    setEnd(selectedBuilding.point);
-    setDestinationPosition(selectedBuilding.name);
-    if (location != null) {
-      setStart(location.coords);
-    }
-    setStartPosition("Your Location");
+      setIsRoute(true);
+      setIsSearch(true);
+      setEnd(selectedBuilding.point);
+      setDestinationPosition(selectedBuilding.name);
+      if (location != null) {
+        setStart(location.coords);
+      }
+      setStartPosition("Your Location");
 
-    // Reset all travel times before fetching new ones
-    setCarTravelTime(null);
-    setBikeTravelTime(null);
-    setMetroTravelTime(null);
-    setWalkTravelTime(null);
+      // Reset all travel times before fetching new ones
+      setCarTravelTime(null);
+      setBikeTravelTime(null);
+      setMetroTravelTime(null);
+      setWalkTravelTime(null);
 
-    // Fetch travel times for all modes
-    const fetchAllTravelTimes = async () => {
-      await Promise.all([
-        fetchTravelTime(location?.coords, selectedBuilding.point, 'DRIVING'),
-        fetchTravelTime(location?.coords, selectedBuilding.point, 'BICYCLING'),
-        fetchTravelTime(location?.coords, selectedBuilding.point, 'TRANSIT'),
-        fetchTravelTime(location?.coords, selectedBuilding.point, 'WALKING'),
-      ]);
-    };
+      // Fetch travel times for all modes
+      const fetchAllTravelTimes = async () => {
+        await Promise.all([
+          fetchTravelTime(location?.coords, selectedBuilding.point, "DRIVING"),
+          fetchTravelTime(
+            location?.coords,
+            selectedBuilding.point,
+            "BICYCLING"
+          ),
+          fetchTravelTime(location?.coords, selectedBuilding.point, "TRANSIT"),
+          fetchTravelTime(location?.coords, selectedBuilding.point, "WALKING"),
+        ]);
+      };
 
-    fetchAllTravelTimes();
-  } catch (e) {
-    console.error(e);
+      fetchAllTravelTimes();
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -228,16 +236,22 @@ export default function Map() {
           onPress={() => handleMarkerPress(building)}
           image={require("../../../assets/concordia-logo.png")}
         >
-          <Callout tooltip={true}
-          onPress={() => navigation.navigate("Building Details", building)}
+          <Callout
+            tooltip={true}
+            onPress={() => navigation.navigate("Building Details", building)}
           >
+            <MapCard building={building} isCallout={true} />
           </Callout>
         </Marker>
       ) : null}
-      <MapPolygonHighlight building={building} location={location} theme={theme} />
+      <MapPolygonHighlight
+        building={building}
+        location={location}
+        theme={theme}
+      />
     </View>
   ));
-  
+
   const traceRouteOnReady = (args) => {
     console.log("Directions are ready!");
   };
@@ -267,11 +281,11 @@ export default function Map() {
     if (location != null && start != location.coords) return;
     async function getCurrentLocation() {
       let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setErrorMsg('Permission to access location was denied');
+      if (status !== "granted") {
+        setErrorMsg("Permission to access location was denied");
         return;
       }
-  
+
       let location = await Location.getCurrentPositionAsync({});
       setLocation(location);
     }
@@ -311,32 +325,38 @@ export default function Map() {
         />
         {start != null && end != null ? <Marker coordinate={end} /> : null}
         {start != null && end != null ? <Marker coordinate={start} /> : null}
-        {start != null && end != null && isShuttle ? (<MapViewDirections
-          origin={walkToBus.start}
-          destination={walkToBus.end}
-          apikey={process.env.EXPO_PUBLIC_GOOGLE_API_KEY}
-          strokeColor="red"
-          strokeWidth={6}
-          mode={"WALKING"}
-        />) : null}
-        {start != null && end != null && isShuttle ? (<MapViewDirections
-          testID='walkfrombus'
-          origin={walkFromBus.start}
-          destination={walkFromBus.end}
-          apikey={process.env.EXPO_PUBLIC_GOOGLE_API_KEY}
-          strokeColor="red"
-          strokeWidth={6}
-          mode={"WALKING"}
-        />) : null}
-        {start != null && end != null && isShuttle ? (<MapViewDirections
-          testID='walktobus'
-          origin={SGWShuttlePickup}
-          destination={LoyolaShuttlePickup}
-          apikey={process.env.EXPO_PUBLIC_GOOGLE_API_KEY}
-          strokeColor="#862532"
-          strokeWidth={6}
-          mode={"DRIVING"}
-        />) : null}
+        {start != null && end != null && isShuttle ? (
+          <MapViewDirections
+            origin={walkToBus.start}
+            destination={walkToBus.end}
+            apikey={process.env.EXPO_PUBLIC_GOOGLE_API_KEY}
+            strokeColor="red"
+            strokeWidth={6}
+            mode={"WALKING"}
+          />
+        ) : null}
+        {start != null && end != null && isShuttle ? (
+          <MapViewDirections
+            testID="walkfrombus"
+            origin={walkFromBus.start}
+            destination={walkFromBus.end}
+            apikey={process.env.EXPO_PUBLIC_GOOGLE_API_KEY}
+            strokeColor="red"
+            strokeWidth={6}
+            mode={"WALKING"}
+          />
+        ) : null}
+        {start != null && end != null && isShuttle ? (
+          <MapViewDirections
+            testID="walktobus"
+            origin={SGWShuttlePickup}
+            destination={LoyolaShuttlePickup}
+            apikey={process.env.EXPO_PUBLIC_GOOGLE_API_KEY}
+            strokeColor="#862532"
+            strokeWidth={6}
+            mode={"DRIVING"}
+          />
+        ) : null}
         {start != null && end != null && !isShuttle ? (
           <MapViewDirections
             origin={start}
@@ -375,6 +395,7 @@ export default function Map() {
           destinationPosition={destinationPosition}
           setDestinationPosition={setDestinationPosition}
           setStartPosition={setStartPosition}
+          startPosition={startPosition}
           closeTraceroute={closeTraceroute}
           setCloseTraceroute={setCloseTraceroute}
         />
@@ -450,7 +471,10 @@ export default function Map() {
       )}
 
       {!isSearch && (
-        <MapLocation panToMyLocation={panToMyLocation} setLocation={setLocation} />
+        <MapLocation
+          panToMyLocation={panToMyLocation}
+          setLocation={setLocation}
+        />
       )}
 
       {selectedBuilding && !isSearch && (
@@ -458,24 +482,49 @@ export default function Map() {
           <View className="flex flex-row justify-center items-center">
             <TouchableHighlight
               testID="set-start-end"
-              style={[styles.shadow, { backgroundColor: theme.backgroundColor }]}
-              className='mr-4 rounded-xl p-4 bg-primary-red'
+              style={[
+                styles.shadow,
+                { backgroundColor: theme.backgroundColor },
+              ]}
+              className="mr-4 rounded-xl p-4 bg-primary-red"
               onPress={handleSetStart}
             >
-              <View className='flex flex-row justify-around items-center'>
-                {start != null && start != location?.coords ? <Text style={[{ fontSize: textSize }]} className='color-white mr-4 font-bold'>Set Destination</Text> : <Text style={[{ fontSize: textSize }]} className='color-white mr-4 font-bold'>Set Start</Text>}
+              <View className="flex flex-row justify-around items-center">
+                {start != null && start != location?.coords ? (
+                  <Text
+                    style={[{ fontSize: textSize }]}
+                    className="color-white mr-4 font-bold"
+                  >
+                    Set Destination
+                  </Text>
+                ) : (
+                  <Text
+                    style={[{ fontSize: textSize }]}
+                    className="color-white mr-4 font-bold"
+                  >
+                    Set Start
+                  </Text>
+                )}
 
                 <NavigationIcon />
               </View>
             </TouchableHighlight>
             <TouchableHighlight
               testID="get-directions"
-              style={[styles.shadow, { backgroundColor: theme.backgroundColor }]}
-              className='rounded-xl p-4 bg-primary-red'
+              style={[
+                styles.shadow,
+                { backgroundColor: theme.backgroundColor },
+              ]}
+              className="rounded-xl p-4 bg-primary-red"
               onPress={handleGetDirections}
             >
-              <View className='flex flex-row justify-around items-center'>
-                <Text style={[{ fontSize: textSize }]} className='color-white mr-4 font-bold'>Get Directions</Text>
+              <View className="flex flex-row justify-around items-center">
+                <Text
+                  style={[{ fontSize: textSize }]}
+                  className="color-white mr-4 font-bold"
+                >
+                  Get Directions
+                </Text>
 
                 <DirectionsIcon />
               </View>
