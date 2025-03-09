@@ -18,41 +18,21 @@ import GoToLoginButton from "../../components/Calendar/GoToLoginButton";
 import styles from "./CalendarScreenStyles";
 import EventObserver from "./EventObserver";
 import { NotificationObserver } from "./NotificationObserver";
-import InAppNotification from "../../components/InAppNotification"; // Import in-app notification
+import InAppNotification from "../../components/InAppNotification";
 
 export default function CalendarScreen() {
+  // 1. Always call hooks at the top
   const navigation = useNavigation();
   const { isSignedIn } = useAuth();
 
-      if (!isSignedIn) {
-        return (
-          <View style={styles.guestContainer}>
-            <GoToLoginButton
-              onPress={async () => {
-                try {
-                  await AsyncStorage.removeItem("sessionId");
-                  await AsyncStorage.removeItem("userData");
-                  await AsyncStorage.removeItem("guestMode");
-                  navigation.reset({ index: 0, routes: [{ name: "Login" }] });
-                } catch (error) {
-                  console.error("Login Redirect Error:", error);
-                }
-              }}
-            />
-            <View style={styles.bottomNavBar}>
-              <BottomNavBar />
-            </View>
-          </View>
-        );
-      }
-
-  // OBSERVER: create an instance of EventObserver
+  // Create an instance of EventObserver (always called)
   const [eventsObserver] = useState(new EventObserver());
 
   // In-app notification state
   const [notificationMessage, setNotificationMessage] = useState("");
   const [notificationVisible, setNotificationVisible] = useState(false);
 
+  // Other state
   const [events, setEvents] = useState([]);
   const [expandedEvent, setExpandedEvent] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -63,27 +43,20 @@ export default function CalendarScreen() {
   );
   const [modalVisible, setModalVisible] = useState(false);
 
+  // 2. Then do your effects or other hooks
+  useEffect(() => {
+    const observerCallback = (events) => {
+      NotificationObserver(events, showInAppNotification, currentStartDate);
+    };
 
+    eventsObserver.subscribe(observerCallback);
 
+    return () => {
+      eventsObserver.unsubscribe(observerCallback);
+    };
+  }, [eventsObserver, currentStartDate]);
 
-
-
-  // Subscribe NotificationObserver to our eventsObserver
-useEffect(() => {
-  const observerCallback = (events) => {
-    NotificationObserver(events, showInAppNotification, currentStartDate);
-  };
-
-  eventsObserver.subscribe(observerCallback);
-
-  return () => {
-    eventsObserver.unsubscribe(observerCallback);
-  };
-}, [eventsObserver, currentStartDate]); // Now depends on `currentStartDate`
-
-
-
-  // Function to show a custom in-app notification
+  // Show in-app notification
   const showInAppNotification = (message) => {
     console.log("📢 Triggering In-App Notification:", message);
     setNotificationMessage(message);
@@ -95,19 +68,19 @@ useEffect(() => {
     }, 5000);
   };
 
+  // Notify observer whenever `events` changes
   useEffect(() => {
     if (events.length > 0) {
       eventsObserver.notify(events);
     }
   }, [events, eventsObserver]);
 
+  // Load stored calendars & selected calendar from AsyncStorage
   useEffect(() => {
     const loadStoredData = async () => {
       try {
         const storedCalendars = await AsyncStorage.getItem("availableCalendars");
-        const storedSelectedCalendar = await AsyncStorage.getItem(
-          "selectedCalendar"
-        );
+        const storedSelectedCalendar = await AsyncStorage.getItem("selectedCalendar");
         if (storedCalendars) {
           const parsedCalendars = JSON.parse(storedCalendars);
           setCalendars(parsedCalendars);
@@ -123,6 +96,7 @@ useEffect(() => {
     loadStoredData();
   }, []);
 
+  // Fetch events from public calendar
   useEffect(() => {
     const fetchEvents = async () => {
       if (!selectedCalendar) {
@@ -146,6 +120,29 @@ useEffect(() => {
     fetchEvents();
   }, [selectedCalendar, currentStartDate]);
 
+  // 3. Now handle the conditional UI rendering
+  if (!isSignedIn) {
+    return (
+      <View style={styles.guestContainer}>
+        <GoToLoginButton
+          onPress={async () => {
+            try {
+              await AsyncStorage.removeItem("sessionId");
+              await AsyncStorage.removeItem("userData");
+              await AsyncStorage.removeItem("guestMode");
+              navigation.reset({ index: 0, routes: [{ name: "Login" }] });
+            } catch (error) {
+              console.error("Login Redirect Error:", error);
+            }
+          }}
+        />
+        <View style={styles.bottomNavBar}>
+          <BottomNavBar />
+        </View>
+      </View>
+    );
+  }
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -154,9 +151,10 @@ useEffect(() => {
     );
   }
 
+  // 4. The main UI returns here
   return (
     <View style={styles.screen}>
-      {/* Custom In-App Notification */}
+      {/* In-App Notification */}
       <InAppNotification message={notificationMessage} visible={notificationVisible} />
 
       {/* Header with Pagination */}
@@ -272,16 +270,14 @@ useEffect(() => {
                       {moment(item.end.dateTime).format("HH:mm")}
                     </Text>
 
-                    {/* "Go to Class" button => calls handleGoToClass from CalendarHelper */}
+                    {/* "Go to Class" button => calls handleGoToClass */}
                     <TouchableOpacity
                       style={styles.nextClassButton}
                       onPress={() =>
                         handleGoToClass(item.description, navigation)
                       }
                     >
-                      <Text style={styles.nextClassButtonText}>
-                        Go to Class
-                      </Text>
+                      <Text style={styles.nextClassButtonText}>Go to Class</Text>
                     </TouchableOpacity>
                   </View>
                 )}
