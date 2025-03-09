@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
  * @param {Function} props.onPlaceSelected - Function to handle place selection.
  */
 const InputAutocomplete = ({
-  placeholder = "Search location...",
+  placeholder,
   flag,
   onPlaceSelected,
 }) => (
