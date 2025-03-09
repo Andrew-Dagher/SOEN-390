@@ -1,31 +1,31 @@
 // GoToClassButton.jsx
+
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import * as Location from "expo-location";
 
-/**
- * This component renders a "Go to Class" button and handles navigation to the class location.
- *
- * @param {string} locationString - e.g. "SGW, Hall Building, 913"
- */
 export default function GoToClassButton({ locationString }) {
   const navigation = useNavigation();
 
   const handleGoToClass = async () => {
     try {
-      const [campus, buildingName, room] = locationString
-        .split(",")
-        .map((str) => str.trim());
+      // Safely split the string
+      const parts = locationString.split(",").map((str) => str.trim());
 
+      // Fallback to empty strings if there's not enough data
+      const c = parts[0] || "";
+      const b = parts[1] || "";
+      // The third part is `room` if you eventually need it
+      const r = parts[2] || "";
+
+      // Get current device location
       const currentLocation = await Location.getCurrentPositionAsync({});
 
+      // Navigate even if some parts are empty
       navigation.navigate("Navigation", {
-        campus: campus.toLowerCase().replace("<pre>", "").trim(),
-        buildingName: buildingName
-          .replace("<pre>", "")
-          .replace("</pre>", "")
-          .trim(),
+        campus: c.toLowerCase().replace("<pre>", "").replace("</pre>", "").trim(),
+        buildingName: b.replace("<pre>", "").replace("</pre>", "").trim(),
         currentLocation: {
           latitude: currentLocation.coords.latitude,
           longitude: currentLocation.coords.longitude,
