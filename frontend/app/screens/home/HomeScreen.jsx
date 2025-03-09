@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useAuth } from "@clerk/clerk-expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   View,
-  Alert,
   StyleSheet,
   Dimensions,
   SafeAreaView,
@@ -15,7 +13,6 @@ import HomeCard from "../../components/Homescreen/HomeCard";
 import MapPic from "../../../assets/MapScreenshot.png";
 import CalendarPic from "../../../assets/CalendarScreenshot.png";
 import { useNavigation } from "@react-navigation/native";
-import { trackEvent } from "@aptabase/react-native";
 
 // Retrieve screen dimensions for responsive design.
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
@@ -31,10 +28,6 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 export default function HomeScreen() {
   // Hook to manage navigation between screens.
   const navigation = useNavigation();
-
-
-  // Authentication hooks from Clerk for managing user sign-in state.
-  const { signOut, isSignedIn } = useAuth();
 
   // State to store the user's full name.
   const [username, setUsername] = useState("");
@@ -61,55 +54,6 @@ export default function HomeScreen() {
 
     loadUserData();
   }, []);
-
-  /**
-   * Handles the user logout process by:
-   * - Displaying a confirmation alert.
-   * - Removing user-related data from AsyncStorage.
-   * - Signing out via Clerk if the user is signed in.
-   * - Resetting the navigation stack to redirect to the Login screen.
-   *
-   * @async
-   * @function handleLogout
-   */
-  const handleLogout = async () => {
-    try {
-      Alert.alert(
-        "Logout",
-        "Are you sure you want to log out?",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Logout",
-            onPress: async () => {
-              try {
-                // Remove user session and guest mode data.
-                await AsyncStorage.removeItem("sessionId");
-                await AsyncStorage.removeItem("userData");
-                await AsyncStorage.removeItem("guestMode");
-
-                // If the user is currently signed in, sign out using Clerk.
-                if (isSignedIn) {
-                  await signOut();
-                }
-
-                // Reset navigation state and redirect to the Login screen.
-                navigation.reset({
-                  index: 0,
-                  routes: [{ name: "Login" }],
-                });
-              } catch (error) {
-                console.error("Logout Error:", error);
-              }
-            },
-          },
-        ],
-        { cancelable: false }
-      );
-    } catch (error) {
-      console.error("Logout Error:", error);
-    }
-  };
 
   return (
     <View style={styles.container}>
