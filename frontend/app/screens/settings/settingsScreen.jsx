@@ -14,7 +14,6 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
-  Button,
   Alert,
 } from "react-native";
 import Slider from "@react-native-community/slider";
@@ -24,6 +23,7 @@ import BottomNavBar from "../../components/BottomNavBar/BottomNavBar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "@clerk/clerk-expo";
+import getThemeColors from "../../ColorBindTheme";
 
 /**
  * SettingsScreen component allows the user to modify various settings including
@@ -39,6 +39,7 @@ export default function SettingsScreen() {
     profileImage, setProfileImage
   } = useAppSettings();
 
+  const theme = getThemeColors();
   const [isWheelchairAccessEnabled, setWheelchairAccessEnabled] = useState(false);
 
   const [tempProfileImage, setTempProfileImage] = useState(profileImage);
@@ -49,7 +50,6 @@ export default function SettingsScreen() {
 
   const navigation = useNavigation();
   const blinder = require("color-blind");
-
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -66,15 +66,6 @@ export default function SettingsScreen() {
     };
     loadUserData();
   }, []);
-
-  const transformColor = (color) => {
-    if (!color || !colorBlindMode) return color;
-    return blinder[colorBlindMode] ? blinder[colorBlindMode](color) : color;
-  };
-
-  // Base maroon color and its transformed version based on color blind mode.
-  const baseMaroonColor = "#7c2933";
-  const transformedMaroonColor = transformColor(baseMaroonColor);
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -139,7 +130,7 @@ export default function SettingsScreen() {
       <View testID="settings-screen" className="flex-1">
       <ScrollView>
         {/* Profile Section */}
-        <View style={[styles.header, { backgroundColor: transformedMaroonColor }]} className="pt-16 pb-8 items-center">
+        <View style={[styles.header, { backgroundColor: theme.backgroundColor }]} className="pt-16 pb-8 items-center">
           <TouchableOpacity onPress={pickImage} className="mb-4">
             <Image
               source={
@@ -154,7 +145,7 @@ export default function SettingsScreen() {
         </View>
 
         {/* Settings Section */}
-        <View style={[styles.content, { backgroundColor: transformColor("#FFFFFF") }]} className="-mt-6 rounded-t-3xl px-6 pt-6 pb-24">
+        <View style={[styles.content, { backgroundColor: "#FFFFFF" }]} className="-mt-6 rounded-t-3xl px-6 pt-6 pb-24">
           <Text style={[styles.userName, { fontSize: textSize }]} className="text-2xl font-bold mb-6">Accessibility Settings</Text>
 
           {/* Mobility Settings */}
@@ -190,9 +181,9 @@ export default function SettingsScreen() {
                 <View key={type} className="flex-row justify-between items-center h-12">
                   <Text style={[styles.userName, { fontSize: textSize }]} className="text-lg">{type}</Text>
                   <TouchableOpacity onPress={() => isColorBlindModeEnabled && setColorBlindMode(type.toLowerCase())}>
-                    <View style={[styles.radioButton, { borderColor: transformedMaroonColor }]}>
+                    <View style={[styles.radioButton, { borderColor: theme.backgroundColor }]}>
                       {colorBlindMode === type.toLowerCase() && isColorBlindModeEnabled && (
-                        <View style={[styles.radioFill, { backgroundColor: transformedMaroonColor }]} />
+                        <View style={[styles.radioFill, { backgroundColor: theme.backgroundColor }]} />
                       )}
                     </View>
                   </TouchableOpacity>
@@ -210,7 +201,7 @@ export default function SettingsScreen() {
                 step={1}
                 value={tempSize}
                 onValueChange={setTempSize}
-                minimumTrackTintColor={transformedMaroonColor}
+                minimumTrackTintColor={theme.backgroundColor}
                 maximumTrackTintColor="#D1D1D6"
                 className="w-full h-10"
               />
@@ -219,12 +210,12 @@ export default function SettingsScreen() {
 
 
           {/* Apply Button */}
-          <TouchableOpacity onPress={applyChanges} style={[styles.applyButton, { backgroundColor: transformedMaroonColor }]} className="py-3 rounded-lg items-center mt-4">
+          <TouchableOpacity onPress={applyChanges} style={[styles.applyButton, { backgroundColor: theme.backgroundColor }]} className="py-3 rounded-lg items-center mt-4">
             <Text className="text-white text-lg font-medium">Apply Changes</Text>
           </TouchableOpacity>
 
           {/* Logout Button */}
-          <TouchableOpacity onPress={handleLogout} style={[styles.applyButton, { backgroundColor: transformedMaroonColor }]} className="py-3 rounded-lg items-center mt-4">
+          <TouchableOpacity onPress={handleLogout} style={[styles.applyButton, { backgroundColor: theme.backgroundColor }]} className="py-3 rounded-lg items-center mt-4">
 
             <Text className="text-white text-lg font-medium">Logout</Text>
           </TouchableOpacity>
