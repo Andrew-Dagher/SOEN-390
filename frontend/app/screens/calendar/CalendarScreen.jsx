@@ -78,7 +78,7 @@ useEffect(() => {
   return () => {
     eventsObserver.unsubscribe(observerCallback);
   };
-}, [eventsObserver, currentStartDate]); // ✅ Now depends on `currentStartDate`
+}, [eventsObserver, currentStartDate]); // Now depends on `currentStartDate`
 
 
 
