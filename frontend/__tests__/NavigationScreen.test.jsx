@@ -66,38 +66,39 @@ describe("<MapCard />", () => {
 
       const { getByTestId } = render(
         <NavigationContainer>
-          <MapTraceroute setMode={setModeMock} setIsShuttle={setIsShuttle} setWalkToBus={setWalkToBus} setWalkFromBus={setWalkFromBus}/>
+          <MapTraceroute
+            setMode={setModeMock}
+            setIsShuttle={setIsShuttle}
+            setWalkToBus={setWalkToBus}
+            setWalkFromBus={setWalkFromBus}
+          />
         </NavigationContainer>
       );
-  
-    //Simulate selecting each button
-    fireEvent.press(getByTestId("car-button"));
-    expect(setModeMock).toHaveBeenCalledWith("DRIVING");
-    
-    fireEvent.press(getByTestId("bike-button"));
-    expect(setModeMock).toHaveBeenCalledWith("BICYCLING");
-    
-    fireEvent.press(getByTestId("metro-button"));
-    expect(setModeMock).toHaveBeenCalledWith("TRANSIT");
 
-    fireEvent.press(getByTestId("walk-button"));
-    expect(setModeMock).toHaveBeenCalledWith("WALKING");
+      //Simulate selecting each button
+      fireEvent.press(getByTestId("car-button"));
+      expect(setModeMock).toHaveBeenCalledWith("DRIVING");
+
+      fireEvent.press(getByTestId("bike-button"));
+      expect(setModeMock).toHaveBeenCalledWith("BICYCLING");
+
+      fireEvent.press(getByTestId("metro-button"));
+      expect(setModeMock).toHaveBeenCalledWith("TRANSIT");
+
+      fireEvent.press(getByTestId("walk-button"));
+      expect(setModeMock).toHaveBeenCalledWith("WALKING");
     });
 
     /**
-   * Ensures that travel times are displayed correctly.
-   */
-  it("displays the correct travel times", () => {
-    const { getByText } = render(
-      <MapTraceroute carTravelTime="10 mins" bikeTravelTime="5 mins" />
-    );
+     * Ensures that travel times are displayed correctly.
+     */
+    it("displays the correct travel times", () => {
+      const { getByText } = render(
+        <MapTraceroute carTravelTime="10 mins" bikeTravelTime="5 mins" />
+      );
 
-    expect(getByText("10 mins")).toBeTruthy(); // Car travel time
-    expect(getByText("5 mins")).toBeTruthy(); // Bike travel time
+      expect(getByText("10 mins")).toBeTruthy(); // Car travel time
+      expect(getByText("5 mins")).toBeTruthy(); // Bike travel time
+    });
   });
-  });
-
-  
-
-
 });
