@@ -42,6 +42,7 @@
     "expo-image-picker": "~16.0.5",
     "expo-linking": "~7.0.5",
     "expo-location": "^18.0.5",
+    "expo-notifications": "~0.29.13",
     "expo-secure-store": "~14.0.1",
     "expo-status-bar": "~2.0.1",
     "expo-web-browser": "~14.0.2",
@@ -49,6 +50,7 @@
     "jest-expo": "~52.0.3",
     "lightningcss": "^1.29.2",
     "nativewind": "^4.1.23",
+    "prop-types": "^15.8.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-native": "0.76.6",
@@ -73,8 +75,7 @@
     "react-native-web": "~0.19.13",
     "react-test-renderer": "^18.0.0",
     "tailwindcss": "^3.4.17",
-    "ts-jest": "^29.2.5",
-    "expo-notifications": "~0.29.13"
+    "ts-jest": "^29.2.5"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

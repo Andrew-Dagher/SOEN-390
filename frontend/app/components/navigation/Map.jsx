@@ -12,7 +12,7 @@ import MapView, {
   Polygon,
   Callout,
 } from "react-native-maps";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import MapViewDirections from "react-native-maps-directions";
 import NavigationIcon from "./Icons/NavigationIcon";
 import DirectionsIcon from "./Icons/DirectionsIcon";
@@ -37,7 +37,7 @@ import { trackEvent } from "@aptabase/react-native";
 import { useAppSettings } from "../../AppSettingsContext";
 import getThemeColors from "../../ColorBindTheme";
 import MapPolygonHighlight from "./MapPolygonHighlight";
-import { useRoute } from "@react-navigation/native";
+
 export default function Map({ navigationParams }) {
   const route = useRoute();
   const params = navigationParams || route.params; // Ensure params are retrieved

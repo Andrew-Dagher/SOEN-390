@@ -1,9 +1,5 @@
-/**
- * @file GoToLoginButton.jsx
- * @description A React Native component for a Google-styled "Go to Login" button.
- */
-
-import { TouchableOpacity, Image, Text, View } from "react-native";
+import { TouchableOpacity, Image, Text } from "react-native";
+import PropTypes from 'prop-types'; // Import PropTypes
 
 /**
  * GoToLoginButton component for redirecting users to the Login page.
@@ -40,6 +36,11 @@ const GoToLoginButton = ({ onPress }) => {
       <Text className="text-black text-lg font-semibold">Go to Login</Text>
     </TouchableOpacity>
   );
+};
+
+// Add PropTypes for validation
+GoToLoginButton.propTypes = {
+  onPress: PropTypes.func.isRequired, // onPress should be a required function
 };
 
 export default GoToLoginButton;

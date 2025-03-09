@@ -24,6 +24,28 @@ export default function CalendarScreen() {
   const navigation = useNavigation();
   const { isSignedIn } = useAuth();
 
+      if (!isSignedIn) {
+        return (
+          <View style={styles.guestContainer}>
+            <GoToLoginButton
+              onPress={async () => {
+                try {
+                  await AsyncStorage.removeItem("sessionId");
+                  await AsyncStorage.removeItem("userData");
+                  await AsyncStorage.removeItem("guestMode");
+                  navigation.reset({ index: 0, routes: [{ name: "Login" }] });
+                } catch (error) {
+                  console.error("Login Redirect Error:", error);
+                }
+              }}
+            />
+            <View style={styles.bottomNavBar}>
+              <BottomNavBar />
+            </View>
+          </View>
+        );
+      }
+
   // OBSERVER: create an instance of EventObserver
   const [eventsObserver] = useState(new EventObserver());
 
@@ -42,27 +64,6 @@ export default function CalendarScreen() {
   const [modalVisible, setModalVisible] = useState(false);
 
 
-    if (!isSignedIn) {
-      return (
-        <View style={styles.guestContainer}>
-          <GoToLoginButton
-            onPress={async () => {
-              try {
-                await AsyncStorage.removeItem("sessionId");
-                await AsyncStorage.removeItem("userData");
-                await AsyncStorage.removeItem("guestMode");
-                navigation.reset({ index: 0, routes: [{ name: "Login" }] });
-              } catch (error) {
-                console.error("Login Redirect Error:", error);
-              }
-            }}
-          />
-          <View style={styles.bottomNavBar}>
-            <BottomNavBar />
-          </View>
-        </View>
-      );
-    }
 
 
 

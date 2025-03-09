@@ -1,9 +1,8 @@
-// GoToClassButton.jsx
-
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import * as Location from "expo-location";
+import PropTypes from 'prop-types';  // Import PropTypes
 
 export default function GoToClassButton({ locationString }) {
   const navigation = useNavigation();
@@ -16,8 +15,6 @@ export default function GoToClassButton({ locationString }) {
       // Fallback to empty strings if there's not enough data
       const c = parts[0] || "";
       const b = parts[1] || "";
-      // The third part is `room` if you eventually need it
-      const r = parts[2] || "";
 
       // Get current device location
       const currentLocation = await Location.getCurrentPositionAsync({});
@@ -42,6 +39,10 @@ export default function GoToClassButton({ locationString }) {
     </TouchableOpacity>
   );
 }
+
+GoToClassButton.propTypes = {
+  locationString: PropTypes.string.isRequired,  // Validate locationString
+};
 
 const styles = StyleSheet.create({
   nextClassButton: {

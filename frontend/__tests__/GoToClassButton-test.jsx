@@ -4,73 +4,99 @@ import GoToClassButton from "../app/components/calendar/GoToClassButton";
 import { useNavigation } from "@react-navigation/native";
 import * as Location from "expo-location";
 
-// ---- Mocks ----
+// Mock the navigation object
 jest.mock("@react-navigation/native", () => ({
   useNavigation: jest.fn(),
 }));
 
+// Mock expo-location
 jest.mock("expo-location", () => ({
   getCurrentPositionAsync: jest.fn(),
 }));
 
 describe("GoToClassButton", () => {
-  let mockNavigate;
+  const mockNavigate = jest.fn();
 
-  beforeEach(() => {
-    // Clear all mocks before each test
-    jest.clearAllMocks();
-
-    // Mock navigation
-    mockNavigate = jest.fn();
-    useNavigation.mockReturnValue({ navigate: mockNavigate });
+  beforeAll(() => {
+    // Make sure useNavigation returns our mocked navigate function
+    useNavigation.mockReturnValue({
+      navigate: mockNavigate,
+    });
   });
 
-  it("renders the Go to Class button correctly", () => {
-    const { getByText } = render(<GoToClassButton locationString="SGW, Hall Building, 913" />);
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("renders the button with correct text", () => {
+    const { getByText } = render(<GoToClassButton locationString="FooCampus, BarBuilding, B123" />);
     expect(getByText("Go to Class")).toBeTruthy();
   });
 
-  it("pressing the button calls Location and navigates with correct params", async () => {
-    // Mock location
-    Location.getCurrentPositionAsync.mockResolvedValueOnce({
-      coords: { latitude: 12.3456, longitude: 65.4321 },
+  it("calls navigate with correct params when pressed and locationString is fully provided", async () => {
+    // Mock current device location
+    Location.getCurrentPositionAsync.mockResolvedValue({
+      coords: { latitude: 12.345, longitude: 67.89 },
     });
 
-    const { getByText } = render(
-      <GoToClassButton locationString="SGW, Hall Building, 913" />
-    );
+    const { getByText } = render(<GoToClassButton locationString="FooCampus, BarBuilding, B123" />);
+    const button = getByText("Go to Class");
 
-    fireEvent.press(getByText("Go to Class"));
+    fireEvent.press(button);
 
-    // Wait for any async logic to complete
-    expect(Location.getCurrentPositionAsync).toHaveBeenCalledTimes(1);
+    // Wait for any async calls to finish
+    // (In testing-library/react-native, we can wait for all React updates)
+    // But typically a waitFor might not even be needed if using a test environment with the flushPromises trick.
+    // Just do so to ensure navigate is called.
+    await new Promise(setImmediate);
 
-    // Check we called navigate with the correct params
+    expect(mockNavigate).toHaveBeenCalledTimes(1);
     expect(mockNavigate).toHaveBeenCalledWith("Navigation", {
-      campus: "sgw",
-      buildingName: "Hall Building",
-      currentLocation: { latitude: 12.3456, longitude: 65.4321 },
+      campus: "foocampus",
+      buildingName: "BarBuilding",
+      currentLocation: {
+        latitude: 12.345,
+        longitude: 67.89,
+      },
     });
   });
 
-  it("handles parsing error gracefully if locationString is invalid", async () => {
-    Location.getCurrentPositionAsync.mockResolvedValueOnce({
-      coords: { latitude: 12.3456, longitude: 65.4321 },
+  it("falls back to empty strings if locationString is missing parts", async () => {
+    Location.getCurrentPositionAsync.mockResolvedValue({
+      coords: { latitude: 10, longitude: 20 },
     });
 
-    // Provide an invalid string or partial string
-    const invalidString = "Not Enough Commas";
-    const { getByText } = render(<GoToClassButton locationString={invalidString} />);
-
+    const { getByText } = render(<GoToClassButton locationString="OnlyCampus" />);
     fireEvent.press(getByText("Go to Class"));
+    await new Promise(setImmediate);
 
-    // We still call Location, but the parse might fail
-    expect(Location.getCurrentPositionAsync).toHaveBeenCalledTimes(1);
-    // Check that it attempts navigation, but the splitted location won't have 3 parts
+    // "OnlyCampus" => parts[0] = 'OnlyCampus', parts[1] -> '', parts[2] -> ''
     expect(mockNavigate).toHaveBeenCalledWith("Navigation", {
-      campus: "not enough commas", // campus.toLowerCase().trim()
-      buildingName: "",            // buildingName => undefined => "" if we do .replace calls
-      currentLocation: { latitude: 12.3456, longitude: 65.4321 },
+      campus: "onlycampus",
+      buildingName: "",
+      currentLocation: {
+        latitude: 10,
+        longitude: 20,
+      },
     });
+  });
+
+  it("handles errors in try/catch block gracefully", async () => {
+    // Spy on console.error to check if it's called
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+
+    // Force getCurrentPositionAsync to throw
+    Location.getCurrentPositionAsync.mockRejectedValue(new Error("Location Error"));
+
+    const { getByText } = render(<GoToClassButton locationString="FooCampus, BarBuilding" />);
+    fireEvent.press(getByText("Go to Class"));
+    await new Promise(setImmediate);
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Error fetching location or parsing location string:",
+      expect.any(Error)
+    );
+
+    consoleErrorSpy.mockRestore();
   });
 });

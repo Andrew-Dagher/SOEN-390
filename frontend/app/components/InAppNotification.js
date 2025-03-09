@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Animated } from "react-native";
+import PropTypes from 'prop-types'; // Import PropTypes
 
 export default function InAppNotification({ message, visible }) {
   const [fadeAnim] = useState(new Animated.Value(0)); // For fade-in effect
@@ -54,6 +55,12 @@ export default function InAppNotification({ message, visible }) {
     </Animated.View>
   );
 }
+
+// Prop types validation
+InAppNotification.propTypes = {
+  message: PropTypes.string.isRequired, // 'message' should be a string and is required
+  visible: PropTypes.bool.isRequired, // 'visible' should be a boolean and is required
+};
 
 const styles = StyleSheet.create({
   notificationContainer: {
