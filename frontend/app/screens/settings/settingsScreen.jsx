@@ -13,7 +13,6 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
-  Alert,
 } from "react-native";
 import Slider from "@react-native-community/slider";
 import { useNavigation } from "@react-navigation/native";
