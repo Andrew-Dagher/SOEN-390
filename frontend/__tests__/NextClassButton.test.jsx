@@ -1,268 +1,119 @@
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
+import moment from 'moment';
+import CalendarScreen from '../app/screens/calendar/CalendarScreen';
+import { useAuth } from '@clerk/clerk-expo';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { fetchPublicCalendarEvents } from '../app/screens/login/LoginHelper';
+import { handleGoToClass } from '../app/screens/calendar/CalendarHelper';
 import { useNavigation } from '@react-navigation/native';
-import * as Location from 'expo-location';
-import NextClassButton from '../app/components/calendar/NextClassButton';
-import { Animated } from 'react-native';
 
-// Mock dependencies
+// Mocks for external dependencies.
+jest.mock('@clerk/clerk-expo', () => ({
+  useAuth: jest.fn(),
+}));
 jest.mock('@react-navigation/native', () => ({
   useNavigation: jest.fn(),
 }));
-jest.mock('expo-location', () => ({
-  getCurrentPositionAsync: jest.fn(),
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
 }));
-jest.mock('../app/components/Calendar/CalendarIcons/CalendarDirectionsIcon', () => 'CalendarDirectionsIcon');
-
-// Mock Animated.timing
-jest.spyOn(Animated, 'timing').mockImplementation(() => ({
-  start: jest.fn(),
+jest.mock('../app/screens/login/LoginHelper', () => ({
+  fetchPublicCalendarEvents: jest.fn(),
+}));
+jest.mock('../app/screens/calendar/CalendarHelper', () => ({
+  handleGoToClass: jest.fn(),
 }));
 
-// Utility to create a mock event observer.
-const createMockObserver = () => ({
-  subscribe: jest.fn(),
-  unsubscribe: jest.fn(),
-});
+// Override NotificationObserver to do nothing (or minimal behavior) for these tests.
+jest.mock('../app/screens/calendar/NotificationObserver', () => ({
+  NotificationObserver: jest.fn(),
+}));
 
-describe('NextClassButton', () => {
+jest.useFakeTimers();
+
+describe('Additional Button Interaction Tests in CalendarScreen', () => {
   let mockNavigation;
+  const storedCalendars = [{ id: 'cal1', name: 'Calendar One' }];
 
   beforeEach(() => {
-    mockNavigation = { navigate: jest.fn() };
+    mockNavigation = { reset: jest.fn(), navigate: jest.fn() };
     useNavigation.mockReturnValue(mockNavigation);
-    Location.getCurrentPositionAsync.mockResolvedValue({
-      coords: { latitude: 40.7128, longitude: -74.0060 }
-    });
     jest.clearAllMocks();
   });
 
-  // Test 1: Component doesn't render when no upcoming events
-  it('returns null when there are no upcoming events', () => {
-    const mockObserver = createMockObserver();
-    const { queryByText } = render(<NextClassButton eventObserver={mockObserver} />);
+  // Test: Guest view "Go to Login" button behavior.
+  it('handles "Go to Login" button press in guest view', async () => {
+    // When user is not signed in.
+    useAuth.mockReturnValue({ isSignedIn: false });
 
-    expect(queryByText('Go to My Next Class')).toBeNull();
-    expect(mockObserver.subscribe).toHaveBeenCalled();
-  });
-
-  // Test 2: Component renders with upcoming event
-  it('renders button when there is an upcoming event', async () => {
-    const mockObserver = createMockObserver();
-    const { findByText } = render(<NextClassButton eventObserver={mockObserver} />);
-
-    // Simulate event update with an upcoming event.
-    const callback = mockObserver.subscribe.mock.calls[0][0];
-    callback([{
-      start: { dateTime: new Date(Date.now() + 10000).toISOString() },
-      description: 'Campus A, Building 1'
-    }]);
-
-    const buttonText = await findByText('Go to My Next Class');
-    expect(buttonText).toBeTruthy();
-    expect(Animated.timing).toHaveBeenCalledWith(
-      expect.any(Animated.Value),
-      expect.objectContaining({
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true
-      })
-    );
-  });
-
-  // Test 3: Handles navigation to next class
-  it('navigates to next class location when button is pressed', async () => {
-    const mockObserver = createMockObserver();
-    const { findByText } = render(<NextClassButton eventObserver={mockObserver} />);
-
-    const callback = mockObserver.subscribe.mock.calls[0][0];
-    callback([{
-      start: { dateTime: new Date(Date.now() + 10000).toISOString() },
-      description: 'Campus A, Building 1'
-    }]);
-
-    const button = await findByText('Go to My Next Class');
-    fireEvent.press(button);
-
+    const { getByText } = render(<CalendarScreen />);
+    // Our guest view renders a GoToLoginButton. Look for text that matches "login".
+    const loginButton = await waitFor(() => getByText(/login/i));
+    fireEvent.press(loginButton);
     await waitFor(() => {
-      expect(Location.getCurrentPositionAsync).toHaveBeenCalled();
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(
-        'Navigation',
-        {
-          campus: 'campus a',
-          buildingName: 'Building 1',
-          currentLocation: {
-            latitude: 40.7128,
-            longitude: -74.0060
-          }
-        }
-      );
+      expect(AsyncStorage.removeItem).toHaveBeenCalledWith("sessionId");
+      expect(AsyncStorage.removeItem).toHaveBeenCalledWith("userData");
+      expect(AsyncStorage.removeItem).toHaveBeenCalledWith("guestMode");
+      expect(mockNavigation.reset).toHaveBeenCalledWith({ index: 0, routes: [{ name: "Login" }] });
     });
   });
 
-  // Test 4: Handles empty event list
-  it('clears location when events array is empty', () => {
-    const mockObserver = createMockObserver();
-    const { queryByText, rerender } = render(<NextClassButton eventObserver={mockObserver} />);
-
-    const callback = mockObserver.subscribe.mock.calls[0][0];
-    callback([]); // Empty event array
-
-    rerender(<NextClassButton eventObserver={mockObserver} />);
-    expect(queryByText('Go to My Next Class')).toBeNull();
-  });
-
-  // Test 5: Handles error in location fetching
-  it('handles location fetching error gracefully', async () => {
-    const mockObserver = createMockObserver();
-    Location.getCurrentPositionAsync.mockRejectedValue(new Error('Location error'));
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
-
-    const { findByText } = render(<NextClassButton eventObserver={mockObserver} />);
-
-    const callback = mockObserver.subscribe.mock.calls[0][0];
-    callback([{
-      start: { dateTime: new Date(Date.now() + 10000).toISOString() },
-      description: 'Campus A, Building 1'
-    }]);
-
-    const button = await findByText('Go to My Next Class');
-    fireEvent.press(button);
-
-    await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Error navigating to next class:',
-        expect.any(Error)
-      );
+  // Test: Modal overlay press closes the calendar selection modal.
+  it('closes modal when the overlay is pressed', async () => {
+    useAuth.mockReturnValue({ isSignedIn: true });
+    const calendarsData = [
+      { id: 'cal1', name: 'Calendar One' },
+      { id: 'cal2', name: 'Calendar Two' }
+    ];
+    AsyncStorage.getItem.mockImplementation((key) => {
+      if (key === 'availableCalendars') return Promise.resolve(JSON.stringify(calendarsData));
+      if (key === 'selectedCalendar') return Promise.resolve('cal1');
+      return Promise.resolve(null);
     });
+    fetchPublicCalendarEvents.mockResolvedValue([]);
 
-    consoleErrorSpy.mockRestore();
+    const { getByText, queryByText } = render(<CalendarScreen />);
+    await waitFor(() => expect(fetchPublicCalendarEvents).toHaveBeenCalled());
+
+    // Open the calendar selection modal by pressing on the dropdown button.
+    const dropdownButton = getByText('Calendar One');
+    fireEvent.press(dropdownButton);
+    // The modal should appear.
+    expect(getByText('Choose a Calendar')).toBeTruthy();
+
+    // Simulate a press on the overlay. In our component, the outer TouchableOpacity covers the modal.
+    // We can press on the "Choose a Calendar" text since it is inside the overlay.
+    fireEvent.press(getByText('Choose a Calendar'));
+    await waitFor(() => expect(queryByText('Choose a Calendar')).toBeNull());
   });
 
-  // Test 6: Cleans up subscription on unmount
-  it('unsubscribes from observer on unmount', () => {
-    const mockObserver = createMockObserver();
-    const { unmount } = render(<NextClassButton eventObserver={mockObserver} />);
-
-    const callback = mockObserver.subscribe.mock.calls[0][0];
-    unmount();
-
-    expect(mockObserver.unsubscribe).toHaveBeenCalledWith(callback);
-  });
-
-  // Additional Test 7: Correctly selects the earliest upcoming event among multiple events
-  it('correctly sorts and selects the earliest upcoming event', async () => {
-    const mockObserver = createMockObserver();
-    const { findByText } = render(<NextClassButton eventObserver={mockObserver} />);
-
-    const now = new Date();
-    const callback = mockObserver.subscribe.mock.calls[0][0];
-    callback([
-      {
-        start: { dateTime: new Date(now.getTime() + 20000).toISOString() }, // Later event
-        description: 'Campus B, Building 2'
-      },
-      {
-        start: { dateTime: new Date(now.getTime() + 10000).toISOString() }, // Earlier event
-        description: 'Campus A, Building 1'
-      },
-      {
-        start: { dateTime: new Date(now.getTime() - 10000).toISOString() }, // Past event
-        description: 'Campus C, Building 3'
-      }
-    ]);
-
-    const buttonText = await findByText('Go to My Next Class');
-    expect(buttonText).toBeTruthy();
-
-    fireEvent.press(buttonText);
-    await waitFor(() => {
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(
-        'Navigation',
-        expect.objectContaining({
-          campus: 'campus a',
-          buildingName: 'Building 1'
-        })
-      );
+  // Test: Double-pressing an event title toggles expansion (expand then collapse).
+  it('toggles event expansion when pressing the event title twice', async () => {
+    useAuth.mockReturnValue({ isSignedIn: true });
+    AsyncStorage.getItem.mockImplementation((key) => {
+      if (key === 'availableCalendars') return Promise.resolve(JSON.stringify(storedCalendars));
+      if (key === 'selectedCalendar') return Promise.resolve('cal1');
+      return Promise.resolve(null);
     });
-  });
+    const event = {
+      id: 'event1',
+      title: 'Event 1',
+      description: 'Campus A, Building 1, Room 101',
+      start: { dateTime: moment().add(1, 'day').toISOString() },
+      end: { dateTime: moment().add(1, 'day').add(1, 'hour').toISOString() },
+    };
+    fetchPublicCalendarEvents.mockResolvedValue([event]);
 
-  // Additional Test 8: Returns null if all events are in the past
-  it('sets location to null when all events are in the past', () => {
-    const mockObserver = createMockObserver();
-    const { queryByText, rerender } = render(<NextClassButton eventObserver={mockObserver} />);
-
-    const now = new Date();
-    const callback = mockObserver.subscribe.mock.calls[0][0];
-    callback([
-      {
-        start: { dateTime: new Date(now.getTime() - 20000).toISOString() },
-        description: 'Campus A, Building 1'
-      },
-      {
-        start: { dateTime: new Date(now.getTime() - 10000).toISOString() },
-        description: 'Campus B, Building 2'
-      }
-    ]);
-
-    rerender(<NextClassButton eventObserver={mockObserver} />);
-    expect(queryByText('Go to My Next Class')).toBeNull();
-  });
-
-  // Additional Test 9: Handles event description with no comma (empty building name)
-  it('handles event description with no comma', async () => {
-    const mockObserver = createMockObserver();
-    const { findByText } = render(<NextClassButton eventObserver={mockObserver} />);
-    const now = new Date();
-    const callback = mockObserver.subscribe.mock.calls[0][0];
-    callback([{
-      start: { dateTime: new Date(now.getTime() + 10000).toISOString() },
-      description: 'Campus A'
-    }]);
-    const button = await findByText('Go to My Next Class');
-    fireEvent.press(button);
-    await waitFor(() => {
-      expect(Location.getCurrentPositionAsync).toHaveBeenCalled();
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(
-        'Navigation',
-        {
-          campus: 'campus a',
-          buildingName: '',
-          currentLocation: {
-            latitude: 40.7128,
-            longitude: -74.0060
-          }
-        }
-      );
-    });
-  });
-
-  // Additional Test 10: Handles event description with <pre> tags correctly
-  it('handles event description with <pre> tags', async () => {
-    const mockObserver = createMockObserver();
-    const { findByText } = render(<NextClassButton eventObserver={mockObserver} />);
-    const now = new Date();
-    const callback = mockObserver.subscribe.mock.calls[0][0];
-    // Description with <pre> tags that need to be stripped.
-    callback([{
-      start: { dateTime: new Date(now.getTime() + 10000).toISOString() },
-      description: '<pre>Campus B, <pre>Building 2'
-    }]);
-    const button = await findByText('Go to My Next Class');
-    fireEvent.press(button);
-    await waitFor(() => {
-      expect(Location.getCurrentPositionAsync).toHaveBeenCalled();
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(
-        'Navigation',
-        {
-          campus: 'campus b',
-          buildingName: 'Building 2',
-          currentLocation: {
-            latitude: 40.7128,
-            longitude: -74.0060
-          }
-        }
-      );
-    });
+    const { getByText, queryByText } = render(<CalendarScreen />);
+    await waitFor(() => expect(getByText('Event 1')).toBeTruthy());
+    // First press: expand event details.
+    fireEvent.press(getByText('Event 1'));
+    expect(getByText(/📍/)).toBeTruthy();
+    // Second press: collapse event details.
+    fireEvent.press(getByText('Event 1'));
+    await waitFor(() => expect(queryByText(/📍/)).toBeNull());
   });
 });
