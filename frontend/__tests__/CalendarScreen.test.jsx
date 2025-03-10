@@ -32,18 +32,49 @@ jest.mock("../app/screens/calendar/CalendarHelper", () => ({
   handleGoToClass: jest.fn(),
 }));
 
-// These components are not our focus so we return simple mocks.
-jest.mock("../../components/BottomNavBar/BottomNavBar", () => "BottomNavBar");
+// Mock BottomNavBar, InAppNotification, and GoToLoginButton for simplicity.
+jest.mock("../../components/BottomNavBar/BottomNavBar", () => () => <div>BottomNavBar</div>);
 jest.mock("../../components/InAppNotification", () => (props) =>
-  props.visible ? <>{props.message}</> : null
+  props.visible ? <div>{props.message}</div> : null
 );
 jest.mock("../../components/Calendar/GoToLoginButton", () => (props) => (
-  <TouchableOpacity onPress={props.onPress}>
-    <Text>Login</Text>
-  </TouchableOpacity>
+  <button onClick={props.onPress}>Login</button>
 ));
 
-// For EventObserver we simulate subscribe, unsubscribe and notify.
+// Fake styles so our component renders without error.
+jest.mock("./CalendarScreenStyles", () => ({
+  guestContainer: { testID: "guestContainer" },
+  bottomNavBar: { testID: "bottomNavBar" },
+  loadingContainer: { testID: "loadingContainer" },
+  screen: { testID: "screen" },
+  header: { testID: "header" },
+  paginationButton: { testID: "paginationButton" },
+  paginationButtonText: {},
+  headerText: {},
+  centeredDateContainer: { testID: "centeredDateContainer" },
+  centeredDateText: {},
+  dropdownContainer: { testID: "dropdownContainer" },
+  dropdownButton: { testID: "dropdownButton" },
+  dropdownButtonText: {},
+  modalOverlay: { testID: "modalOverlay" },
+  modalDropdown: { testID: "modalDropdown" },
+  modalTitle: {},
+  modalItem: {},
+  modalLastItem: {},
+  modalItemText: {},
+  modalCancel: { testID: "modalCancel" },
+  modalCancelText: {},
+  container: { testID: "container" },
+  noEventsText: {},
+  eventBox: { testID: "eventBox" },
+  eventTitle: { testID: "eventTitle" },
+  eventLocation: {},
+  eventTime: {},
+  nextClassButton: { testID: "nextClassButton" },
+  nextClassButtonText: {},
+}));
+
+// For EventObserver, we create a fake instance with subscribe, unsubscribe, and notify.
 const fakeEventObserver = {
   subscribe: jest.fn(),
   unsubscribe: jest.fn(),
@@ -53,7 +84,7 @@ jest.mock("../app/screens/calendar/EventObserver", () => {
   return jest.fn().mockImplementation(() => fakeEventObserver);
 });
 
-// Override NotificationObserver to immediately trigger a notification when events exist.
+// For NotificationObserver, we simulate it by immediately calling the provided showInAppNotification if events are present.
 jest.mock("../app/screens/calendar/NotificationObserver", () => ({
   NotificationObserver: jest.fn((events, showInAppNotification, currentStartDate) => {
     if (events && events.length > 0) {
@@ -62,43 +93,7 @@ jest.mock("../app/screens/calendar/NotificationObserver", () => ({
   }),
 }));
 
-// Dummy styles for our component.
-jest.mock("./CalendarScreenStyles", () => ({
-  guestContainer: {},
-  bottomNavBar: {},
-  loadingContainer: {},
-  screen: {},
-  header: {},
-  paginationButton: {},
-  paginationButtonText: {},
-  headerText: {},
-  centeredDateContainer: {},
-  centeredDateText: {},
-  dropdownContainer: {},
-  dropdownButton: {},
-  dropdownButtonText: {},
-  modalOverlay: {},
-  modalDropdown: {},
-  modalTitle: {},
-  modalItem: {},
-  modalLastItem: {},
-  modalItemText: {},
-  modalCancel: {},
-  modalCancelText: {},
-  container: {},
-  noEventsText: {},
-  eventBox: {},
-  eventTitle: {},
-  eventLocation: {},
-  eventTime: {},
-  nextClassButton: {},
-  nextClassButtonText: {},
-}));
-
-// For React Native components.
-import { TouchableOpacity, Text, ActivityIndicator } from "react-native";
-
-// Use fake timers for setTimeout.
+// Use fake timers for setTimeout in the in-app notification.
 jest.useFakeTimers();
 
 // --- Test Suite ---
@@ -111,12 +106,13 @@ describe("CalendarScreen", () => {
     jest.clearAllMocks();
   });
 
-  // --- Guest View Tests ---
+  // --- Guest View ---
   describe("Guest view", () => {
     it("renders guest view when not signed in and handles login button press", async () => {
       useAuth.mockReturnValue({ isSignedIn: false });
       AsyncStorage.removeItem.mockResolvedValue();
       const { getByText } = render(<CalendarScreen />);
+      // GoToLoginButton renders a button with text "Login"
       const loginButton = await waitFor(() => getByText("Login"));
       expect(loginButton).toBeTruthy();
       fireEvent.press(loginButton);
@@ -132,53 +128,60 @@ describe("CalendarScreen", () => {
     });
   });
 
-  // --- Loading State Tests ---
+  // --- Loading State ---
   describe("Loading state", () => {
-    it("renders an ActivityIndicator while events are being fetched", async () => {
+    it("shows an ActivityIndicator when events are being fetched", async () => {
       useAuth.mockReturnValue({ isSignedIn: true });
-      // Simulate stored calendars and selected calendar so fetchEvents is called.
+      // Simulate stored calendars so fetchEvents is attempted.
       AsyncStorage.getItem.mockImplementation((key) => {
         if (key === "availableCalendars")
           return Promise.resolve(JSON.stringify([{ id: "cal1", name: "Calendar One" }]));
         if (key === "selectedCalendar") return Promise.resolve("cal1");
         return Promise.resolve(null);
       });
-      // Never-resolving promise simulates pending fetch.
+      // Return a pending promise.
       fetchPublicCalendarEvents.mockReturnValue(new Promise(() => {}));
-      const { getByRole } = render(<CalendarScreen />);
-      const indicator = await waitFor(() => getByRole("progressbar"));
-      expect(indicator).toBeTruthy();
+      const { getByTestId } = render(<CalendarScreen />);
+      // Our loading container is identified by testID "loadingContainer" (from our dummy styles)
+      const loadingContainer = await waitFor(() => getByTestId("loadingContainer"));
+      expect(loadingContainer).toBeTruthy();
     });
   });
 
-  // --- Main UI and Events ---
-  describe("Main UI and events", () => {
-    const sampleValidEvent = {
-      id: "event1",
-      title: "Event 1",
-      description: "Campus A, Building 1, Room 101",
-      start: { dateTime: moment().add(1, "day").toISOString() },
-      end: { dateTime: moment().add(1, "day").add(1, "hour").toISOString() },
-    };
-    const sampleInvalidEvent = {
-      id: "event2",
-      title: "Event 2",
-      description: "Invalid description",
-      start: { dateTime: moment().add(2, "day").toISOString() },
-      end: { dateTime: moment().add(2, "day").add(1, "hour").toISOString() },
-    };
-
+  // --- Stored Data & Fetching Events ---
+  describe("Stored calendar data & event fetching", () => {
+    const calendarsData = [{ id: "cal1", name: "Calendar One" }];
     beforeEach(() => {
       useAuth.mockReturnValue({ isSignedIn: true });
       AsyncStorage.getItem.mockImplementation((key) => {
-        if (key === "availableCalendars")
-          return Promise.resolve(JSON.stringify([{ id: "cal1", name: "Calendar One" }]));
+        if (key === "availableCalendars") return Promise.resolve(JSON.stringify(calendarsData));
         if (key === "selectedCalendar") return Promise.resolve("cal1");
         return Promise.resolve(null);
       });
     });
 
-    it('renders "No events found for this range." when fetch returns an empty array', async () => {
+    it("loads stored calendars and sets selectedCalendar", async () => {
+      fetchPublicCalendarEvents.mockResolvedValue([]);
+      const { getByText } = render(<CalendarScreen />);
+      await waitFor(() => expect(fetchPublicCalendarEvents).toHaveBeenCalled());
+      expect(getByText("Calendar One")).toBeTruthy();
+    });
+
+    it("logs error if loading stored calendar data fails", async () => {
+      const errorMessage = "Storage error";
+      AsyncStorage.getItem.mockRejectedValue(new Error(errorMessage));
+      useAuth.mockReturnValue({ isSignedIn: true });
+      const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+      render(<CalendarScreen />);
+      await waitFor(() => {
+        expect(consoleErrorSpy).toHaveBeenCalledWith("Error loading stored calendar data:", expect.any(Error));
+      });
+      consoleErrorSpy.mockRestore();
+    });
+
+    it("sets loading to false if no selectedCalendar is available", async () => {
+      AsyncStorage.getItem.mockImplementation(() => Promise.resolve(null));
+      useAuth.mockReturnValue({ isSignedIn: true });
       fetchPublicCalendarEvents.mockResolvedValue([]);
       const { getByText } = render(<CalendarScreen />);
       await waitFor(() => {
@@ -186,77 +189,65 @@ describe("CalendarScreen", () => {
       });
     });
 
-    it("renders event list with valid events and filters out invalid events", async () => {
-      fetchPublicCalendarEvents.mockResolvedValue([sampleValidEvent, sampleInvalidEvent]);
+    it("fetches events, filters by regex, and sets loading to false", async () => {
+      // Provide one valid event and one invalid event.
+      const validEvent = {
+        id: "event1",
+        title: "Event 1",
+        description: "Campus A, Building 1, Room 101",
+        start: { dateTime: moment().add(1, "day").toISOString() },
+        end: { dateTime: moment().add(1, "day").add(1, "hour").toISOString() },
+      };
+      const invalidEvent = {
+        id: "event2",
+        title: "Event 2",
+        description: "Invalid description",
+        start: { dateTime: moment().add(2, "day").toISOString() },
+        end: { dateTime: moment().add(2, "day").add(1, "hour").toISOString() },
+      };
+      fetchPublicCalendarEvents.mockResolvedValue([validEvent, invalidEvent]);
       const { getByText, queryByText } = render(<CalendarScreen />);
       await waitFor(() => {
         expect(getByText("Event 1")).toBeTruthy();
-        expect(queryByText("Event 2")).toBeNull();
       });
-    });
-
-    it('expands an event and triggers "Go to Class" button press', async () => {
-      fetchPublicCalendarEvents.mockResolvedValue([sampleValidEvent]);
-      const { getByText } = render(<CalendarScreen />);
-      await waitFor(() => getByText("Event 1"));
-      fireEvent.press(getByText("Event 1"));
-      const goToClassButton = getByText("Go to Class");
-      expect(goToClassButton).toBeTruthy();
-      fireEvent.press(goToClassButton);
-      expect(handleGoToClass).toHaveBeenCalledWith(sampleValidEvent.description, mockNavigation);
-    });
-
-    it("toggles event expansion on repeated presses", async () => {
-      fetchPublicCalendarEvents.mockResolvedValue([sampleValidEvent]);
-      const { getByText, queryByText } = render(<CalendarScreen />);
-      await waitFor(() => getByText("Event 1"));
-      // Expand event.
-      fireEvent.press(getByText("Event 1"));
-      expect(getByText(/📍/)).toBeTruthy();
-      // Collapse event.
-      fireEvent.press(getByText("Event 1"));
-      await waitFor(() => {
-        expect(queryByText(/📍/)).toBeNull();
-      });
+      // Invalid event should be filtered out.
+      expect(queryByText("Event 2")).toBeNull();
     });
   });
 
-  // --- Pagination and Date Range ---
-  describe("Pagination and Date Range", () => {
-    beforeEach(() => {
+  // --- Observer and Notification ---
+  describe("EventObserver and In-App Notification", () => {
+    it("subscribes to eventsObserver and unsubscribes on unmount", async () => {
       useAuth.mockReturnValue({ isSignedIn: true });
-      AsyncStorage.getItem.mockImplementation((key) => {
-        if (key === "availableCalendars")
-          return Promise.resolve(JSON.stringify([{ id: "cal1", name: "Calendar One" }]));
-        if (key === "selectedCalendar") return Promise.resolve("cal1");
-        return Promise.resolve(null);
-      });
+      AsyncStorage.getItem.mockResolvedValue(JSON.stringify([{ id: "cal1", name: "Calendar One" }]));
       fetchPublicCalendarEvents.mockResolvedValue([]);
+      const { unmount } = render(<CalendarScreen />);
+      // The first useEffect subscribes to eventsObserver.
+      const observerCallback = fakeEventObserver.subscribe.mock.calls[0][0];
+      unmount();
+      expect(fakeEventObserver.unsubscribe).toHaveBeenCalledWith(observerCallback);
     });
 
-    it('updates the displayed date range when "Previous" and "Next" are pressed', async () => {
-      const { getByText } = render(<CalendarScreen />);
-      await waitFor(() => expect(fetchPublicCalendarEvents).toHaveBeenCalled());
-      const initialRange =
-        moment().startOf("day").format("MMM DD") +
-        " - " +
-        moment().startOf("day").add(9, "days").format("MMM DD");
-      expect(getByText(initialRange)).toBeTruthy();
-      // Press "Previous"
-      fireEvent.press(getByText("Previous"));
-      const previousRange =
-        moment().startOf("day").subtract(10, "days").format("MMM DD") +
-        " - " +
-        moment().startOf("day").subtract(10, "days").add(9, "days").format("MMM DD");
-      await waitFor(() => expect(getByText(previousRange)).toBeTruthy());
-      // Press "Next"
-      fireEvent.press(getByText("Next"));
-      await waitFor(() => expect(fetchPublicCalendarEvents).toHaveBeenCalledTimes(2));
+    it("calls NotificationObserver and shows in-app notification", async () => {
+      useAuth.mockReturnValue({ isSignedIn: true });
+      AsyncStorage.getItem.mockResolvedValue(JSON.stringify([{ id: "cal1", name: "Calendar One" }]));
+      fetchPublicCalendarEvents.mockResolvedValue([]);
+      const { getByText, queryByText } = render(<CalendarScreen />);
+      // Trigger NotificationObserver by simulating a notify call.
+      act(() => {
+        fakeEventObserver.notify([{ id: "dummy", title: "dummy", description: "Dummy, Dummy, Dummy", start: { dateTime: moment().toISOString() }, end: { dateTime: moment().toISOString() } }]);
+      });
+      await waitFor(() => expect(getByText("Test Notification")).toBeTruthy());
+      // Advance timers to hide notification after 5 seconds.
+      act(() => {
+        jest.advanceTimersByTime(5000);
+      });
+      await waitFor(() => expect(queryByText("Test Notification")).toBeNull());
     });
   });
 
-  // --- Calendar Selection Modal ---
-  describe("Calendar Selection Modal", () => {
+  // --- UI: Main Screen, Pagination, and Modal ---
+  describe("Main UI and interactions", () => {
     const calendarsData = [
       { id: "cal1", name: "Calendar One" },
       { id: "cal2", name: "Calendar Two" },
@@ -271,14 +262,41 @@ describe("CalendarScreen", () => {
       fetchPublicCalendarEvents.mockResolvedValue([]);
     });
 
-    it("opens modal on dropdown button press and selects a calendar", async () => {
+    it("renders header with pagination buttons and date range", async () => {
+      const { getByText } = render(<CalendarScreen />);
+      const headerText = await waitFor(() => getByText("Google Calendar"));
+      expect(headerText).toBeTruthy();
+
+      // Check date range text.
+      const rangeText = moment().startOf("day").format("MMM DD") + " - " + moment().startOf("day").add(9, "days").format("MMM DD");
+      expect(getByText(rangeText)).toBeTruthy();
+    });
+
+    it("updates date range when Previous and Next buttons are pressed", async () => {
+      const { getByText } = render(<CalendarScreen />);
+      await waitFor(() => expect(fetchPublicCalendarEvents).toHaveBeenCalled());
+
+      // Press Previous.
+      fireEvent.press(getByText("Previous"));
+      const prevRange = moment().startOf("day").subtract(10, "days").format("MMM DD") +
+        " - " +
+        moment().startOf("day").subtract(10, "days").add(9, "days").format("MMM DD");
+      await waitFor(() => expect(getByText(prevRange)).toBeTruthy());
+
+      // Press Next.
+      fireEvent.press(getByText("Next"));
+      await waitFor(() => expect(fetchPublicCalendarEvents).toHaveBeenCalledTimes(2));
+    });
+
+    it("opens calendar selection modal and selects a new calendar", async () => {
       const { getByText, queryByText } = render(<CalendarScreen />);
       await waitFor(() => expect(fetchPublicCalendarEvents).toHaveBeenCalled());
-      // Dropdown shows current calendar.
-      const dropdownButton = getByText("Calendar One");
-      fireEvent.press(dropdownButton);
+      // Dropdown button shows current calendar.
+      const dropdown = getByText("Calendar One");
+      fireEvent.press(dropdown);
       expect(getByText("Choose a Calendar")).toBeTruthy();
-      // Press a different calendar option.
+
+      // Select Calendar Two.
       fireEvent.press(getByText("Calendar Two"));
       await waitFor(() => {
         expect(queryByText("Choose a Calendar")).toBeNull();
@@ -286,107 +304,44 @@ describe("CalendarScreen", () => {
       expect(AsyncStorage.setItem).toHaveBeenCalledWith("selectedCalendar", "cal2");
     });
 
-    it("closes modal when Cancel is pressed", async () => {
+    it("closes calendar modal when Cancel or overlay is pressed", async () => {
       const { getByText, queryByText } = render(<CalendarScreen />);
       await waitFor(() => expect(fetchPublicCalendarEvents).toHaveBeenCalled());
       fireEvent.press(getByText("Calendar One"));
       expect(getByText("Choose a Calendar")).toBeTruthy();
+      // Press Cancel.
       fireEvent.press(getByText("Cancel"));
       await waitFor(() => expect(queryByText("Choose a Calendar")).toBeNull());
-    });
 
-    it("closes modal when overlay is pressed", async () => {
-      const { getByText, queryByText } = render(<CalendarScreen />);
-      await waitFor(() => expect(fetchPublicCalendarEvents).toHaveBeenCalled());
+      // Open modal again.
       fireEvent.press(getByText("Calendar One"));
       expect(getByText("Choose a Calendar")).toBeTruthy();
-      // Simulate overlay press by pressing on the modal title (part of the overlay).
+      // Simulate overlay press (press the modal title text for example).
       fireEvent.press(getByText("Choose a Calendar"));
       await waitFor(() => expect(queryByText("Choose a Calendar")).toBeNull());
     });
-  });
 
-  // --- In-App Notification ---
-  describe("In-App Notification", () => {
-    beforeEach(() => {
-      useAuth.mockReturnValue({ isSignedIn: true });
-      AsyncStorage.getItem.mockImplementation((key) => {
-        if (key === "availableCalendars")
-          return Promise.resolve(JSON.stringify([{ id: "cal1", name: "Calendar One" }]));
-        if (key === "selectedCalendar") return Promise.resolve("cal1");
-        return Promise.resolve(null);
-      });
-      fetchPublicCalendarEvents.mockResolvedValue([]);
-    });
-
-    it("displays a notification when triggered and hides it after 5 seconds", async () => {
+    it("renders event list; expands and collapses events; and calls handleGoToClass", async () => {
+      // Provide one valid event.
+      const validEvent = {
+        id: "event1",
+        title: "Event 1",
+        description: "Campus A, Building 1, Room 101",
+        start: { dateTime: moment().add(1, "day").toISOString() },
+        end: { dateTime: moment().add(1, "day").add(1, "hour").toISOString() },
+      };
+      fetchPublicCalendarEvents.mockResolvedValue([validEvent]);
       const { getByText, queryByText } = render(<CalendarScreen />);
-      // Trigger NotificationObserver by calling notify on our fake observer.
-      act(() => {
-        fakeEventObserver.notify([
-          {
-            id: "dummy",
-            title: "dummy",
-            description: "Dummy, Dummy, Dummy",
-            start: { dateTime: moment().toISOString() },
-            end: { dateTime: moment().toISOString() },
-          },
-        ]);
-      });
-      await waitFor(() => {
-        expect(getByText("Test Notification")).toBeTruthy();
-      });
-      // Fast-forward 5 seconds.
-      act(() => {
-        jest.advanceTimersByTime(5000);
-      });
-      await waitFor(() => {
-        expect(queryByText("Test Notification")).toBeNull();
-      });
-    });
-  });
-
-  // --- Stored Calendar Data Loading & Error Handling ---
-  describe("Stored Calendar Data Loading", () => {
-    it("loads stored calendar data and sets selectedCalendar correctly", async () => {
-      const calendarsData = [{ id: "cal1", name: "Calendar One" }];
-      AsyncStorage.getItem.mockImplementation((key) => {
-        if (key === "availableCalendars")
-          return Promise.resolve(JSON.stringify(calendarsData));
-        if (key === "selectedCalendar") return Promise.resolve("cal1");
-        return Promise.resolve(null);
-      });
-      useAuth.mockReturnValue({ isSignedIn: true });
-      fetchPublicCalendarEvents.mockResolvedValue([]);
-      const { getByText } = render(<CalendarScreen />);
-      await waitFor(() => expect(fetchPublicCalendarEvents).toHaveBeenCalled());
-      expect(getByText("Calendar One")).toBeTruthy();
-    });
-
-    it("logs an error when loading stored calendar data fails", async () => {
-      const errorMessage = "Storage error";
-      AsyncStorage.getItem.mockRejectedValue(new Error(errorMessage));
-      useAuth.mockReturnValue({ isSignedIn: true });
-      const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
-      render(<CalendarScreen />);
-      await waitFor(() => {
-        expect(consoleErrorSpy).toHaveBeenCalledWith("Error loading stored calendar data:", expect.any(Error));
-      });
-      consoleErrorSpy.mockRestore();
-    });
-  });
-
-  // --- No selectedCalendar Scenario ---
-  describe("No selectedCalendar scenario", () => {
-    it("sets loading to false if no selectedCalendar is available", async () => {
-      // Simulate missing availableCalendars (and thus no selectedCalendar)
-      AsyncStorage.getItem.mockImplementation((key) => Promise.resolve(null));
-      useAuth.mockReturnValue({ isSignedIn: true });
-      fetchPublicCalendarEvents.mockResolvedValue([]);
-      const { getByText } = render(<CalendarScreen />);
-      await waitFor(() => {
-        expect(getByText("No events found for this range.")).toBeTruthy();
-      });
+      await waitFor(() => expect(getByText("Event 1")).toBeTruthy());
+      // Expand the event.
+      fireEvent.press(getByText("Event 1"));
+      expect(getByText(/📍/)).toBeTruthy();
+      // Press "Go to Class" button.
+      fireEvent.press(getByText("Go to Class"));
+      expect(handleGoToClass).toHaveBeenCalledWith(validEvent.description, mockNavigation);
+      // Collapse event.
+      fireEvent.press(getByText("Event 1"));
+      await waitFor(() => expect(queryByText(/📍/)).toBeNull());
     });
   });
 });
