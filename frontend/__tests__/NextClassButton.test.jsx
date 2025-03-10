@@ -288,5 +288,81 @@ it('sets location to null when all events are in the past', () => {
     // We expect either no navigation or a console.error. Adjust as needed:
     expect(mockNavigation.navigate).not.toHaveBeenCalled();
   });
+// Additional tests for NextClassButton observer callback logic
+
+describe("NextClassButton Observer Callback", () => {
+  let observerCallback;
+  beforeEach(() => {
+    // Recreate the fake observer so we can directly access its subscribe callback
+    fakeObserver = {
+      subscribe: jest.fn((cb) => {
+        observerCallback = cb;
+      }),
+      unsubscribe: jest.fn(),
+      notify: jest.fn(),
+    };
+    // Re-render component with our fresh fakeObserver
+  });
+
+  it("sets nextEventLocation to null if events is undefined", async () => {
+    const { queryByText } = render(<NextClassButton eventObserver={fakeObserver} />);
+    // Simulate undefined events
+    act(() => {
+      observerCallback(undefined);
+    });
+    expect(queryByText("Go to My Next Class")).toBeNull();
+  });
+
+  it("sets nextEventLocation to null if events array is empty", async () => {
+    const { queryByText } = render(<NextClassButton eventObserver={fakeObserver} />);
+    act(() => {
+      observerCallback([]);
+    });
+    expect(queryByText("Go to My Next Class")).toBeNull();
+  });
+
+  it("sets nextEventLocation to null if only past events exist", async () => {
+    const pastEvent = {
+      start: { dateTime: new Date(Date.now() - 60000).toISOString() },
+      description: "Campus Past, Building Past",
+    };
+    const { queryByText } = render(<NextClassButton eventObserver={fakeObserver} />);
+    act(() => {
+      observerCallback([pastEvent]);
+    });
+    expect(queryByText("Go to My Next Class")).toBeNull();
+  });
+
+  it("triggers fade animation and sets nextEventLocation for a future event", async () => {
+    const futureEvent = {
+      start: { dateTime: new Date(Date.now() + 60000).toISOString() },
+      description: "Campus Future, Building Future",
+    };
+    const { getByText } = render(<NextClassButton eventObserver={fakeObserver} />);
+    act(() => {
+      observerCallback([futureEvent]);
+    });
+    const button = await waitFor(() => getByText("Go to My Next Class"));
+    expect(button).toBeTruthy();
+    expect(Animated.timing).toHaveBeenCalledWith(
+      expect.any(Animated.Value),
+      expect.objectContaining({
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      })
+    );
+  });
+
+  it("handleGoToNextClass does nothing if nextEventLocation is null", async () => {
+    // Render with an observer that sets no event (empty array)
+    const { queryByText } = render(<NextClassButton eventObserver={fakeObserver} />);
+    act(() => {
+      observerCallback([]);
+    });
+    // Button should not be rendered so nothing to press.
+    expect(queryByText("Go to My Next Class")).toBeNull();
+  });
+});
 
 });
