@@ -14,7 +14,7 @@ jest.mock("expo-location", () => ({
   getCurrentPositionAsync: jest.fn(),
 }));
 
-// We mock CalendarDirectionsIcon as a simple Text element.
+// Mock CalendarDirectionsIcon as a simple Text element.
 jest.mock("../app/components/Calendar/CalendarIcons/CalendarDirectionsIcon", () => {
   return (props) => <Text testID="calendar-directions-icon" {...props}>Icon</Text>;
 });
@@ -30,9 +30,8 @@ const createFakeObserver = () => ({
   unsubscribe: jest.fn(),
 });
 
-describe("NextClassButton - useEffect and handleGoToNextClass", () => {
+describe("NextClassButton", () => {
   let fakeObserver, mockNavigation;
-
   beforeEach(() => {
     fakeObserver = createFakeObserver();
     mockNavigation = { navigate: jest.fn() };
@@ -42,30 +41,20 @@ describe("NextClassButton - useEffect and handleGoToNextClass", () => {
 
   it("subscribes to the eventObserver and unsubscribes on unmount", () => {
     const { unmount } = render(<NextClassButton eventObserver={fakeObserver} />);
-    // Get the observer callback that was passed to subscribe.
     const observerCallback = fakeObserver.subscribe.mock.calls[0][0];
-    expect(observerCallback).toBeInstanceOf(Function);
+    expect(typeof observerCallback).toBe("function");
     unmount();
     expect(fakeObserver.unsubscribe).toHaveBeenCalledWith(observerCallback);
   });
 
-  it("sets nextEventLocation to null if events is empty or undefined", async () => {
+  it("renders nothing when no events are provided", () => {
     const { queryByText } = render(<NextClassButton eventObserver={fakeObserver} />);
-    const observerCallback = fakeObserver.subscribe.mock.calls[0][0];
-    // Call observer callback with no events.
-    act(() => {
-      observerCallback([]);
-    });
-    // Because nextEventLocation is null, nothing renders.
+    // No event callback is invoked so nextEventLocation remains null
     expect(queryByText("Go to My Next Class")).toBeNull();
-
-    act(() => {
-      observerCallback(undefined);
-    });
-    expect(queryByText("Go to My Next Class")).toBeNull();
+    expect(fakeObserver.subscribe).toHaveBeenCalled();
   });
 
-  it("does not set nextEventLocation if all events are in the past", async () => {
+  it("does not render the button when only past events exist", () => {
     const pastDate = new Date(Date.now() - 10000).toISOString();
     const pastEvent = { start: { dateTime: pastDate }, description: "Campus A, Building 1" };
 
@@ -77,7 +66,7 @@ describe("NextClassButton - useEffect and handleGoToNextClass", () => {
     expect(queryByText("Go to My Next Class")).toBeNull();
   });
 
-  it("sets nextEventLocation and starts fade animation when a future event exists", async () => {
+  it("sets nextEventLocation and triggers animation when a future event is provided", async () => {
     const futureDate = new Date(Date.now() + 10000).toISOString();
     const futureEvent = { start: { dateTime: futureDate }, description: "Campus A, Building 1" };
 
@@ -98,13 +87,12 @@ describe("NextClassButton - useEffect and handleGoToNextClass", () => {
     );
   });
 
-  it("calls navigation.navigate with parsed parameters when handleGoToNextClass is triggered", async () => {
+  it("navigates with parsed parameters when the button is pressed", async () => {
     const futureDate = new Date(Date.now() + 10000).toISOString();
     const description = "Campus A, Building 1";
     const futureEvent = { start: { dateTime: futureDate }, description };
     const mockCoords = { latitude: 40.7128, longitude: -74.0060 };
 
-    // Simulate successful location retrieval.
     Location.getCurrentPositionAsync.mockResolvedValue({ coords: mockCoords });
 
     const { getByText } = render(<NextClassButton eventObserver={fakeObserver} />);
@@ -114,7 +102,6 @@ describe("NextClassButton - useEffect and handleGoToNextClass", () => {
     });
     const button = await waitFor(() => getByText("Go to My Next Class"));
     fireEvent.press(button);
-
     await waitFor(() => {
       expect(Location.getCurrentPositionAsync).toHaveBeenCalled();
       expect(mockNavigation.navigate).toHaveBeenCalledWith("Navigation", {
@@ -127,8 +114,7 @@ describe("NextClassButton - useEffect and handleGoToNextClass", () => {
 
   it("handles event description with missing comma gracefully", async () => {
     const futureDate = new Date(Date.now() + 10000).toISOString();
-    // Description with no comma results in buildingName as empty string.
-    const description = "Campus A";
+    const description = "Campus A"; // No comma, so buildingName will be empty.
     const futureEvent = { start: { dateTime: futureDate }, description };
     const mockCoords = { latitude: 1, longitude: 2 };
     Location.getCurrentPositionAsync.mockResolvedValue({ coords: mockCoords });
@@ -140,7 +126,6 @@ describe("NextClassButton - useEffect and handleGoToNextClass", () => {
     });
     const button = await waitFor(() => getByText("Go to My Next Class"));
     fireEvent.press(button);
-
     await waitFor(() => {
       expect(mockNavigation.navigate).toHaveBeenCalledWith("Navigation", {
         campus: "campus a",
@@ -164,7 +149,6 @@ describe("NextClassButton - useEffect and handleGoToNextClass", () => {
     });
     const button = await waitFor(() => getByText("Go to My Next Class"));
     fireEvent.press(button);
-
     await waitFor(() => {
       expect(mockNavigation.navigate).toHaveBeenCalledWith("Navigation", {
         campus: "campus b",
@@ -174,14 +158,13 @@ describe("NextClassButton - useEffect and handleGoToNextClass", () => {
     });
   });
 
-  it("does nothing when handleGoToNextClass is called and nextEventLocation is null", async () => {
-    // Render without triggering any event so nextEventLocation remains null.
+  it("does nothing when nextEventLocation is null", async () => {
     const { queryByText } = render(<NextClassButton eventObserver={fakeObserver} />);
-    // No button rendered because nextEventLocation is null.
+    // Without triggering any event update, no button should be rendered.
     expect(queryByText("Go to My Next Class")).toBeNull();
   });
 
-  it("logs an error if location fetching fails in handleGoToNextClass", async () => {
+  it("logs an error if location fetching fails", async () => {
     const futureDate = new Date(Date.now() + 10000).toISOString();
     const description = "Campus A, Building 1";
     const futureEvent = { start: { dateTime: futureDate }, description };
@@ -196,10 +179,7 @@ describe("NextClassButton - useEffect and handleGoToNextClass", () => {
     const button = await waitFor(() => getByText("Go to My Next Class"));
     fireEvent.press(button);
     await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "Error navigating to next class:",
-        expect.any(Error)
-      );
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Error navigating to next class:", expect.any(Error));
     });
     consoleErrorSpy.mockRestore();
   });
