@@ -117,4 +117,82 @@ describe("CalendarScreen Tests", () => {
       expect.any(Object) // Because navigation is passed in
     );
   });
+  it("displays multiple valid events in the list", async () => {
+    useAuth.mockReturnValue({ isSignedIn: true });
+    AsyncStorage.getItem.mockImplementation((key) => {
+      if (key === "availableCalendars") {
+        return Promise.resolve(JSON.stringify([{ id: "cal1", name: "Calendar One" }]));
+      }
+      if (key === "selectedCalendar") {
+        return Promise.resolve("cal1");
+      }
+      return Promise.resolve(null);
+    });
+
+    // Provide two valid events
+    const event1 = {
+      id: "ev1",
+      title: "Event 1",
+      description: "Campus A, Building A, Room A",
+      start: { dateTime: moment().add(1, "day").toISOString() },
+      end: { dateTime: moment().add(1, "day").add(1, "hour").toISOString() },
+    };
+    const event2 = {
+      id: "ev2",
+      title: "Event 2",
+      description: "Campus B, Building B, Room B",
+      start: { dateTime: moment().add(2, "day").toISOString() },
+      end: { dateTime: moment().add(2, "day").add(1, "hour").toISOString() },
+    };
+    fetchPublicCalendarEvents.mockResolvedValue([event1, event2]);
+
+    const { getByText } = render(<CalendarScreen />);
+    // Both events should appear
+    await waitFor(() => {
+      expect(getByText("Event 1")).toBeTruthy();
+      expect(getByText("Event 2")).toBeTruthy();
+    });
+  });
+
+  it("shows in-app notification after observer callback if any logic triggers it", async () => {
+    // This test specifically checks if your code triggers showInAppNotification
+    // You can adapt it if your logic calls setNotificationMessage somewhere
+    useAuth.mockReturnValue({ isSignedIn: true });
+    AsyncStorage.getItem.mockImplementation((key) => {
+      if (key === "availableCalendars") {
+        return Promise.resolve(JSON.stringify([{ id: "cal1", name: "Calendar One" }]));
+      }
+      if (key === "selectedCalendar") {
+        return Promise.resolve("cal1");
+      }
+      return Promise.resolve(null);
+    });
+
+    const testEvent = {
+      id: "notify",
+      title: "Notification Event",
+      description: "Campus X, Building X, Room X",
+      start: { dateTime: moment().toISOString() },
+      end: { dateTime: moment().add(1, "hour").toISOString() },
+    };
+    fetchPublicCalendarEvents.mockResolvedValue([testEvent]);
+
+    const { queryByText } = render(<CalendarScreen />);
+    await waitFor(() => expect(fetchPublicCalendarEvents).toHaveBeenCalled());
+
+    // Now let's simulate the observer callback that might trigger the in-app notification
+    const observerCallback = fakeEventObserver.subscribe.mock.calls[0][0];
+    act(() => {
+      observerCallback([testEvent]); // This might cause NotificationObserver to do something
+    });
+
+    // If your code sets setNotificationVisible(true) or something like that,
+    // you can check the notification text or however you display it:
+    // e.g. if your InAppNotification is <Text>NOTIF: {notificationMessage}</Text>
+    // Adjust to your actual code:
+    await waitFor(() => {
+      expect(queryByText(/Notification Event/i)).toBeTruthy();
+    });
+  });
+
 });

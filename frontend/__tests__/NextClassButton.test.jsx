@@ -209,4 +209,84 @@ it('sets location to null when all events are in the past', () => {
 
   rerender(<NextClassButton eventObserver={mockObserver} />);
   expect(queryByText('Go to My Next Class')).toBeNull(); // Button should not render
+
+  test("Picks the earliest future event if multiple exist", async () => {
+    const now = new Date();
+    const futureEvent1 = {
+      start: { dateTime: new Date(now.getTime() + 30000).toISOString() }, // 30s from now
+      description: "Campus X, Building X",
+    };
+    const futureEvent2 = {
+      start: { dateTime: new Date(now.getTime() + 60000).toISOString() }, // 60s from now
+      description: "Campus Y, Building Y",
+    };
+
+    const { getByText } = render(<NextClassButton eventObserver={fakeObserver} />);
+    const observerCallback = fakeObserver.subscribe.mock.calls[0][0];
+
+    // Provide both future events
+    act(() => {
+      observerCallback([futureEvent2, futureEvent1]);
+    });
+
+    // The earliest is futureEvent1 => "Campus X"
+    const button = await waitFor(() => getByText("Go to My Next Class"));
+    expect(button).toBeTruthy();
+    fireEvent.press(button);
+
+    await waitFor(() => {
+      expect(mockNavigation.navigate).toHaveBeenCalledWith("Navigation", expect.objectContaining({
+        campus: "campus x",
+      }));
+    });
+  });
+
+  test("Updates and hides the button if a subsequent notify call has no upcoming events", async () => {
+    // First call: we have an upcoming event => button visible
+    const upcomingEvent = {
+      start: { dateTime: new Date(Date.now() + 10000).toISOString() },
+      description: "Campus Z, Building Z",
+    };
+
+    const { queryByText } = render(<NextClassButton eventObserver={fakeObserver} />);
+    const observerCallback = fakeObserver.subscribe.mock.calls[0][0];
+
+    // 1) Provide an event => show button
+    act(() => {
+      observerCallback([upcomingEvent]);
+    });
+    expect(await waitFor(() => queryByText("Go to My Next Class"))).toBeTruthy();
+
+    // 2) Now provide empty => no future events => button disappears
+    act(() => {
+      observerCallback([]);
+    });
+
+    // After re-render, button should be gone
+    expect(queryByText("Go to My Next Class")).toBeNull();
+  });
+
+  test("Handles null or undefined coords from getCurrentPositionAsync gracefully", async () => {
+    // If expo-location returns an object with missing coords, we can see if it logs an error or does nothing
+    Location.getCurrentPositionAsync.mockResolvedValue({ coords: null });
+
+    const futureEvent = {
+      start: { dateTime: new Date(Date.now() + 20000).toISOString() },
+      description: "Campus A, Building B",
+    };
+
+    const { getByText } = render(<NextClassButton eventObserver={fakeObserver} />);
+    const observerCallback = fakeObserver.subscribe.mock.calls[0][0];
+
+    act(() => {
+      observerCallback([futureEvent]);
+    });
+
+    const button = await waitFor(() => getByText("Go to My Next Class"));
+    fireEvent.press(button);
+
+    // We expect either no navigation or a console.error. Adjust as needed:
+    expect(mockNavigation.navigate).not.toHaveBeenCalled();
+  });
+
 });
