@@ -1,37 +1,117 @@
+// CalendarScreen.test.jsx
+// This file does not use inline jest.mock() calls for calendar-related modules.
+// Instead, it manually overrides functions/properties after import.
+
 import React from "react";
-import { render, act, waitFor, fireEvent } from "@testing-library/react-native";
+import { render, fireEvent, waitFor, act } from "@testing-library/react-native";
+import moment from "moment";
+
+// Import the component under test
 import CalendarScreen from "../app/screens/calendar/CalendarScreen";
-import { useAuth } from "@clerk/clerk-expo";
+
+// Import modules that CalendarScreen depends on
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { fetchPublicCalendarEvents } from "../app/screens/login/LoginHelper";
-import { NotificationObserver } from "../app/screens/calendar/NotificationObserver";
+import * as ClerkExpo from "@clerk/clerk-expo";
+import * as NavigationNative from "@react-navigation/native";
+import * as LoginHelper from "../app/screens/login/LoginHelper";
+import * as CalendarHelper from "../app/screens/calendar/CalendarHelper";
+import * as NotificationObserverModule from "../app/screens/calendar/NotificationObserver";
 
-// We assume these are already mocked in your test file, so if not, add them:
-jest.mock("@clerk/clerk-expo", () => ({
-  useAuth: jest.fn(),
-}));
-jest.mock("@react-native-async-storage/async-storage", () => ({
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-}));
-jest.mock("../app/screens/login/LoginHelper", () => ({
-  fetchPublicCalendarEvents: jest.fn(),
-}));
-jest.mock("../app/screens/calendar/NotificationObserver", () => ({
-  NotificationObserver: jest.fn(),
-}));
+// --- Manual Overrides of Dependencies ---
+// Override useAuth to be a stub that we can change per test.
+ClerkExpo.useAuth = () => ({ isSignedIn: false });
+// Override useNavigation to return a stub navigation object.
+NavigationNative.useNavigation = () => ({
+  reset: jest.fn(),
+  navigate: jest.fn(),
+  replace: jest.fn(),
+  addListener: jest.fn(() => jest.fn()),
+});
 
-describe("CalendarScreen (New Lines Coverage)", () => {
+// Override AsyncStorage methods with jest functions.
+AsyncStorage.getItem = jest.fn();
+AsyncStorage.setItem = jest.fn();
+AsyncStorage.removeItem = jest.fn();
+
+// Override fetchPublicCalendarEvents to be a jest function.
+LoginHelper.fetchPublicCalendarEvents = jest.fn();
+
+// Override handleGoToClass to be a jest function.
+CalendarHelper.handleGoToClass = jest.fn();
+
+// Override NotificationObserver to return a fake observer.
+// We also create a local variable so we can simulate calls.
+const fakeObserver = {
+  subscribe: jest.fn(),
+  unsubscribe: jest.fn(),
+  notify: jest.fn(),
+};
+NotificationObserverModule.NotificationObserver = () => fakeObserver;
+
+// Ensure that any module (like react-native-css-interop) is manually mocked in your __mocks__ folder.
+// For example, in __mocks__/react-native-css-interop.js, have:
+//   module.exports = {};
+
+jest.useFakeTimers();
+
+describe("CalendarScreen - Comprehensive Tests", () => {
+  // We’ll override useAuth per test as needed.
+  let navigationStub;
   beforeEach(() => {
-    jest.clearAllMocks();
+    // Reset manual stubs before each test.
+    navigationStub = {
+      reset: jest.fn(),
+      navigate: jest.fn(),
+      replace: jest.fn(),
+      addListener: jest.fn(() => jest.fn()),
+    };
+    NavigationNative.useNavigation = () => navigationStub;
+    // Reset AsyncStorage methods.
+    AsyncStorage.getItem.mockReset();
+    AsyncStorage.setItem.mockReset();
+    AsyncStorage.removeItem.mockReset();
+    // Reset fetchPublicCalendarEvents and handleGoToClass.
+    LoginHelper.fetchPublicCalendarEvents.mockReset();
+    CalendarHelper.handleGoToClass.mockReset();
+    // Reset fake observer
+    fakeObserver.subscribe.mockReset();
+    fakeObserver.unsubscribe.mockReset();
+    fakeObserver.notify.mockReset();
   });
 
-  it("calls showInAppNotification when NotificationObserver triggers a notification", async () => {
-    // 1) Mock user is signed in
-    useAuth.mockReturnValue({ isSignedIn: true });
+  // --- Guest Mode & Basic Rendering ---
+  it("renders guest mode if user is not signed in and shows the Login button", async () => {
+    // Override useAuth to return not-signed-in.
+    ClerkExpo.useAuth = () => ({ isSignedIn: false });
+    AsyncStorage.removeItem.mockResolvedValue();
 
-    // 2) Mock stored calendars so the screen doesn't short-circuit
+    let screen;
+    await act(async () => {
+      screen = render(<CalendarScreen />);
+    });
+
+    // Expect that the rendered output includes a button with text "Login"
+    // (Assuming your manual __mocks__ for GoToLoginButton renders a button with title "Login")
+    const loginButton = screen.getByText("Login");
+    expect(loginButton).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.press(loginButton);
+    });
+
+    await waitFor(() => {
+      expect(AsyncStorage.removeItem).toHaveBeenCalledWith("sessionId");
+      expect(AsyncStorage.removeItem).toHaveBeenCalledWith("userData");
+      expect(AsyncStorage.removeItem).toHaveBeenCalledWith("guestMode");
+      expect(navigationStub.reset).toHaveBeenCalledWith({
+        index: 0,
+        routes: [{ name: "Login" }],
+      });
+    });
+  });
+
+  it("shows a loading indicator while fetching events", async () => {
+    ClerkExpo.useAuth = () => ({ isSignedIn: true });
     AsyncStorage.getItem.mockImplementation((key) => {
       if (key === "availableCalendars") {
         return Promise.resolve(JSON.stringify([{ id: "cal1", name: "Calendar One" }]));
@@ -41,50 +121,93 @@ describe("CalendarScreen (New Lines Coverage)", () => {
       }
       return Promise.resolve(null);
     });
+    // Simulate a never-resolving fetch so that loading indicator remains.
+    LoginHelper.fetchPublicCalendarEvents.mockReturnValue(new Promise(() => {}));
 
-    // 3) Mock fetchPublicCalendarEvents to return something
-    fetchPublicCalendarEvents.mockResolvedValue([]);
-
-    // 4) Render the component
-    const { getByText, queryByText } = render(<CalendarScreen />);
-
-    // Wait for initial fetch
-    await waitFor(() => expect(fetchPublicCalendarEvents).toHaveBeenCalled());
-
-    // 5) Now let's simulate the NotificationObserver calling "showInAppNotification".
-    //    In your code, `NotificationObserver(events, showInAppNotification, ...)` is triggered 
-    //    inside the eventObserver.subscribe callback. Let's directly invoke it:
-    const observerCallback = NotificationObserver.mock.calls[0][1]; 
-    // The above might vary if you're calling NotificationObserver differently; 
-    // adjust if needed to get the actual callback from your mock.
-
-    act(() => {
-      // Simulate the observer calling showInAppNotification with a message
-      observerCallback("Test Notification");
+    let screen;
+    await act(async () => {
+      screen = render(<CalendarScreen />);
     });
-
-    // 6) Now your code logs "Triggering In-App Notification: Test Notification"
-    //    and sets the notification to visible for 5 seconds.
-    //    If your InAppNotification component shows the message, check it:
-    //    e.g. `expect(queryByText("Test Notification")).toBeTruthy();`
-    //    If you only have a console.log, you can spy on console.log. 
-    //    We'll check if the message is displayed in the UI (adjust as needed).
-    //    If your code doesn't display it in text, skip this step.
-    // Example:
-    // expect(queryByText(/Test Notification/i)).toBeTruthy();
-
-    // 7) The code sets a 5-second timer to hide the notification. Let's fast-forward timers:
-    jest.advanceTimersByTime(5000);
-
-    // Now it should be hidden. 
-    // If your code unmounts or toggles a piece of state for the notification, check it:
-    // expect(queryByText(/Test Notification/i)).toBeNull();
+    // Assume that the loading indicator has a testID of "loading-indicator" (or role "progressbar")
+    // Adjust the query according to your implementation.
+    expect(screen.getByRole("progressbar")).toBeTruthy();
   });
 
-  it("fetches events (with date range & regex filtering) when selectedCalendar changes", async () => {
-    useAuth.mockReturnValue({ isSignedIn: true });
+  it("does not fetch events if no selectedCalendar is stored", async () => {
+    ClerkExpo.useAuth = () => ({ isSignedIn: true });
+    AsyncStorage.getItem.mockResolvedValue(null);
+    LoginHelper.fetchPublicCalendarEvents.mockResolvedValue([]);
+    let screen;
+    await act(async () => {
+      screen = render(<CalendarScreen />);
+    });
+    await waitFor(() => {
+      expect(LoginHelper.fetchPublicCalendarEvents).not.toHaveBeenCalled();
+    });
+    expect(await screen.findByText("No events found for this range.")).toBeTruthy();
+  });
 
-    // 1) Mock stored data
+  // --- Stored Data & Error Handling ---
+  it("logs an error when stored data fails to load", async () => {
+    ClerkExpo.useAuth = () => ({ isSignedIn: true });
+    const errorMessage = "Storage error";
+    AsyncStorage.getItem.mockRejectedValue(new Error(errorMessage));
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    await act(async () => {
+      render(<CalendarScreen />);
+    });
+    await waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Error loading stored calendar data:", expect.any(Error));
+    });
+    consoleErrorSpy.mockRestore();
+  });
+
+  // --- Observer & In-App Notification ---
+  it("subscribes to the observer and unsubscribes on unmount", async () => {
+    ClerkExpo.useAuth = () => ({ isSignedIn: true });
+    AsyncStorage.getItem.mockResolvedValue(JSON.stringify([{ id: "cal1", name: "Calendar One" }]));
+    LoginHelper.fetchPublicCalendarEvents.mockResolvedValue([]);
+    let screen;
+    await act(async () => {
+      screen = render(<CalendarScreen />);
+    });
+    await waitFor(() => expect(LoginHelper.fetchPublicCalendarEvents).toHaveBeenCalledTimes(1));
+    // Assume that CalendarScreen calls fakeObserver.subscribe(callback)
+    const callback = fakeObserver.subscribe.mock.calls[0][0];
+    await act(async () => {
+      screen.unmount();
+    });
+    expect(fakeObserver.unsubscribe).toHaveBeenCalledWith(callback);
+  });
+
+  it("triggers in-app notification and hides it after 5 sec", async () => {
+    ClerkExpo.useAuth = () => ({ isSignedIn: true });
+    AsyncStorage.getItem.mockResolvedValue(JSON.stringify([{ id: "cal1", name: "Calendar One" }]));
+    LoginHelper.fetchPublicCalendarEvents.mockResolvedValue([]);
+    let screen;
+    await act(async () => {
+      screen = render(<CalendarScreen />);
+    });
+    // Simulate the observer triggering a notification.
+    await act(async () => {
+      fakeObserver.notify([{ title: "FakeEvent" }]);
+    });
+    let notif;
+    await waitFor(() => {
+      notif = screen.queryByTestId("in-app-notif");
+      expect(notif).toBeTruthy();
+    });
+    await act(async () => {
+      jest.advanceTimersByTime(5000);
+    });
+    await waitFor(() => {
+      expect(screen.queryByTestId("in-app-notif")).toBeNull();
+    });
+  });
+
+  // --- Fetching & Filtering Events ---
+  it("fetches events, filters out invalid descriptions, and sets state", async () => {
+    ClerkExpo.useAuth = () => ({ isSignedIn: true });
     AsyncStorage.getItem.mockImplementation((key) => {
       if (key === "availableCalendars") {
         return Promise.resolve(JSON.stringify([{ id: "cal1", name: "Calendar One" }]));
@@ -94,58 +217,185 @@ describe("CalendarScreen (New Lines Coverage)", () => {
       }
       return Promise.resolve(null);
     });
-
-    // 2) Provide events, some valid, some invalid
     const validEvent = {
       id: "v1",
-      description: "Campus A, Building B, Room 101", // Matches regex
-      start: { dateTime: new Date().toISOString() },
-      end: { dateTime: new Date().toISOString() },
+      title: "Valid Event",
+      description: "Campus A, Building 1, Room 101", // valid format
+      start: { dateTime: moment().add(1, "day").toISOString() },
+      end: { dateTime: moment().add(1, "day").add(1, "hour").toISOString() },
     };
     const invalidEvent = {
       id: "v2",
-      description: "JustOnePart",
-      start: { dateTime: new Date().toISOString() },
-      end: { dateTime: new Date().toISOString() },
+      title: "Invalid Event",
+      description: "MissingCommasHere",
+      start: { dateTime: moment().add(2, "day").toISOString() },
+      end: { dateTime: moment().add(2, "day").add(1, "hour").toISOString() },
     };
-    fetchPublicCalendarEvents.mockResolvedValue([validEvent, invalidEvent]);
-
-    const { getByText, queryByText } = render(<CalendarScreen />);
-
-    // Wait for initial fetch
-    await waitFor(() => expect(fetchPublicCalendarEvents).toHaveBeenCalledTimes(1));
-
-    // We should see something from the valid event, but not from the invalid event
-    expect(queryByText(/JustOnePart/i)).toBeNull(); // Filtered out
-    // If your code displays the event differently, check that the valid one is present
-    // e.g. if you show an event "Campus A, Building B, Room 101"
-    expect(queryByText(/Campus A, Building B, Room 101/i)).toBeTruthy();
-
-    // 3) Trigger changing the selectedCalendar or the date range to re-fetch
-    fetchPublicCalendarEvents.mockClear();
-    // If you have a "Next" button for pagination:
-    fireEvent.press(getByText("Next")); 
-    // Wait for re-fetch
-    await waitFor(() => expect(fetchPublicCalendarEvents).toHaveBeenCalledTimes(1));
+    LoginHelper.fetchPublicCalendarEvents.mockResolvedValue([validEvent, invalidEvent]);
+    let screen;
+    await act(async () => {
+      screen = render(<CalendarScreen />);
+    });
+    expect(await screen.findByText("Valid Event")).toBeTruthy();
+    expect(screen.queryByText("Invalid Event")).toBeNull();
   });
 
-  it("renders NextClassButton with eventObserver, verifying it's present in the tree", async () => {
-    // Just confirm that <NextClassButton eventObserver={eventsObserver} /> is rendered 
-    // when user is signed in.
-    useAuth.mockReturnValue({ isSignedIn: true });
-    AsyncStorage.getItem.mockResolvedValue(JSON.stringify([{ id: "cal1", name: "Calendar One" }]));
-    fetchPublicCalendarEvents.mockResolvedValue([]);
+  it("updates date range when pressing Previous or Next and refetches events", async () => {
+    ClerkExpo.useAuth = () => ({ isSignedIn: true });
+    AsyncStorage.getItem.mockImplementation((key) => {
+      if (key === "availableCalendars") {
+        return Promise.resolve(JSON.stringify([{ id: "cal1", name: "Calendar One" }]));
+      }
+      if (key === "selectedCalendar") return Promise.resolve("cal1");
+      return Promise.resolve(null);
+    });
+    LoginHelper.fetchPublicCalendarEvents.mockResolvedValue([]);
+    let screen;
+    await act(async () => {
+      screen = render(<CalendarScreen />);
+    });
+    await waitFor(() => expect(LoginHelper.fetchPublicCalendarEvents).toHaveBeenCalledTimes(1));
+    await act(async () => {
+      fireEvent.press(screen.getByText("Previous"));
+    });
+    await waitFor(() => expect(LoginHelper.fetchPublicCalendarEvents).toHaveBeenCalledTimes(2));
+    await act(async () => {
+      fireEvent.press(screen.getByText("Next"));
+    });
+    await waitFor(() => expect(LoginHelper.fetchPublicCalendarEvents).toHaveBeenCalledTimes(3));
+  });
 
-    const { getByText, queryByText } = render(<CalendarScreen />);
-    await waitFor(() => expect(fetchPublicCalendarEvents).toHaveBeenCalled());
+  // --- Calendar Modal & Selection ---
+  it("opens calendar selection modal and changes selected calendar", async () => {
+    ClerkExpo.useAuth = () => ({ isSignedIn: true });
+    const calendarsData = [
+      { id: "cal1", name: "Calendar One" },
+      { id: "cal2", name: "Calendar Two" },
+    ];
+    AsyncStorage.getItem.mockImplementation((key) => {
+      if (key === "availableCalendars")
+        return Promise.resolve(JSON.stringify(calendarsData));
+      if (key === "selectedCalendar") return Promise.resolve("cal1");
+      return Promise.resolve(null);
+    });
+    LoginHelper.fetchPublicCalendarEvents.mockResolvedValue([]);
+    let screen;
+    await act(async () => {
+      screen = render(<CalendarScreen />);
+    });
+    await waitFor(() => expect(LoginHelper.fetchPublicCalendarEvents).toHaveBeenCalled());
+    await act(async () => {
+      fireEvent.press(screen.getByText("Calendar One"));
+    });
+    expect(screen.getByText("Choose a Calendar")).toBeTruthy();
+    await act(async () => {
+      fireEvent.press(screen.getByText("Calendar Two"));
+    });
+    await waitFor(() => {
+      expect(screen.queryByText("Choose a Calendar")).toBeNull();
+    });
+    expect(AsyncStorage.setItem).toHaveBeenCalledWith("selectedCalendar", "cal2");
+  });
 
-    // If NextClassButton is actually invisible until an upcoming event is found, 
-    // you might only confirm that it is in the DOM or not. 
-    // If it doesn't render anything, you might check for its container 
-    // or just confirm no errors are thrown.
-    // Example: 
-    // expect(queryByText("Go to My Next Class")).toBeNull();
-    // But at least we confirm it doesn't crash. 
-    // You can further test NextClassButton logic in NextClassButton.test.jsx
+  it("closes calendar modal when Cancel is pressed", async () => {
+    ClerkExpo.useAuth = () => ({ isSignedIn: true });
+    const calendarsData = [{ id: "cal1", name: "Calendar One" }];
+    AsyncStorage.getItem.mockImplementation((key) => {
+      if (key === "availableCalendars")
+        return Promise.resolve(JSON.stringify(calendarsData));
+      if (key === "selectedCalendar") return Promise.resolve("cal1");
+      return Promise.resolve(null);
+    });
+    LoginHelper.fetchPublicCalendarEvents.mockResolvedValue([]);
+    let screen;
+    await act(async () => {
+      screen = render(<CalendarScreen />);
+    });
+    await waitFor(() => expect(LoginHelper.fetchPublicCalendarEvents).toHaveBeenCalled());
+    await act(async () => {
+      fireEvent.press(screen.getByText("Calendar One"));
+    });
+    expect(screen.getByText("Choose a Calendar")).toBeTruthy();
+    await act(async () => {
+      fireEvent.press(screen.getByText("Cancel"));
+    });
+    await waitFor(() => expect(screen.queryByText("Choose a Calendar")).toBeNull());
+  });
+
+  // --- Expanding Events & handleGoToClass ---
+  it("expands an event, shows details, and calls handleGoToClass when 'Go to Class' is pressed", async () => {
+    ClerkExpo.useAuth = () => ({ isSignedIn: true });
+    AsyncStorage.getItem.mockReturnValue(JSON.stringify([{ id: "cal1", name: "Calendar One" }]));
+    const event = {
+      id: "event1",
+      title: "Event 1",
+      description: "Campus A, Building 1, Room 101",
+      start: { dateTime: moment().add(1, "day").toISOString() },
+      end: { dateTime: moment().add(1, "day").add(1, "hour").toISOString() },
+    };
+    LoginHelper.fetchPublicCalendarEvents.mockResolvedValue([event]);
+    let screen;
+    await act(async () => {
+      screen = render(<CalendarScreen />);
+    });
+    expect(await screen.findByText("Event 1")).toBeTruthy();
+    await act(async () => {
+      fireEvent.press(screen.getByText("Event 1"));
+    });
+    expect(screen.getByText(/📍 Campus A, Building 1, Room 101/)).toBeTruthy();
+    await act(async () => {
+      fireEvent.press(screen.getByText("Go to Class"));
+    });
+    expect(CalendarHelper.handleGoToClass).toHaveBeenCalledWith(event.description, navigationStub);
+    await act(async () => {
+      fireEvent.press(screen.getByText("Event 1"));
+    });
+    await waitFor(() => expect(screen.queryByText(/📍/)).toBeNull());
+  });
+
+  it("handles multiple event expansions (only one expanded at a time)", async () => {
+    ClerkExpo.useAuth = () => ({ isSignedIn: true });
+    AsyncStorage.getItem.mockReturnValue(JSON.stringify([{ id: "cal1", name: "Calendar One" }]));
+    const eventA = {
+      id: "A",
+      title: "Event A",
+      description: "Campus A, Building 1, Room 101",
+      start: { dateTime: moment().add(1, "day").toISOString() },
+      end: { dateTime: moment().add(1, "day").add(1, "hour").toISOString() },
+    };
+    const eventB = {
+      id: "B",
+      title: "Event B",
+      description: "Campus B, Building 2, Room 202",
+      start: { dateTime: moment().add(2, "day").toISOString() },
+      end: { dateTime: moment().add(2, "day").add(1, "hour").toISOString() },
+    };
+    LoginHelper.fetchPublicCalendarEvents.mockResolvedValue([eventA, eventB]);
+    let screen;
+    await act(async () => {
+      screen = render(<CalendarScreen />);
+    });
+    expect(await screen.findByText("Event A")).toBeTruthy();
+    act(() => {
+      fireEvent.press(screen.getByText("Event A"));
+    });
+    expect(screen.getByText(/Campus A/)).toBeTruthy();
+    act(() => {
+      fireEvent.press(screen.getByText("Event B"));
+    });
+    expect(screen.getByText(/Campus B/)).toBeTruthy();
+    expect(screen.queryByText(/Campus A/)).toBeNull();
+  });
+
+  // --- NextClassButton Rendering ---
+  it("renders NextClassButton within CalendarScreen without crashing", async () => {
+    ClerkExpo.useAuth = () => ({ isSignedIn: true });
+    AsyncStorage.getItem.mockReturnValue(JSON.stringify([{ id: "cal1", name: "Calendar One" }]));
+    LoginHelper.fetchPublicCalendarEvents.mockResolvedValue([]);
+    let screen;
+    await act(async () => {
+      screen = render(<CalendarScreen />);
+    });
+    expect(screen.toJSON()).toBeTruthy();
   });
 });
