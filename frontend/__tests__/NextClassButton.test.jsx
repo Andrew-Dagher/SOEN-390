@@ -19,7 +19,7 @@ jest.spyOn(Animated, 'timing').mockImplementation(() => ({
   start: jest.fn(),
 }));
 
-// Mock event observer
+// Utility to create a mock event observer.
 const createMockObserver = () => ({
   subscribe: jest.fn(),
   unsubscribe: jest.fn(),
@@ -37,7 +37,7 @@ describe('NextClassButton', () => {
     jest.clearAllMocks();
   });
 
-  // Test 1: Component doesn't render when no events
+  // Test 1: Component doesn't render when no upcoming events
   it('returns null when there are no upcoming events', () => {
     const mockObserver = createMockObserver();
     const { queryByText } = render(<NextClassButton eventObserver={mockObserver} />);
@@ -51,7 +51,7 @@ describe('NextClassButton', () => {
     const mockObserver = createMockObserver();
     const { findByText } = render(<NextClassButton eventObserver={mockObserver} />);
 
-    // Simulate event update
+    // Simulate event update with an upcoming event.
     const callback = mockObserver.subscribe.mock.calls[0][0];
     callback([{
       start: { dateTime: new Date(Date.now() + 10000).toISOString() },
@@ -149,64 +149,120 @@ describe('NextClassButton', () => {
 
     expect(mockObserver.unsubscribe).toHaveBeenCalledWith(callback);
   });
-});
 
+  // Additional Test 7: Correctly selects the earliest upcoming event among multiple events
+  it('correctly sorts and selects the earliest upcoming event', async () => {
+    const mockObserver = createMockObserver();
+    const { findByText } = render(<NextClassButton eventObserver={mockObserver} />);
 
+    const now = new Date();
+    const callback = mockObserver.subscribe.mock.calls[0][0];
+    callback([
+      {
+        start: { dateTime: new Date(now.getTime() + 20000).toISOString() }, // Later event
+        description: 'Campus B, Building 2'
+      },
+      {
+        start: { dateTime: new Date(now.getTime() + 10000).toISOString() }, // Earlier event
+        description: 'Campus A, Building 1'
+      },
+      {
+        start: { dateTime: new Date(now.getTime() - 10000).toISOString() }, // Past event
+        description: 'Campus C, Building 3'
+      }
+    ]);
 
-it('correctly sorts and selects the earliest upcoming event', async () => {
-  const mockObserver = createMockObserver();
-  const { findByText } = render(<NextClassButton eventObserver={mockObserver} />);
+    const buttonText = await findByText('Go to My Next Class');
+    expect(buttonText).toBeTruthy();
 
-  const now = new Date();
-  const callback = mockObserver.subscribe.mock.calls[0][0];
-  callback([
-    {
-      start: { dateTime: new Date(now.getTime() + 20000).toISOString() }, // Later event
-      description: 'Campus B, Building 2'
-    },
-    {
-      start: { dateTime: new Date(now.getTime() + 10000).toISOString() }, // Earlier event
-      description: 'Campus A, Building 1'
-    },
-    {
-      start: { dateTime: new Date(now.getTime() - 10000).toISOString() }, // Past event
-      description: 'Campus C, Building 3'
-    }
-  ]);
-
-  const buttonText = await findByText('Go to My Next Class');
-  expect(buttonText).toBeTruthy();
-
-  fireEvent.press(buttonText);
-  await waitFor(() => {
-    expect(mockNavigation.navigate).toHaveBeenCalledWith(
-      'Navigation',
-      expect.objectContaining({
-        campus: 'campus a', // Should use the earliest upcoming event (Campus A)
-        buildingName: 'Building 1'
-      })
-    );
+    fireEvent.press(buttonText);
+    await waitFor(() => {
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(
+        'Navigation',
+        expect.objectContaining({
+          campus: 'campus a',
+          buildingName: 'Building 1'
+        })
+      );
+    });
   });
-});
 
+  // Additional Test 8: Returns null if all events are in the past
+  it('sets location to null when all events are in the past', () => {
+    const mockObserver = createMockObserver();
+    const { queryByText, rerender } = render(<NextClassButton eventObserver={mockObserver} />);
 
-it('sets location to null when all events are in the past', () => {
-  const mockObserver = createMockObserver();
-  const { queryByText, rerender } = render(<NextClassButton eventObserver={mockObserver} />);
+    const now = new Date();
+    const callback = mockObserver.subscribe.mock.calls[0][0];
+    callback([
+      {
+        start: { dateTime: new Date(now.getTime() - 20000).toISOString() },
+        description: 'Campus A, Building 1'
+      },
+      {
+        start: { dateTime: new Date(now.getTime() - 10000).toISOString() },
+        description: 'Campus B, Building 2'
+      }
+    ]);
 
-  const now = new Date();
-  const callback = mockObserver.subscribe.mock.calls[0][0];
-  callback([
-    {
-      start: { dateTime: new Date(now.getTime() - 20000).toISOString() }, // Past event
-      description: 'Campus A, Building 1'
-    },
-    {
-      start: { dateTime: new Date(now.getTime() - 10000).toISOString() }, // Past event
-      description: 'Campus B, Building 2'
-    }
-  ]);
+    rerender(<NextClassButton eventObserver={mockObserver} />);
+    expect(queryByText('Go to My Next Class')).toBeNull();
+  });
 
-  rerender(<NextClassButton eventObserver={mockObserver} />);
-  expect(queryByText('Go to My Next Class')).toBeNull(); // Button should not render
+  // Additional Test 9: Handles event description with no comma (empty building name)
+  it('handles event description with no comma', async () => {
+    const mockObserver = createMockObserver();
+    const { findByText } = render(<NextClassButton eventObserver={mockObserver} />);
+    const now = new Date();
+    const callback = mockObserver.subscribe.mock.calls[0][0];
+    callback([{
+      start: { dateTime: new Date(now.getTime() + 10000).toISOString() },
+      description: 'Campus A'
+    }]);
+    const button = await findByText('Go to My Next Class');
+    fireEvent.press(button);
+    await waitFor(() => {
+      expect(Location.getCurrentPositionAsync).toHaveBeenCalled();
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(
+        'Navigation',
+        {
+          campus: 'campus a',
+          buildingName: '',
+          currentLocation: {
+            latitude: 40.7128,
+            longitude: -74.0060
+          }
+        }
+      );
+    });
+  });
+
+  // Additional Test 10: Handles event description with <pre> tags correctly
+  it('handles event description with <pre> tags', async () => {
+    const mockObserver = createMockObserver();
+    const { findByText } = render(<NextClassButton eventObserver={mockObserver} />);
+    const now = new Date();
+    const callback = mockObserver.subscribe.mock.calls[0][0];
+    // Description with <pre> tags that need to be stripped.
+    callback([{
+      start: { dateTime: new Date(now.getTime() + 10000).toISOString() },
+      description: '<pre>Campus B, <pre>Building 2'
+    }]);
+    const button = await findByText('Go to My Next Class');
+    fireEvent.press(button);
+    await waitFor(() => {
+      expect(Location.getCurrentPositionAsync).toHaveBeenCalled();
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(
+        'Navigation',
+        {
+          campus: 'campus b',
+          buildingName: 'Building 2',
+          currentLocation: {
+            latitude: 40.7128,
+            longitude: -74.0060
+          }
+        }
+      );
+    });
+  });
 });
