@@ -59,7 +59,7 @@ export default function CalendarScreen() {
 
   // Show in-app notification
   const showInAppNotification = (message) => {
-    console.log("📢 Triggering In-App Notification:", message);
+    console.log("Triggering In-App Notification:", message);
     setNotificationMessage(message);
     setNotificationVisible(true);
 
