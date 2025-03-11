@@ -1,163 +1,308 @@
-/**
- * @file CalendarScreen.jsx
- * @description Renders a calendar view with month display, date selection, and navigation options.
- */
-
-import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
-import { Calendar } from "react-native-calendars";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  TouchableOpacity,
+  FlatList,
+  Modal,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import BottomNavBar from "../../components/BottomNavBar/BottomNavBar"; // Ensure BottomNavBar is correctly imported
-import CalendarDirectionsIcon from "../../components/Calendar/CalendarIcons/CalendarDirectionsIcon.jsx"; // Import CalendarDirectionsIcon
-import { useAppSettings } from "../../AppSettingsContext";
-import getThemeColors from "../../ColorBindTheme";
+import { useAuth } from "@clerk/clerk-expo";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import BottomNavBar from "../../components/BottomNavBar/BottomNavBar";
+import moment from "moment";
+import { fetchPublicCalendarEvents } from "../login/LoginHelper";
+import { handleGoToClass } from "./CalendarHelper";
+import GoToLoginButton from "../../components/Calendar/GoToLoginButton";
+import styles from "./CalendarScreenStyles";
+import EventObserver from "./EventObserver";
+import { NotificationObserver } from "./NotificationObserver";
+import InAppNotification from "../../components/InAppNotification";
+import NextClassButton from "../../components/Calendar/NextClassButton";
 import { trackEvent } from "@aptabase/react-native";
 
-/**
- * Fetches public Google Calendar events using the given Calendar ID.
- *
- * @param {string} calendarId
- */
-async function fetchPublicCalendarEvents(calendarId) {
-  try {
-    const GOOGLE_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_API_KEY2;
-
-    const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?key=${GOOGLE_API_KEY}&timeMin=2000-01-01T00:00:00Z&singleEvents=true&orderBy=startTime`;
-
-    console.log("Fetching calendar for:", calendarId);
-
-    const response = await fetch(url);
-    const textResponse = await response.text();
-    console.log("Raw response:", textResponse);
-
-    if (!response.ok) {
-      throw new Error(`Error fetching calendar events: ${response.status} - ${response.statusText}`);
-    }
-
-    const data = JSON.parse(textResponse);
-
-    console.log("\nFetched Calendar Events:");
-    if (!data.items || data.items.length === 0) {
-      console.log("No events found.");
-    } else {
-      data.items.forEach((event, index) => {
-        console.log(`\nEvent ${index + 1}:`);
-        console.log(`Title: ${event.summary}`);
-        console.log(`Start Date: ${event.start?.date || event.start?.dateTime}`);
-        console.log(`End Date: ${event.end?.date || event.end?.dateTime}`);
-        console.log(`Event Link: ${event.htmlLink}`);
-      });
-    }
-  } catch (error) {
-    console.error("Error fetching public calendar:", error);
-  }
-}
-
-/**
- * CalendarScreen component renders a calendar with navigation and a directions button.
- *
- * @component
- * @returns {JSX.Element} The rendered CalendarScreen component.
- */
 export default function CalendarScreen() {
-  // React Navigation hook to manage navigation.
+  // 1. Always call hooks at the top
   const navigation = useNavigation();
-  const theme = getThemeColors();
-  const { textSize } = useAppSettings();
+  const { isSignedIn } = useAuth();
 
-  // Fetch Google Calendar events when the calendar screen is accessed.
+  // Create an instance of EventObserver (always called)
+  const [eventsObserver] = useState(new EventObserver());
+
+  // In-app notification state
+  const [notificationMessage, setNotificationMessage] = useState("");
+  const [notificationVisible, setNotificationVisible] = useState(false);
+
+  // Other state
+  const [events, setEvents] = useState([]);
+  const [expandedEvent, setExpandedEvent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [calendars, setCalendars] = useState([]);
+  const [selectedCalendar, setSelectedCalendar] = useState(null);
+  const [currentStartDate, setCurrentStartDate] = useState(
+    moment().startOf("day")
+  );
+  const [modalVisible, setModalVisible] = useState(false);
+
+  // 2. Then do your effects or other hooks
   useEffect(() => {
-    const calendarId = process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_ID;
-    fetchPublicCalendarEvents(calendarId);
+    const observerCallback = (events) => {
+      NotificationObserver(events, showInAppNotification, currentStartDate);
+    };
+
+    eventsObserver.subscribe(observerCallback);
+
+    return () => {
+      eventsObserver.unsubscribe(observerCallback);
+    };
+  }, [eventsObserver, currentStartDate]);
+
+  // Show in-app notification
+  const showInAppNotification = (message) => {
+    console.log("Triggering In-App Notification:", message);
+    setNotificationMessage(message);
+    setNotificationVisible(true);
+
+    // Hide after 5 seconds
+    setTimeout(() => {
+      setNotificationVisible(false);
+    }, 5000);
+  };
+
+  // Notify observer whenever `events` changes
+  useEffect(() => {
+    if (events.length > 0) {
+      eventsObserver.notify(events);
+    }
+  }, [events, eventsObserver]);
+
+  // Load stored calendars & selected calendar from AsyncStorage
+  useEffect(() => {
+    const loadStoredData = async () => {
+      try {
+        const storedCalendars = await AsyncStorage.getItem("availableCalendars");
+        const storedSelectedCalendar = await AsyncStorage.getItem("selectedCalendar");
+        if (storedCalendars) {
+          const parsedCalendars = JSON.parse(storedCalendars);
+          setCalendars(parsedCalendars);
+          setSelectedCalendar(storedSelectedCalendar || parsedCalendars[0]?.id);
+        } else {
+          console.log("No calendars found in storage.");
+        }
+      } catch (error) {
+        console.error("Error loading stored calendar data:", error);
+      }
+    };
+
+    loadStoredData();
   }, []);
 
-  // Get screen height and width for multiple phones
-  const screenHeight = Dimensions.get("window").height;
+useEffect(() => {
+  const fetchEvents = async () => {
+    if (!selectedCalendar) {
+      setLoading(false);
+      return;
+    }
 
-  // State for the current month displayed on the header.
-  const [currentMonth, setCurrentMonth] = useState("January");
+    setLoading(true);
+    const startDate = currentStartDate.toISOString();
+    const endDate = currentStartDate.clone().add(10, "days").toISOString();
 
-  /**
-   * Updates the current month based on the month change event from the Calendar component.
-   *
-   * @param {Object} monthData - The month data provided by the Calendar component.
-   * @param {number} monthData.month - The numeric representation of the month (1-12).
-   */
-  const handleMonthChange = (monthData) => {
-    const monthNames = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
-    ];
-    // Convert month number to month name and update state.
-    setCurrentMonth(monthNames[monthData.month - 1]);
+    let fetchedEvents = await fetchPublicCalendarEvents(
+      selectedCalendar,
+      startDate,
+      endDate
+    );
+
+    // Ensure the description follows "Campus, Building, Room" format
+    const regex = /^[^,]+,[^,]+,[^,]+$/;
+    fetchedEvents = fetchedEvents.filter(event => {
+      const description = event.description?.trim() || "";
+      return regex.test(description);
+    });
+
+    setEvents(fetchedEvents);
+    setLoading(false);
   };
-  trackEvent("Calendar Screen selected", {})
 
-  return (
-    <View style={{ flex: 1, backgroundColor: "#FFFFFF", flexDirection: "column" }}>
-      {/* Header displaying the current month and a static date. */}
-      <View style={{ flexDirection: "row", justifyContent: "space-between", padding: 16, marginTop: "10%" }}>
-        <Text style={{ fontSize: 24, color: "#000000", fontWeight: "bold" }}>{currentMonth}</Text>
-        <Text style={{ fontSize: 20, color: "#E6863C" }}>27</Text>
+  fetchEvents();
+}, [selectedCalendar, currentStartDate]);
+
+
+
+  // 3. Now handle the conditional UI rendering
+  if (!isSignedIn) {
+    return (
+      <View style={styles.guestContainer}>
+        <GoToLoginButton
+          onPress={async () => {
+            try {
+              await AsyncStorage.removeItem("sessionId");
+              await AsyncStorage.removeItem("userData");
+              await AsyncStorage.removeItem("guestMode");
+              navigation.reset({ index: 0, routes: [{ name: "Login" }] });
+            } catch (error) {
+              console.error("Login Redirect Error:", error);
+            }
+          }}
+        />
+        <View style={styles.bottomNavBar}>
+          <BottomNavBar />
+        </View>
       </View>
+    );
+  }
 
-      {/* Calendar component with configuration for dates, theme, and event handlers. */}
-      <Calendar
-        testID="calendar-view"
-        current={"2025-01-01"}
-        minDate={"2025-01-01"}
-        maxDate={"2025-12-31"}
-        monthFormat={"yyyy MM"}
-        onDayPress={(day) => console.log("selected day", day)}
-        onMonthChange={handleMonthChange} // Update month on arrow press.
-        theme={{
-          selectedDayBackgroundColor: "#E6863C",
-          selectedDayTextColor: "#FFFFFF",
-          todayTextColor: "#862532",
-          arrowColor: "#862532",
-        }}
-      />
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#862532" />
+      </View>
+    );
+  }
+  trackEvent("Calendar Screen selected", {})
+  // 4. The main UI returns here
+  return (
+    <View style={styles.screen}>
+      {/* In-App Notification */}
+      <InAppNotification message={notificationMessage} visible={notificationVisible} />
 
-      {/* Button with icon to trigger directions alert. Positioned near the bottom of the screen. */}
-      <View style={{ position: "absolute", bottom: "10%", left: 0, right: 0 }}>
+      {/* Header with Pagination */}
+      <View style={styles.header}>
         <TouchableOpacity
-          style={[styles.buttonContainer, { backgroundColor: theme.backgroundColor }]}
-          onPress={() =>{
-            trackEvent("Get Directions to next class", {}) 
-            alert("Directions are coming soon!")}}
+          style={styles.paginationButton}
+          onPress={() =>
+            setCurrentStartDate(currentStartDate.clone().subtract(10, "days"))
+          }
         >
-          <Text style={[styles.buttonText, { backgroundColor: theme.backgroundColor }, { fontSize: textSize }]}>
-            Get Directions to My Next Class
-          </Text>
-          {/* Add the icon after the text */}
-          <CalendarDirectionsIcon width={25} height={25} />
+          <Text style={styles.paginationButtonText}>Previous</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerText}>Google Calendar</Text>
+        <TouchableOpacity
+          style={styles.paginationButton}
+          onPress={() =>
+            setCurrentStartDate(currentStartDate.clone().add(10, "days"))
+          }
+        >
+          <Text style={styles.paginationButtonText}>Next</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Bottom navigation bar component. */}
-      <View style={{ position: "absolute", bottom: 0, left: 0, right: 0 }}>
+      {/* Date Range Display */}
+      <View style={styles.centeredDateContainer}>
+        <Text style={styles.centeredDateText}>
+          {currentStartDate.format("MMM DD")} -{" "}
+          {currentStartDate.clone().add(9, "days").format("MMM DD")}
+        </Text>
+      </View>
+
+      {/* Calendar Selection (Modal) */}
+      <View style={styles.dropdownContainer}>
+        <TouchableOpacity
+          style={styles.dropdownButton}
+          onPress={() => {trackEvent("Get Directions to next class", {}) 
+          setModalVisible(true)}}
+        >
+          <Text style={styles.dropdownButtonText}>
+            {calendars.find((c) => c.id === selectedCalendar)?.name ||
+              "Select Calendar"}
+          </Text>
+        </TouchableOpacity>
+
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setModalVisible(false)}
+          >
+            <View style={styles.modalDropdown}>
+              <Text style={styles.modalTitle}>Choose a Calendar</Text>
+              {calendars.map((calendar, index) => (
+                <TouchableOpacity
+                  key={calendar.id}
+                  style={[
+                    styles.modalItem,
+                    index === calendars.length - 1
+                      ? styles.modalLastItem
+                      : null,
+                  ]}
+                  onPress={async () => {
+                    setSelectedCalendar(calendar.id);
+                    await AsyncStorage.setItem("selectedCalendar", calendar.id);
+                    setModalVisible(false);
+                  }}
+                >
+                  <Text style={styles.modalItemText}>{calendar.name}</Text>
+                </TouchableOpacity>
+              ))}
+              <TouchableOpacity
+                style={styles.modalCancel}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      </View>
+
+      {/* Events List */}
+      <View style={styles.container}>
+        {events.length === 0 ? (
+          <Text style={styles.noEventsText}>
+            No events found for this range.
+          </Text>
+        ) : (
+          <FlatList
+            data={events}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={{ paddingBottom: 80 }}
+            renderItem={({ item }) => (
+              <View style={styles.eventBox}>
+                <TouchableOpacity
+                  onPress={() =>
+                    setExpandedEvent(expandedEvent === item.id ? null : item.id)
+                  }
+                >
+                  <Text style={styles.eventTitle}>{item.title}</Text>
+                </TouchableOpacity>
+                {expandedEvent === item.id && (
+                  <View>
+                    <Text style={styles.eventLocation}>
+                      📍 {item.description.replace(/<\/?pre>/g, "").trim()}
+                    </Text>
+                    <Text style={styles.eventTime}>
+                      {moment(item.start.dateTime).format("YYYY-MM-DD HH:mm")} -{" "}
+                      {moment(item.end.dateTime).format("HH:mm")}
+                    </Text>
+
+                    {/* "Go to Class" button => calls handleGoToClass */}
+                    <TouchableOpacity
+                      style={styles.nextClassButton}
+                      onPress={() =>
+                        handleGoToClass(item.description, navigation)
+                      }
+                    >
+                      <Text style={styles.nextClassButtonText}>Go to Class</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            )}
+          />
+        )}
+      </View>
+      <NextClassButton eventObserver={eventsObserver} />
+
+      <View style={styles.bottomNavBar}>
         <BottomNavBar />
       </View>
     </View>
   );
 }
-
-// Styling for the button and its text.
-const styles = StyleSheet.create({
-  buttonContainer: {
-    alignSelf: "center", // Center the button horizontally.
-    flexDirection: "row", // Align icon and text on the same line.
-    alignItems: "center", // Vertically align text and icon.
-    justifyContent: "space-between",
-    backgroundColor: "#862532",
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-  },
-  buttonText: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
-    fontSize: 16,
-    marginRight: 10, // Space between text and icon.
-  },
-});

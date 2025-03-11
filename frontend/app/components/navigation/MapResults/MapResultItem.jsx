@@ -24,6 +24,11 @@ import ParkingIcon from "../Icons/ParkingIcon";
 import CreditCardIcon from "../Icons/CreditCardIcon";
 
 const MapResultItem = ({
+  fetchTravelTime,
+  setCarTravelTime,
+  setBikeTravelTime,
+  setMetroTravelTime,
+  setWalkTravelTime,
   isRoute,
   location,
   setIsSearch,
@@ -51,6 +56,23 @@ const MapResultItem = ({
       setIsSearch(true);
       setDestinationPosition(building.name);
       setEnd(building.point);
+  
+      // Reset travel times
+      setCarTravelTime(null);
+      setBikeTravelTime(null);
+      setMetroTravelTime(null);
+      setWalkTravelTime(null);
+  
+      // Fetch times from start point to selected building
+      const fetchAllTravelTimes = async () => {
+        await Promise.all([
+          fetchTravelTime(start, building.point, 'DRIVING'),
+          fetchTravelTime(start, building.point, 'BICYCLING'),
+          fetchTravelTime(start, building.point, 'TRANSIT'),
+          fetchTravelTime(start, building.point, 'WALKING'),
+        ]);
+      };
+      fetchAllTravelTimes();
       return;
     }
     setStart(building.point);
@@ -99,7 +121,7 @@ const MapResultItem = ({
       >
         {/* Building name and associated icons */}
         <View className="flex flex-row items-center mb-4">
-          <Text className="font-bold">{building.name}</Text>
+          <Text className="font-bold" style={[{ fontSize: textSize }]}>{building.name}</Text>
           <View className="flex flex-row items-center gap-2 ml-4">{icons}</View>
         </View>
         <View className="mb-4 flex flex-row">

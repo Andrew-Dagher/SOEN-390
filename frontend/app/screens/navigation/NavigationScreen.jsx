@@ -7,6 +7,8 @@ import React from 'react';
 import { View, Text, Button } from 'react-native';
 import Map from '../../components/navigation/Map';
 import { trackEvent } from "@aptabase/react-native";
+import { useRoute } from "@react-navigation/native";
+
 /**
  * NavigationScreen component renders a full-screen view centered on the Map component.
  *
@@ -17,13 +19,15 @@ import { trackEvent } from "@aptabase/react-native";
  */
 export default function NavigationScreen({ navigation }) {
   trackEvent("Navigation Screen", {});
+    const route = useRoute();
   return (
     <View
       className="h-full opacity-100"
       style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+      testID='navigation-view'
     >
       {/* Render the Map component to display navigation details */}
-      <Map />
+      <Map navigationParams={route.params} />
     </View>
   );
 }
