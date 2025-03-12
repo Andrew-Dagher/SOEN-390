@@ -14,6 +14,8 @@ import {
   Linking,
   Platform,
   StatusBar,
+  Image,
+  Modal,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import MapPinIcon from "../../components/navigation/Icons/MapPinIcon";
@@ -23,23 +25,27 @@ import InformationIcon from "../../components/navigation/Icons/InformationIcon";
 import CreditCardIcon from "../../components/navigation/Icons/CreditCardIcon";
 import ParkingIcon from "../../components/navigation/Icons/ParkingIcon";
 
-/**
- * BuildingDetails component displays building information with tabs for departments and services.
- *
- * @component
- * @param {Object} props - The component props.
- * @param {Object} props.route - The route object provided by React Navigation.
- * @param {Object} props.route.params - The building details passed through navigation parameters.
- * @returns {JSX.Element} The rendered BuildingDetails component.
- */
+const floorplanImages = {
+  "Hall 1": require("../../../assets/floor_plans/Hall-1.png"),
+  "Hall 2": require("../../../assets/floor_plans/Hall-2.png"),
+  "Hall 8": require("../../../assets/floor_plans/Hall-8.png"),
+  "Hall 9": require("../../../assets/floor_plans/Hall-9.png"),
+  "MB 1": require("../../../assets/floor_plans/Hall-1.png"),
+  "MB S2": require("../../../assets/floor_plans/MB-S2.png"),
+  "CC1": require("../../../assets/floor_plans/CC1.png"),
+  "VE 1": require("../../../assets/floor_plans/VE-1.png"),
+  "VE 2": require("../../../assets/floor_plans/VE-2.png"),
+  "VL 1": require("../../../assets/floor_plans/VL-1.png"),
+  "VL 2": require("../../../assets/floor_plans/VL-2.png"),
+};
+
+
 const BuildingDetails = ({ route }) => {
-  // State for managing active tab ("Departments" or "Services")
   const [activeTab, setActiveTab] = useState("Departments");
-
-  // Navigation hook for managing navigation actions.
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedFloorplan, setSelectedFloorplan] = useState(null);
+  
   const navigation = useNavigation();
-
-  // Retrieve building details from route parameters.
   const building = route.params;
 
   const icons = [
@@ -50,27 +56,33 @@ const BuildingDetails = ({ route }) => {
     building?.isInfo && <InformationIcon key="info" />,
   ].filter(Boolean);
 
-  /**
-   * Opens a provided URL using the Linking API.
-   *
-   * @param {string} url - The URL to open.
-   */
   const handleLinkPress = (url) => {
     if (url) {
       Linking.openURL(url);
     }
   };
 
-  /**
-   * Renders a list item with an optional link indicator.
-   *
-   * @param {string} item - The text content for the list item.
-   * @param {string} link - The URL associated with the item.
-   * @param {number} index - The index of the item in the list.
-   * @returns {JSX.Element|null} The rendered list item or null if the item is not defined.
-   */
+  const handleFloorplanPress = (imagePath) => {
+    setSelectedFloorplan(imagePath);
+    setModalVisible(true);
+  };
+
   const renderListItem = (item, link, index) => {
     if (!item) return null;
+
+    // Handle Floor Plans separately
+    if (activeTab === "Floorplans") {
+      return (
+        <Pressable
+          key={index}
+          onPress={() => handleFloorplanPress(link)}
+          className="py-4"
+        >
+          <Text className="text-blue-600">{item}</Text>
+        </Pressable>
+      );
+    }
+
     return (
       <Pressable
         key={index}
@@ -83,21 +95,26 @@ const BuildingDetails = ({ route }) => {
     );
   };
 
-  /**
-   * Renders the content for the active tab (Departments or Services).
-   *
-   * @returns {JSX.Element} The rendered content view.
-   */
   const renderContent = () => {
-    // Choose items and links based on the active tab.
-    const items =
-      activeTab === "Departments" ? building.Departments : building.Services;
-    const links =
-      activeTab === "Departments"
-        ? building.DepartmentLink
-        : building.ServiceLink;
+    let items, links;
+    switch (activeTab) {
+      case "Departments":
+        items = building.Departments;
+        links = building.DepartmentLink;
+        break;
+      case "Services":
+        items = building.Services;
+        links = building.ServiceLink;
+        break;
+      case "Floorplans":
+        items = building.floorPlans;
+        links = building.floorPlans;
+        break;
+      default:
+        items = [];
+        links = [];
+    }
 
-    // Handle cases when there are no items.
     if (!items || items.length === 0) {
       return (
         <Text className="p-4 text-gray-500">
@@ -106,12 +123,6 @@ const BuildingDetails = ({ route }) => {
       );
     }
 
-    /**
-     * Creates an array of icons representing building features.
-     * Only includes icons for features that are enabled (e.g., wheelchair accessibility, bike parking).
-     */
-
-    // Ensure items and links are arrays for consistent rendering.
     const itemsArray = Array.isArray(items) ? items : [items];
     const linksArray = Array.isArray(links) ? links : [links];
 
@@ -129,18 +140,13 @@ const BuildingDetails = ({ route }) => {
     );
   };
 
-  // Determine safe area padding for header based on the platform.
   const headerPadding = Platform.OS === "ios" ? "pt-12" : "pt-8";
-
   return (
     <View className="flex-1 bg-gray-100">
-      {/* Set the status bar style */}
       <StatusBar barStyle="dark-content" />
 
-      {/* Fixed Header */}
       <View className="bg-gray-100">
         <View className={`px-4 ${headerPadding} mb-4`}>
-          {/* Back button with expanded touch target */}
           <Pressable
             onPress={() => navigation.goBack()}
             className="mb-6 py-2"
@@ -149,14 +155,12 @@ const BuildingDetails = ({ route }) => {
             <Text className="text-3xl font-light">←</Text>
           </Pressable>
 
-          {/* Display building long name */}
           <View className="mb-4">
             <Text className="text-2xl font-bold" numberOfLines={2}>
               {building.longName}
             </Text>
           </View>
 
-          {/* Display building address and amenity icons */}
           <View className="flex flex-row items-center">
             <MapPinIcon />
             <Text className="ml-2 text-gray-400">{building.address}</Text>
@@ -168,54 +172,52 @@ const BuildingDetails = ({ route }) => {
         </View>
       </View>
 
-      {/* Scrollable Content Area */}
       <View className="flex-1">
         <View className="mx-4 bg-white rounded-xl overflow-hidden">
-          {/* Tab navigation for Departments and Services */}
           <View className="flex flex-row border-b border-gray-200">
             <Pressable
               onPress={() => setActiveTab("Departments")}
-              className={`flex-1 py-4 ${
-                activeTab === "Departments" ? "border-b-2 border-red-800" : ""
-              }`}
+              className={`flex-1 py-4 ${activeTab === "Departments" ? "border-b-2 border-red-800" : ""}`}
             >
-              <Text
-                className={`text-center text-base ${
-                  activeTab === "Departments"
-                    ? "text-red-800 font-semibold"
-                    : "text-gray-500"
-                }`}
-              >
+              <Text className={`text-center text-base ${activeTab === "Departments" ? "text-red-800 font-semibold" : "text-gray-500"}`}>
                 Departments
               </Text>
             </Pressable>
             <Pressable
               onPress={() => setActiveTab("Services")}
-              className={`flex-1 py-4 ${
-                activeTab === "Services" ? "border-b-2 border-red-800" : ""
-              }`}
+              className={`flex-1 py-4 ${activeTab === "Services" ? "border-b-2 border-red-800" : ""}`}
             >
-              <Text
-                className={`text-center text-base ${
-                  activeTab === "Services"
-                    ? "text-red-800 font-semibold"
-                    : "text-gray-500"
-                }`}
-              >
+              <Text className={`text-center text-base ${activeTab === "Services" ? "text-red-800 font-semibold" : "text-gray-500"}`}>
                 Services
               </Text>
             </Pressable>
+            {building.floorPlans && building.floorPlans.length > 0 && (
+              <Pressable
+                onPress={() => setActiveTab("Floorplans")}
+                className={`flex-1 py-4 ${activeTab === "Floorplans" ? "border-b-2 border-red-800" : ""}`}
+              >
+                <Text className={`text-center text-base ${activeTab === "Floorplans" ? "text-red-800 font-semibold" : "text-gray-500"}`}>
+                  Floorplans
+                </Text>
+              </Pressable>
+            )}
           </View>
 
-          {/* Render the list content based on the active tab */}
           <ScrollView>{renderContent()}</ScrollView>
         </View>
       </View>
 
-      {/* Fixed Footer (currently empty but reserved for future content) */}
-      <View className="p-4 bg-white border-t border-gray-200">
-        <View className="flex flex-row gap-4"></View>
-      </View>
+      <Modal visible={modalVisible} transparent={true} animationType="fade">
+        <Pressable
+          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.8)", justifyContent: "center", alignItems: "center" }}
+          onPress={() => setModalVisible(false)}
+        >
+          
+          {selectedFloorplan && (
+            <Image source={floorplanImages[selectedFloorplan]} style={{ width: "90%", height: "90%", resizeMode: "contain" }} allowUniversalAccessFromFileURLs={true}/>
+          )}
+        </Pressable>
+      </Modal>
     </View>
   );
 };
