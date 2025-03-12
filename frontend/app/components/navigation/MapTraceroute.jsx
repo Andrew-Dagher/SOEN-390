@@ -30,6 +30,7 @@ import ArrowIcon from "./Icons/ArrowIcon";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { SGWShuttlePickup, LoyolaShuttlePickup } from '../../screens/navigation/navigationConfig';
 import { IsAtSGW } from '../../screens/navigation/navigationUtils';
+import { trackEvent } from "@aptabase/react-native";
 
 
 // Define the styles outside of the component
@@ -431,6 +432,7 @@ const MapTraceroute = ({
                 onPress={() => {
                   handleShuttleIntegration();
                   setMode("DRIVING");
+                  trackEvent("Mode selected", {"mode":"car"})
                 }}
                 className={`flex mr-1 p-2 rounded-3xl flex-row justify-around items-center ${
                   selected === "car" ? "bg-primary-red" : ""
@@ -450,6 +452,7 @@ const MapTraceroute = ({
                 onPress={() => {
                   setSelected("bike");
                   setMode("BICYCLING");
+                  trackEvent("Mode selected", {"mode":"bycicling"})
                 }}
                 className={`flex mr-1 p-2 rounded-3xl flex-row justify-around items-center ${
                   selected === "bike" ? "bg-primary-red" : ""
@@ -469,6 +472,7 @@ const MapTraceroute = ({
                 onPress={() => {
                   setSelected("metro");
                   setMode("TRANSIT");
+                  trackEvent("Mode selected", {"mode":"transit"})
                 }}
                 className={`flex p-2 rounded-3xl flex-row justify-around items-center ${
                   selected === "metro" ? "bg-primary-red" : ""
@@ -488,6 +492,7 @@ const MapTraceroute = ({
                 onPress={() => {
                   setSelected("walk");
                   setMode("WALKING");
+                  trackEvent("Mode selected", {"mode":"walking"})
                 }}
                 className={`flex p-2 rounded-3xl flex-row justify-around items-center ${
                   selected === "walk" ? "bg-primary-red" : ""

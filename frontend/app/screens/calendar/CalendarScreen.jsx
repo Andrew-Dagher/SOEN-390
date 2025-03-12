@@ -20,6 +20,7 @@ import EventObserver from "./EventObserver";
 import { NotificationObserver } from "./NotificationObserver";
 import InAppNotification from "../../components/InAppNotification";
 import NextClassButton from "../../components/Calendar/NextClassButton";
+import { trackEvent } from "@aptabase/react-native";
 
 export default function CalendarScreen() {
   // 1. Always call hooks at the top
@@ -160,7 +161,7 @@ useEffect(() => {
       </View>
     );
   }
-
+  trackEvent("Calendar Screen selected", {})
   // 4. The main UI returns here
   return (
     <View style={styles.screen}>
@@ -200,7 +201,8 @@ useEffect(() => {
       <View style={styles.dropdownContainer}>
         <TouchableOpacity
           style={styles.dropdownButton}
-          onPress={() => setModalVisible(true)}
+          onPress={() => {trackEvent("Get Directions to next class", {}) 
+          setModalVisible(true)}}
         >
           <Text style={styles.dropdownButtonText}>
             {calendars.find((c) => c.id === selectedCalendar)?.name ||
