@@ -495,6 +495,7 @@ export default function CampusMap({ navigationParams }) {
           end={end}
           setStart={setStart}
           setEnd={setEnd}
+          startPosition={startPosition}
           destinationPosition={destinationPosition}
           setDestinationPosition={setDestinationPosition}
           setStartPosition={setStartPosition}
