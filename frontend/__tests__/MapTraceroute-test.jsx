@@ -121,4 +121,25 @@ describe("MapTraceroute", () => {
       "Test Destination Address"
     );
   });
+
+  it("handles shuttle integration correctly based on proximity to SGW or Loyola", () => {
+    const { getByTestId } = render(<MapTraceroute {...mockProps} />);
+    const carButton = getByTestId("car-button");
+    fireEvent.press(carButton);
+
+    expect(mockProps.setIsShuttle).toHaveBeenCalledWith(true);
+  });
+
+  it("calls setStart and setStartPosition when origin place is selected", () => {
+    const mockDetails = {
+      geometry: { location: { lat: 1, lng: 2 } },
+      formatted_address: "Test Origin Address",
+    };
+    render(<MapTraceroute {...mockProps} />);
+    const onOriginPress = GooglePlacesAutocomplete.mock.calls[0][0].onPress;
+    onOriginPress({ place_id: "test_place_id" }, mockDetails);
+    expect(mockProps.setStart).toHaveBeenCalledWith({ latitude: 1, longitude: 2 });
+    expect(mockProps.setStartPosition).toHaveBeenCalledWith("Test Origin Address");
+  });
+
 });
