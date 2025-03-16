@@ -2,12 +2,51 @@ import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import MapTraceroute from "../app/components/navigation/MapTraceroute";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
+import { findClosestPoint, IsAtSGW } from "../../screens/navigation/navigationUtils";
 import "react-native-google-places-autocomplete";
 
 // Mock the GooglePlacesAutocomplete component
 jest.mock("react-native-google-places-autocomplete", () => ({
   GooglePlacesAutocomplete: jest.fn(() => <mock-autocomplete />),
 }));
+
+describe("navigationUtils functions", () => {
+  describe("findClosestPoint", () => {
+    it("returns the closest point based on the Haversine distance", () => {
+      const reference = { latitude: 45.5, longitude: -73.6 };
+      const points = [
+        { lat: 45.5, lng: -73.55 },
+        { lat: 45.55, lng: -73.65 },
+        { lat: 45.49, lng: -73.59 },
+      ];
+
+      const closest = findClosestPoint(reference, points);
+      expect(closest).toEqual({ lat: 45.49, lng: -73.59 });
+    });
+
+    it("returns null if points array is empty", () => {
+      const reference = { latitude: 45.5, longitude: -73.6 };
+      expect(findClosestPoint(reference, [])).toBeNull();
+    });
+  });
+
+  describe("IsAtSGW", () => {
+    it("returns true if closer to SGW", () => {
+      const currentLocation = { latitude: SGWLocation.latitude + 0.001, longitude: SGWLocation.longitude + 0.001 };
+      expect(IsAtSGW(currentLocation)).toBe(true);
+    });
+
+    it("returns false if closer to Loyola", () => {
+      const currentLocation = { latitude: LoyolaLocation.latitude + 0.001, longitude: LoyolaLocation.longitude + 0.001 };
+      expect(IsAtSGW(currentLocation)).toBe(false);
+    });
+
+    it("returns false for null or undefined input", () => {
+      expect(IsAtSGW(null)).toBe(false);
+      expect(IsAtSGW(undefined)).toBe(false);
+    });
+  });
+});
 
 describe("MapTraceroute", () => {
   const mockProps = {
