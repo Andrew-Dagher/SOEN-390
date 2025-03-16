@@ -2,13 +2,15 @@ import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import MapTraceroute from "../app/components/navigation/MapTraceroute";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
-import { findClosestPoint, IsAtSGW } from "../../screens/navigation/navigationUtils";
+import { findClosestPoint, IsAtSGW } from "../app/screens/navigation/navigationUtils";
+import { SGWLocation, LoyolaLocation } from "../app/screens/navigation/navigationConfig";
 import "react-native-google-places-autocomplete";
 
 // Mock the GooglePlacesAutocomplete component
 jest.mock("react-native-google-places-autocomplete", () => ({
   GooglePlacesAutocomplete: jest.fn(() => <mock-autocomplete />),
 }));
+
 
 describe("navigationUtils functions", () => {
   describe("findClosestPoint", () => {
@@ -27,6 +29,20 @@ describe("navigationUtils functions", () => {
     it("returns null if points array is empty", () => {
       const reference = { latitude: 45.5, longitude: -73.6 };
       expect(findClosestPoint(reference, [])).toBeNull();
+    });
+
+    it("correctly calculates Haversine distance", () => {
+      const lat1 = 45.5, lon1 = -73.6;
+      const lat2 = 45.55, lon2 = -73.65;
+      const distance = findClosestPoint({ latitude: lat1, longitude: lon1 }, [{ lat: lat2, lng: lon2 }]);
+      expect(distance).toEqual({ lat: lat2, lng: lon2 });
+    });
+
+    it("converts degrees to radians correctly", () => {
+      const toRadians = (degrees) => degrees * (Math.PI / 180);
+      expect(toRadians(0)).toBe(0);
+      expect(toRadians(180)).toBeCloseTo(Math.PI);
+      expect(toRadians(90)).toBeCloseTo(Math.PI / 2);
     });
   });
 
@@ -73,6 +89,9 @@ describe("MapTraceroute", () => {
     bikeTravelTime: "20 min",
     metroTravelTime: "30 min",
     walkTravelTime: "40 min",
+    setIsShuttle: jest.fn(),
+    setWalkToBus: jest.fn(),
+    setWalkFromBus: jest.fn(),
   };
 
   it("renders GooglePlacesAutocomplete for origin and destination", () => {
@@ -141,5 +160,5 @@ describe("MapTraceroute", () => {
     expect(mockProps.setStart).toHaveBeenCalledWith({ latitude: 1, longitude: 2 });
     expect(mockProps.setStartPosition).toHaveBeenCalledWith("Test Origin Address");
   });
-
+  
 });
