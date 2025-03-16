@@ -1,9 +1,9 @@
-// BuildingDetails.test.js
+// BuildingInfoScreen.test.js
 import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import { Linking, Modal, Pressable, Image } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
-import BuildingDetails from "../path/to/BuildingDetails";
+import BuildingInfoScreen from "../app/screens/Info/BuildingInfoScreen";
 
 // Create a mock for the navigation.goBack() function
 const goBackMock = jest.fn();
@@ -34,11 +34,11 @@ const route = { params: building };
 const renderComponent = () =>
   render(
     <NavigationContainer>
-      <BuildingDetails route={route} />
+      <BuildingInfoScreen route={route} />
     </NavigationContainer>
   );
 
-describe("BuildingDetails", () => {
+describe("BuildingInfoScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -166,7 +166,7 @@ describe("BuildingDetails", () => {
 
     const { queryByText } = render(
       <NavigationContainer>
-        <BuildingDetails route={routeNoFloorplans} />
+        <BuildingInfoScreen route={routeNoFloorplans} />
       </NavigationContainer>
     );
 
