@@ -1,91 +1,183 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
-import { Text, Card, IconButton } from "react-native-paper";
+import { Text, Card, IconButton, ActivityIndicator, Modal } from "react-native-paper";
+import { PinchGestureHandler } from "react-native-gesture-handler";
 import moment from "moment";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { fetchPublicCalendarEvents } from "../login/LoginHelper";
+import CustomizeModal from "./CustomizeModal"; // Import the modal
 
 export default function Planner() {
   const [selectedDate, setSelectedDate] = useState(moment().format("YYYY-MM-DD"));
   const [currentWeekStart, setCurrentWeekStart] = useState(moment().startOf("week"));
   const [scale, setScale] = useState(1);
+  const [classes, setClasses] = useState([]);
+  const [toDoTasks, setToDoTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isCustomizeModalVisible, setIsCustomizeModalVisible] = useState(false);
+  const [preferences, setPreferences] = useState({});
+  const [classColor, setClassColor] = useState("#FFD700");
+  const [taskColor, setTaskColor] = useState("#ADD8E6");
 
-  const weekDates = Array.from({ length: 7 }, (_, i) =>
-    moment(currentWeekStart).add(i, "days").format("YYYY-MM-DD")
-  );
+  const CLASS_CALENDAR_ID = process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_ID1;
+  const TODO_CALENDAR_ID = process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_ID2;
 
-  const schedule = [
-    { id: 1, name: "SOEN 363", startTime: "08:00", endTime: "09:00", color: "#D3E4CD" },
-    { id: 2, name: "SOEN 345", startTime: "10:00", endTime: "11:00", color: "#D5C6E0" },
-    { id: 3, name: "Buy Coffee", startTime: "09:15", endTime: "09:30", color: "#FFE5B4" },
-    { id: 4, name: "Pick Up Notes", startTime: "14:15", endTime: "14:30", color: "#FFC3A0" },
-  ];
-
-  const changeWeek = (direction) => {
-    setCurrentWeekStart(moment(currentWeekStart).add(direction * 7, "days"));
+  const loadPreferences = async () => {
+    try {
+      const storedPrefs = await AsyncStorage.getItem("plannerPreferences");
+      if (storedPrefs) {
+        console.log("Loaded preferences:", storedPrefs);
+        const parsedPrefs = JSON.parse(storedPrefs);
+        setClassColor(parsedPrefs.globalClassColor || "#FFD700"); // Global class color
+        setTaskColor(parsedPrefs.globalTaskColor || "#ADD8E6"); // Global task color
+        
+        setPreferences(parsedPrefs[selectedDate] || {});
+      }
+    } catch (error) {
+      console.error("Error loading preferences:", error);
+    }
   };
 
-  const calculatePosition = (start, end) => {
-    const startTime = moment(start, "HH:mm");
-    const endTime = moment(end, "HH:mm");
-    const height = Math.max(50, (endTime.diff(startTime, "minutes") / 60) * 80) * scale;
+  useEffect(() => {
+    const fetchEvents = async () => {
+      setLoading(true);
+      try {
+        const startDate = moment(selectedDate).startOf("day").toISOString();
+        const endDate = moment(selectedDate).endOf("day").toISOString();
 
-    return {
-      top: ((startTime.hours() - 8) * 80 + startTime.minutes()) * scale,
-      height,
-      displayTime: height > 50,
+        console.log(`Fetching events from ${startDate} to ${endDate}`);
+
+        const fetchedClasses = await fetchPublicCalendarEvents(CLASS_CALENDAR_ID, startDate, endDate);
+        const fetchedToDoTasks = await fetchPublicCalendarEvents(TODO_CALENDAR_ID, startDate, endDate);
+
+        fetchedClasses.sort((a, b) => new Date(a.start.dateTime) - new Date(b.start.dateTime));
+        fetchedToDoTasks.sort((a, b) => new Date(a.start.dateTime) - new Date(b.start.dateTime));
+
+        setClasses(fetchedClasses);
+        setToDoTasks(fetchedToDoTasks);
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      } finally {
+        setLoading(false);
+      }
     };
+
+    fetchEvents();
+    loadPreferences();
+  }, [selectedDate]);
+  
+  const calculatePosition = (startDateTime, endDateTime) => {
+    const startTime = moment(startDateTime);
+    const endTime = moment(endDateTime);
+    const startHour = startTime.hours() + startTime.minutes() / 60;
+    const endHour = endTime.hours() + endTime.minutes() / 60;
+
+    const top = (startHour - 8) * 80 * scale;
+    const height = Math.max(50, (endHour - startHour) * 80 * scale);
+
+    return { top, height, displayTime: height > 50 };
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <IconButton icon="chevron-left" size={26} onPress={() => changeWeek(-1)} />
+        <IconButton icon="chevron-left" size={26} onPress={() => setCurrentWeekStart(moment(currentWeekStart).subtract(7, "days"))} />
         <View style={styles.headerMiddle}>
           <Text variant="titleLarge" style={styles.headerText}>Planner</Text>
           <Text variant="bodyMedium" style={styles.dateText}>
             {moment(selectedDate).format("MMM DD, YYYY")}
           </Text>
         </View>
-        <IconButton icon="chevron-right" size={26} onPress={() => changeWeek(1)} />
+        <IconButton icon="chevron-right" size={26} onPress={() => setCurrentWeekStart(moment(currentWeekStart).add(7, "days"))} />
       </View>
 
       <View style={styles.weekContainer}>
-        {weekDates.map((date) => (
-          <TouchableOpacity
-            key={date}
-            style={[styles.dateButton, selectedDate === date && styles.selectedDate]}
-            onPress={() => setSelectedDate(date)}
-          >
-            <Text style={styles.dayText}>{moment(date).format("dd")}</Text>
-            <Text style={styles.dateText}>{moment(date).format("D")}</Text>
-          </TouchableOpacity>
-        ))}
+        {Array.from({ length: 7 }, (_, i) => {
+          const date = moment(currentWeekStart).add(i, "days").format("YYYY-MM-DD");
+          return (
+            <TouchableOpacity
+              key={date}
+              style={[styles.dateButton, selectedDate === date && styles.selectedDate]}
+              onPress={() => setSelectedDate(date)}
+            >
+              <Text style={styles.dayText}>{moment(date).format("dd")}</Text>
+              <Text style={[styles.dateText, selectedDate === date && styles.selectedDateText]}>
+                {moment(date).format("D")}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
-        <ScrollView
-          contentContainerStyle={[styles.scheduleContainer, { height: 1800 * scale }]}
-          showsVerticalScrollIndicator={true}
-        >
-          {Array.from({ length: 15 }, (_, i) => {
-            const hour = moment().startOf("day").add(8 + i, "hours").format("h A");
-            return (
-              <View key={hour} style={[styles.timeSlot, { height: 80 * scale }]}>
-                <Text style={styles.timeText}>{hour}</Text>
-              </View>
-            );
-          })}
+      {loading ? (
+        <ActivityIndicator size="large" color="#862532" style={styles.loadingIndicator} />
+      ) : (
+        <PinchGestureHandler onGestureEvent={(event) => {
+          if (event.nativeEvent.scale > 0.8 && event.nativeEvent.scale < 2) {
+            setScale(event.nativeEvent.scale);
+          }
+        }}>
+          <ScrollView
+            contentContainerStyle={[styles.scheduleContainer, { height: 1800 * scale }]}
+            showsVerticalScrollIndicator={true}
+          >
+            {Array.from({ length: 15 }, (_, i) => {
+              const hour = moment().startOf("day").add(8 + i, "hours").format("h A");
+              return (
+                <View key={hour} style={[styles.timeSlot, { height: 80 * scale }]}>
+                  <Text style={styles.timeText}>{hour}</Text>
+                </View>
+              );
+            })}
 
-          {schedule.map((item) => {
-            const { top, height, displayTime } = calculatePosition(item.startTime, item.endTime);
-            return (
-              <Card key={item.id} style={[styles.scheduleCard, { top, height, backgroundColor: item.color }]}>
-                <Card.Content>
-                  <Text variant="titleMedium" style={styles.taskText}>{item.name}</Text>
-                  {displayTime && <Text variant="bodySmall">{`${item.startTime} - ${item.endTime}`}</Text>}
-                </Card.Content>
-              </Card>
-            );
-          })}
-        </ScrollView>
+            {classes.map((item) => {
+              const { top, height, displayTime } = calculatePosition(item.start.dateTime, item.end.dateTime);
+              return (
+                <Card key={item.id} style={[styles.scheduleCard, { top, height, backgroundColor: classColor }]}>
+                  <Card.Content>
+                    <Text variant="titleMedium" style={styles.taskText}>{item.title}</Text>
+                    {displayTime && (
+                      <Text variant="bodySmall">
+                        {moment(item.start.dateTime).format("hh:mm A")} - {moment(item.end.dateTime).format("hh:mm A")}
+                      </Text>
+                    )}
+                  </Card.Content>
+                </Card>
+              );
+            })}
+
+            {toDoTasks.map((item) => {
+              const { top, height, displayTime } = calculatePosition(item.start.dateTime, item.end.dateTime);
+              return (
+                <Card key={item.id} style={[styles.scheduleCard, { top, height, backgroundColor: taskColor }]}>
+                  <Card.Content>
+                    <Text variant="titleMedium" style={styles.taskText}>{item.title}</Text>
+                    {displayTime && (
+                      <Text variant="bodySmall">
+                        {moment(item.start.dateTime).format("hh:mm A")} - {moment(item.end.dateTime).format("hh:mm A")}
+                      </Text>
+                    )}
+                  </Card.Content>
+                </Card>
+              );
+            })}
+          </ScrollView>
+        </PinchGestureHandler> // not working for now
+      )}
+
+      {/* Customize Button */}
+      <TouchableOpacity style={styles.customizeButton} onPress={() => setIsCustomizeModalVisible(true)}>
+        <Text style={styles.customizeButtonText}>⚙️ Customize</Text>
+      </TouchableOpacity>
+
+      <CustomizeModal
+        visible={isCustomizeModalVisible}
+        onClose={() => setIsCustomizeModalVisible(false)}
+        classes={classes}
+        toDoTasks={toDoTasks}
+        selectedDate={selectedDate}
+        onPreferencesSaved={loadPreferences}
+      />
     </View>
   );
 }
@@ -133,6 +225,10 @@ const styles = StyleSheet.create({
   selectedDate: {
     backgroundColor: "#862532",
   },
+  selectedDateText: {
+    color: "#FFF",
+    fontWeight: "bold",
+  },
   dayText: {
     fontSize: 14,
     color: "#555",
@@ -163,4 +259,17 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333", // Ensures text is visible
   },
+  customizeButton: { 
+    position: "absolute", 
+    right: 20, bottom: 40, 
+    backgroundColor: "#862532", 
+    padding: 12, 
+    borderRadius: 25 
+  },
+  customizeButtonText: { 
+    color: "white", 
+    fontWeight: "bold" 
+  },
 });
+
+
