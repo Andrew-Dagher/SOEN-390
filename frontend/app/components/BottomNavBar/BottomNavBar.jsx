@@ -5,8 +5,13 @@
  */
 
 import React from "react";
-import { Platform } from "react-native";
-import { View, Pressable, StyleSheet, SafeAreaView } from "react-native";
+import {
+  View,
+  Pressable,
+  StyleSheet,
+  SafeAreaView,
+  Platform,
+} from "react-native";
 import PropTypes from "prop-types";
 import HomeActive from "./HomeIcons/HomeActive";
 import HomeInactive from "./HomeIcons/HomeInactive";
