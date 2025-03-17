@@ -6,6 +6,7 @@
 
 import React from "react";
 import { View, Pressable, StyleSheet, SafeAreaView } from "react-native";
+import PropTypes from "prop-types";
 import HomeActive from "./HomeIcons/HomeActive";
 import HomeInactive from "./HomeIcons/HomeInactive";
 import CalendarActive from "./CalendarIcons/CalendarActive";
@@ -36,10 +37,6 @@ export default function BottomNavBar({ navigation, route }) {
   // Safe navigation function that checks if navigation exists before using it
   const navigateTo = (screenName) => {
     if (navigation) {
-      // Get current screen index and target screen index to determine animation
-      const currentIndex = screenOrder.indexOf(currentScreen);
-      const targetIndex = screenOrder.indexOf(screenName);
-
       // Only navigate if we're not already on that screen
       if (currentScreen !== screenName) {
         navigation.navigate(screenName);
@@ -96,6 +93,22 @@ export default function BottomNavBar({ navigation, route }) {
     </SafeAreaView>
   );
 }
+
+// PropTypes validation for the BottomNavBar component
+BottomNavBar.propTypes = {
+  navigation: PropTypes.shape({
+    navigate: PropTypes.func.isRequired,
+  }),
+  route: PropTypes.shape({
+    name: PropTypes.string,
+  }),
+};
+
+// Default props
+BottomNavBar.defaultProps = {
+  navigation: null,
+  route: null,
+};
 
 // Styles for the BottomNavBar component
 const styles = StyleSheet.create({
