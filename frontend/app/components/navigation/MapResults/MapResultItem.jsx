@@ -126,7 +126,7 @@ const MapResultItem = ({
         </View>
         <View className="mb-4 flex flex-row">
           <SmallNavigationIcon />
-          <Text className="color-slate-400 text-xs">{building.address}</Text>
+          <Text className="color-slate-400 text-xs ml-2">{building.address}</Text>
         </View>
         <View className="flex flex-row justify-around items-center">
           <TouchableHighlight
