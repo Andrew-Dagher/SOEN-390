@@ -31,9 +31,6 @@ export default function BottomNavBar({ navigation, route }) {
   // Determine current screen - default to empty if route is not provided
   const currentScreen = route?.name || "";
 
-  // Screen order for animation direction
-  const screenOrder = ["Home", "Navigation", "Calendar", "Settings"];
-
   // Safe navigation function that checks if navigation exists before using it
   const navigateTo = (screenName) => {
     if (navigation) {
