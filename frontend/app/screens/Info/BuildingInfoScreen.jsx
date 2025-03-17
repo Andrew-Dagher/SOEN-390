@@ -304,8 +304,9 @@ const BuildingDetails = ({ route }) => {
         </View>
       </View>
 
-      <Modal visible={modalVisible} transparent={true} animationType="fade">
+      <Modal testID="floorplanModal" visible={modalVisible} transparent={true} animationType="fade">
         <Pressable
+         testID="modal-background"
           style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.8)", justifyContent: "center", alignItems: "center" }}
           onPress={(e) => {
             console.log("Image pressed at:", e.nativeEvent.locationX, e.nativeEvent.locationY);
@@ -313,7 +314,7 @@ const BuildingDetails = ({ route }) => {
         >
           
           {selectedFloorplan && (
-            <Image source={floorplanImages[selectedFloorplan]} style={{ width: "90%", height: "90%", resizeMode: "contain" }} allowUniversalAccessFromFileURLs={true}/>
+            <Image source={floorplanImages[selectedFloorplan]} style={{ width: "90%", height: "90%", resizeMode: "contain" }} allowUniversalAccessFromFileURLs={true}  testID="modal-image"/>
           )}
         </Pressable>
       </Modal>
