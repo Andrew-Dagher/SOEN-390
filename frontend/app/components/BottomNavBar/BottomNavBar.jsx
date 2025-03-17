@@ -5,6 +5,7 @@
  */
 
 import React from "react";
+import { Platform } from "react-native";
 import { View, Pressable, StyleSheet, SafeAreaView } from "react-native";
 import PropTypes from "prop-types";
 import HomeActive from "./HomeIcons/HomeActive";
@@ -127,7 +128,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1, // Top border width
     borderTopColor: "#d6d6d6", // Light gray border color
     paddingTop: 4, // Reduced padding at the top
-    marginBottom: -18, // No margin at the bottom
+    marginBottom: Platform.OS === "android" ? 0 : -18,
   },
   navButton: {
     flex: 1, // Each button takes equal space
