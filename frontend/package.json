@@ -57,6 +57,7 @@
     "react-native": "0.76.6",
     "react-native-auth0": "^4.2.0",
     "react-native-calendars": "^1.1308.1",
+    "react-native-coachmark": "^0.3.0",
     "react-native-color-matrix-image-filters": "^7.0.2",
     "react-native-dotenv": "^3.4.11",
     "react-native-gesture-handler": "^2.22.1",

@@ -23,7 +23,6 @@ import NextClassButton from "../../components/Calendar/NextClassButton";
 import { trackEvent } from "@aptabase/react-native";
 
 export default function CalendarScreen() {
-  // 1. Always call hooks at the top
   const navigation = useNavigation();
   const { isSignedIn } = useAuth();
 
@@ -33,6 +32,9 @@ export default function CalendarScreen() {
   // In-app notification state
   const [notificationMessage, setNotificationMessage] = useState("");
   const [notificationVisible, setNotificationVisible] = useState(false);
+
+  // Coach mark state
+  const [showCoachMark, setShowCoachMark] = useState(false);
 
   // Other state
   const [events, setEvents] = useState([]);
@@ -45,7 +47,6 @@ export default function CalendarScreen() {
   );
   const [modalVisible, setModalVisible] = useState(false);
 
-  // 2. Then do your effects or other hooks
   useEffect(() => {
     const observerCallback = (events) => {
       NotificationObserver(events, showInAppNotification, currentStartDate);
@@ -64,7 +65,6 @@ export default function CalendarScreen() {
     setNotificationMessage(message);
     setNotificationVisible(true);
 
-    // Hide after 5 seconds
     setTimeout(() => {
       setNotificationVisible(false);
     }, 5000);
@@ -98,40 +98,43 @@ export default function CalendarScreen() {
     loadStoredData();
   }, []);
 
-useEffect(() => {
-  const fetchEvents = async () => {
-    if (!selectedCalendar) {
+  useEffect(() => {
+    const fetchEvents = async () => {
+      if (!selectedCalendar) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      const startDate = currentStartDate.toISOString();
+      const endDate = currentStartDate.clone().add(10, "days").toISOString();
+
+      let fetchedEvents = await fetchPublicCalendarEvents(
+        selectedCalendar,
+        startDate,
+        endDate
+      );
+
+      const regex = /^[^,]+,[^,]+,[^,]+$/;
+      fetchedEvents = fetchedEvents.filter(event => {
+        const description = event.description?.trim() || "";
+        return regex.test(description);
+      });
+
+      setEvents(fetchedEvents);
       setLoading(false);
-      return;
+    };
+
+    fetchEvents();
+  }, [selectedCalendar, currentStartDate]);
+
+  // Show coach mark when not signed in (only on first render)
+  useEffect(() => {
+    if (!isSignedIn) {
+      setShowCoachMark(true);
     }
+  }, [isSignedIn]);
 
-    setLoading(true);
-    const startDate = currentStartDate.toISOString();
-    const endDate = currentStartDate.clone().add(10, "days").toISOString();
-
-    let fetchedEvents = await fetchPublicCalendarEvents(
-      selectedCalendar,
-      startDate,
-      endDate
-    );
-
-    // Ensure the description follows "Campus, Building, Room" format
-    const regex = /^[^,]+,[^,]+,[^,]+$/;
-    fetchedEvents = fetchedEvents.filter(event => {
-      const description = event.description?.trim() || "";
-      return regex.test(description);
-    });
-
-    setEvents(fetchedEvents);
-    setLoading(false);
-  };
-
-  fetchEvents();
-}, [selectedCalendar, currentStartDate]);
-
-
-
-  // 3. Now handle the conditional UI rendering
   if (!isSignedIn) {
     return (
       <View style={styles.guestContainer}>
@@ -150,6 +153,31 @@ useEffect(() => {
         <View style={styles.bottomNavBar}>
           <BottomNavBar />
         </View>
+
+        {/* Coach Mark Modal */}
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={showCoachMark}
+          onRequestClose={() => setShowCoachMark(false)}
+        >
+          <View style={styles.coachMarkOverlay}>
+            <View style={styles.coachMarkContainer}>
+              <Text style={styles.coachMarkText}>
+                Sign in to access your calendar events!
+              </Text>
+              <Text style={styles.coachMarkSubText}>
+                Tap the button below to log in.
+              </Text>
+              <TouchableOpacity
+                style={styles.coachMarkButton}
+                onPress={() => setShowCoachMark(false)}
+              >
+                <Text style={styles.coachMarkButtonText}>Got it</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </View>
     );
   }
@@ -161,14 +189,13 @@ useEffect(() => {
       </View>
     );
   }
-  trackEvent("Calendar Screen selected", {})
-  // 4. The main UI returns here
+
+  trackEvent("Calendar Screen selected", {});
+
   return (
     <View style={styles.screen}>
-      {/* In-App Notification */}
       <InAppNotification message={notificationMessage} visible={notificationVisible} />
 
-      {/* Header with Pagination */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.paginationButton}
@@ -189,7 +216,6 @@ useEffect(() => {
         </TouchableOpacity>
       </View>
 
-      {/* Date Range Display */}
       <View style={styles.centeredDateContainer}>
         <Text style={styles.centeredDateText}>
           {currentStartDate.format("MMM DD")} -{" "}
@@ -197,12 +223,13 @@ useEffect(() => {
         </Text>
       </View>
 
-      {/* Calendar Selection (Modal) */}
       <View style={styles.dropdownContainer}>
         <TouchableOpacity
           style={styles.dropdownButton}
-          onPress={() => {trackEvent("Get Directions to next class", {}) 
-          setModalVisible(true)}}
+          onPress={() => {
+            trackEvent("Get Directions to next class", {});
+            setModalVisible(true);
+          }}
         >
           <Text style={styles.dropdownButtonText}>
             {calendars.find((c) => c.id === selectedCalendar)?.name ||
@@ -252,7 +279,6 @@ useEffect(() => {
         </Modal>
       </View>
 
-      {/* Events List */}
       <View style={styles.container}>
         {events.length === 0 ? (
           <Text style={styles.noEventsText}>
@@ -281,8 +307,6 @@ useEffect(() => {
                       {moment(item.start.dateTime).format("YYYY-MM-DD HH:mm")} -{" "}
                       {moment(item.end.dateTime).format("HH:mm")}
                     </Text>
-
-                    {/* "Go to Class" button => calls handleGoToClass */}
                     <TouchableOpacity
                       style={styles.nextClassButton}
                       onPress={() =>

@@ -231,4 +231,80 @@ export default StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
+
+coachMarkOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.7)", // Darker overlay for contrast
+  },
+  spotlight: {
+    position: "absolute",
+    backgroundColor: "transparent",
+    borderWidth: 2,
+    borderColor: "#fff",
+    borderRadius: 10,
+    shadowColor: "#fff",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  coachMarkContainer: {
+    position: "absolute",
+    top: "10%", // Adjust based on your GoToLoginButton position
+    left: "10%",
+    right: "10%",
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  coachMarkContainerFinal: {
+    position: "absolute",
+    top: "30%",
+    left: "10%",
+    right: "10%",
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  coachMarkText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  coachMarkSubText: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  coachMarkButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  coachMarkButton: {
+    backgroundColor: "#862532",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+  },
+  coachMarkButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  coachMarkSkipButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+  coachMarkSkipText: {
+    color: "#862532",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+
 });
