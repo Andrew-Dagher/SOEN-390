@@ -13,7 +13,6 @@ import HomeCard from "../../components/Homescreen/HomeCard";
 import MapPic from "../../../assets/MapScreenshot.png";
 import CalendarPic from "../../../assets/CalendarScreenshot.png";
 import { useNavigation } from "@react-navigation/native";
-import Planner from "../Planner/Planner";
 
 // Retrieve screen dimensions for responsive design.
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");

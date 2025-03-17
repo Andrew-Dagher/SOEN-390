@@ -50,7 +50,7 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-    // Wrap the app in ClerkProvider for authentication.
+    {/* Wrap the app in ClerkProvider for authentication. */}
     <ClerkProvider
       publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
     >
