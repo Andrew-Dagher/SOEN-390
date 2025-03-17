@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView } from 'react-native';
+import PropTypes from 'prop-types'; // Import PropTypes
 import busScheduleData from '../../data/bus_schedule.json';
 
 /**
@@ -24,13 +25,22 @@ const ScheduleTable = ({ title, data }) => (
       <Text className="font-bold flex-1 text-center">Departures from S.G.W</Text>
     </View>
     {data.departures_from_loyola.map((time, index) => (
-      <View key={index} className="flex-row justify-between py-2 border-b border-gray-200">
+      <View key={`${time}-${index}`} className="flex-row justify-between py-2 border-b border-gray-200">
         <Text className="flex-1 text-center">{time}</Text>
         <Text className="flex-1 text-center">{data.departures_from_sgw[index] || ''}</Text>
       </View>
     ))}
   </View>
 );
+
+//  for ScheduleTable
+ScheduleTable.propTypes = {
+  title: PropTypes.string.isRequired,
+  data: PropTypes.shape({
+    departures_from_loyola: PropTypes.arrayOf(PropTypes.string).isRequired,
+    departures_from_sgw: PropTypes.arrayOf(PropTypes.string).isRequired,
+  }).isRequired,
+};
 
 /**
  * BusSchedule component that fetches and displays bus schedules for different days of the week.

@@ -70,7 +70,7 @@ const HomeHeader = ({ name }) => {
           paddingTop: height * 0.03,
         }}
       >
-        <Concordia50 />
+        <Concordia50 width={width * 0.15} height={height * 0.08} />
       </View>
     </View>
   );

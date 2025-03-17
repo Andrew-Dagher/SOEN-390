@@ -4,6 +4,7 @@
  */
 
 import React from "react";
+import PropTypes from "prop-types"; // Import PropTypes
 import Svg, { Path } from "react-native-svg";
 
 /**
@@ -24,5 +25,12 @@ const DirectionsIcon = ({ width = 18, height = 18, color = "#fff" }) => (
     />
   </Svg>
 );
+
+// PropTypes validation
+DirectionsIcon.propTypes = {
+  width: PropTypes.number,
+  height: PropTypes.number,
+  color: PropTypes.string,
+};
 
 export default DirectionsIcon;

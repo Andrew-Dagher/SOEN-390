@@ -6,6 +6,7 @@
 
 import React from "react";
 import { Svg, Path } from "react-native-svg";
+import PropTypes from "prop-types"; // Import PropTypes
 
 /**
  * Concordia50 component renders an SVG-based Concordia logo.
@@ -33,5 +34,12 @@ const Concordia50 = (props) => (
     />
   </Svg>
 );
+
+// PropTypes validation
+Concordia50.propTypes = {
+  width: PropTypes.number.isRequired,
+  height: PropTypes.number.isRequired,
+};
+
 
 export default Concordia50;

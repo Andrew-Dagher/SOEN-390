@@ -4,6 +4,7 @@
  */
 
 import * as React from "react";
+import PropTypes from "prop-types"; // Import PropTypes
 import Svg, { Path } from "react-native-svg";
 
 /**
@@ -28,5 +29,10 @@ const MetroNavIcon = ({ isSelected }) => (
     />
   </Svg>
 );
+
+// **PropTypes validation**
+MetroNavIcon.propTypes = {
+  isSelected: PropTypes.bool.isRequired,
+};
 
 export default MetroNavIcon;
