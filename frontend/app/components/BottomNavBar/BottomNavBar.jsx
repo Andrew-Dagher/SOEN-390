@@ -25,7 +25,7 @@ import SettingsInactive from "./SettingsIcons/SettingsInactive";
  * @param {Object} props.route - Optional route object passed from parent
  * @returns {JSX.Element} The rendered bottom navigation bar.
  */
-export default function BottomNavBar({ navigation, route }) {
+export default function BottomNavBar({ navigation = null, route = null }) {
   // This component can now be used both inside and outside a navigation context
 
   // Determine current screen - default to empty if route is not provided
@@ -99,12 +99,6 @@ BottomNavBar.propTypes = {
   route: PropTypes.shape({
     name: PropTypes.string,
   }),
-};
-
-// Default props
-BottomNavBar.defaultProps = {
-  navigation: null,
-  route: null,
 };
 
 // Styles for the BottomNavBar component
