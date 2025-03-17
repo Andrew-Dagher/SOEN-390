@@ -25,6 +25,9 @@ import NavigationScreen from "./screens/navigation/NavigationScreen";
 import LoginScreen from "./screens/login/LoginScreen";
 import SettingsScreen from "./screens/settings/settingsScreen";
 import BuildingInfoScreen from "./screens/Info/BuildingInfoScreen";
+import Planner from "./screens/Planner/Planner";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+
 
 // Import BusService
 import busService from "./services/BusService";
@@ -46,6 +49,7 @@ export default function App() {
   busService.start();
 
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
     // Wrap the app in ClerkProvider for authentication.
     <ClerkProvider
       publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
@@ -65,6 +69,8 @@ export default function App() {
               <Stack.Screen name="Calendar" component={CalendarScreen} />
               <Stack.Screen name="Navigation" component={NavigationScreen} />
               <Stack.Screen name="Settings" component={SettingsScreen} />
+              <Stack.Screen name="Planner" component={Planner} />
+              
               <Stack.Screen
                 name="Building Details"
                 component={BuildingInfoScreen}
@@ -79,5 +85,6 @@ export default function App() {
         </AppSettingsProvider>
       </ClerkLoaded>
     </ClerkProvider>
+    </GestureHandlerRootView>
   );
 }
