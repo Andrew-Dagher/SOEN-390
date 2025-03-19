@@ -24,7 +24,7 @@ jest.mock('@react-navigation/native', () => ({
 
   import React from 'react';
   import { Text, TouchableHighlight, Pressable } from 'react-native';
-  import { fireEvent, render } from '@testing-library/react-native';
+  import { fireEvent, render, waitFor } from '@testing-library/react-native';
   import { useNavigation } from "@react-navigation/native";
   
   // Import the actual component
@@ -113,6 +113,56 @@ jest.mock('@react-navigation/native', () => ({
         expect(mockNavigate).toHaveBeenCalledTimes(1);
         // Ensure the correct arguments were passed to navigate
         expect(mockNavigate).toHaveBeenCalledWith("Building Details", mockProps.building);
+    });
+
+    it('should handle setting start when start is already set and different from location coords', async () => {
+        // Set start
+        const propsWithStartSet = {
+            ...mockProps,
+            start: { latitude: 45.500, longitude: -73.570 }, 
+        };
+    
+        const { getByText } = render(<MapResultItem {...propsWithStartSet} />);
+        
+        // Simulate pressing the button
+        fireEvent.press(getByText('Set Destination'));
+    
+        // Assertions
+        expect(propsWithStartSet.setIsRoute).toHaveBeenCalledWith(true);
+        expect(propsWithStartSet.setIsSearch).toHaveBeenCalledWith(true);
+        expect(propsWithStartSet.setDestinationPosition).toHaveBeenCalledWith(propsWithStartSet.building.name);
+        expect(propsWithStartSet.setEnd).toHaveBeenCalledWith(propsWithStartSet.building.point);
+        
+        // Check travel time resets
+        expect(propsWithStartSet.setCarTravelTime).toHaveBeenCalledWith(null);
+        expect(propsWithStartSet.setBikeTravelTime).toHaveBeenCalledWith(null);
+        expect(propsWithStartSet.setMetroTravelTime).toHaveBeenCalledWith(null);
+        expect(propsWithStartSet.setWalkTravelTime).toHaveBeenCalledWith(null);
+    
+        // Ensure fetchTravelTime is called for all transport modes
+        await waitFor(() => {
+            expect(propsWithStartSet.fetchTravelTime).toHaveBeenCalledTimes(4);
+            expect(propsWithStartSet.fetchTravelTime).toHaveBeenCalledWith(
+                propsWithStartSet.start,
+                propsWithStartSet.building.point,
+                'DRIVING'
+            );
+            expect(propsWithStartSet.fetchTravelTime).toHaveBeenCalledWith(
+                propsWithStartSet.start,
+                propsWithStartSet.building.point,
+                'BICYCLING'
+            );
+            expect(propsWithStartSet.fetchTravelTime).toHaveBeenCalledWith(
+                propsWithStartSet.start,
+                propsWithStartSet.building.point,
+                'TRANSIT'
+            );
+            expect(propsWithStartSet.fetchTravelTime).toHaveBeenCalledWith(
+                propsWithStartSet.start,
+                propsWithStartSet.building.point,
+                'WALKING'
+            );
+        });
     });
     
     it('should call setStart when "Set Start" button is pressed', () => {
