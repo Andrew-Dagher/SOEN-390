@@ -30,7 +30,7 @@ const MetroNavIcon = ({ isSelected }) => (
   </Svg>
 );
 
-// **PropTypes validation**
+// PropTypes validation
 MetroNavIcon.propTypes = {
   isSelected: PropTypes.bool.isRequired,
 };

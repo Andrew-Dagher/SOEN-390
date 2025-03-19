@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types"; // Import PropTypes
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import InformationIcon from "./Icons/InformationIcon";
@@ -105,6 +106,20 @@ const MapCard = ({ building, isCallout = false }) => {
       <CardContent />
     </Pressable>
   );
+};
+
+// Define PropTypes for MapCard component
+MapCard.propTypes = {
+  building: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    address: PropTypes.string.isRequired,
+    isHandicap: PropTypes.bool,
+    isBike: PropTypes.bool,
+    isParking: PropTypes.bool,
+    isInfo: PropTypes.bool,
+    isCredit: PropTypes.bool,
+  }).isRequired,
+  isCallout: PropTypes.bool,
 };
 
 const styles = StyleSheet.create({

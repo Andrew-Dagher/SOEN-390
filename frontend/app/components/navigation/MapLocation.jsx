@@ -4,6 +4,7 @@
  */
 
 import { Text, View, StyleSheet, TouchableOpacity } from "react-native";
+import PropTypes from "prop-types"; // Import PropTypes
 import LocationIcon from "./Icons/LocationIcon";
 import * as Location from "expo-location";
 import { useEffect } from "react";
@@ -29,6 +30,7 @@ const MapLocation = ({ panToMyLocation, setLocation }) => {
     let location = await Location.getCurrentPositionAsync({});
     setLocation(location);
   }
+  
   /**
    * Handles the button click event to fetch and center the user's location.
    */
@@ -47,6 +49,12 @@ const MapLocation = ({ panToMyLocation, setLocation }) => {
       </TouchableOpacity>
     </View>
   );
+};
+
+// Define PropTypes for MapLocation component
+MapLocation.propTypes = {
+  panToMyLocation: PropTypes.func.isRequired,
+  setLocation: PropTypes.func.isRequired,
 };
 
 const styles = StyleSheet.create({

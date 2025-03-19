@@ -3,6 +3,7 @@
  * @description A React Native component for displaying the bottom navigation bar of the traceroute feature.
  */
 
+import PropTypes from "prop-types"; // Import PropTypes
 import React, { useRef, useEffect } from "react";
 import {
   Animated,
@@ -162,5 +163,21 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
 });
+MapTracerouteBottom.propTypes = {
+  isRoute: PropTypes.bool.isRequired,
+  setIsRoute: PropTypes.func.isRequired,
+  end: PropTypes.shape({
+    latitude: PropTypes.number.isRequired,
+    longitude: PropTypes.number.isRequired,
+  }),
+  start: PropTypes.shape({
+    latitude: PropTypes.number.isRequired,
+    longitude: PropTypes.number.isRequired,
+  }),
+  panToStart: PropTypes.func.isRequired,
+  closeTraceroute: PropTypes.bool.isRequired,
+  setCloseTraceroute: PropTypes.func.isRequired,
+};
+
 
 export default MapTracerouteBottom;
