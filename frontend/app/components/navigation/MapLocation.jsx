@@ -20,6 +20,7 @@ const MapLocation = ({ panToMyLocation, setLocation }) => {
    * Fetches the user's current location and updates the state.
    * If permission is denied, an error message is set.
    */
+  /* Function already exists in Map.jsx
   async function getCurrentLocation() {
     let { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
@@ -30,7 +31,8 @@ const MapLocation = ({ panToMyLocation, setLocation }) => {
     let location = await Location.getCurrentPositionAsync({});
     setLocation(location);
   }
-  
+
+  */
   /**
    * Handles the button click event to fetch and center the user's location.
    */
@@ -41,6 +43,7 @@ const MapLocation = ({ panToMyLocation, setLocation }) => {
   return (
     <View className="absolute justify-end items-center right-4 h-full">
       <TouchableOpacity
+        testID="map-location-button"
         onPress={handleClick}
         style={styles.shadow}
         className="mb-40 flex items-center justify-center rounded-3xl bg-white p-2 mr-4"
