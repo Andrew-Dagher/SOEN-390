@@ -6,33 +6,44 @@ import {
   StyleSheet,
 } from "react-native";
 import { Modal, Text, Switch, Button, IconButton } from "react-native-paper";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default function CustomizeModal({ visible, onClose, classes = [], toDoTasks = [], selectedDate, onPreferencesSaved }) {
-  const [preferences, setPreferences] = useState({});
+/**
+ * CustomizeModal
+ * 
+ * @param {boolean} visible
+ * @param {() => void} onClose
+ * @param {Array} classes
+ * @param {Array} toDoTasks
+ * @param {string} selectedDate
+ * @param {Object} datePreferences
+ * @param {string} initialClassColor
+ * @param {string} initialTaskColor
+ * @param {(localPrefs, classColor, taskColor) => void} onSavePreferences
+ */
+export default function CustomizeModal({
+  visible,
+  onClose,
+  classes = [],
+  toDoTasks = [],
+  selectedDate,
+  datePreferences = {},
+  initialClassColor = "#FFD700",
+  initialTaskColor = "#ADD8E6",
+  onSavePreferences,
+}) {
+
+  const [localPrefs, setLocalPrefs] = useState({});
   const [expandedSections, setExpandedSections] = useState({});
-  const [classColor, setClassColor] = useState("#FFD700");
-  const [taskColor, setTaskColor] = useState("#ADD8E6");
+  const [classColor, setClassColor] = useState(initialClassColor);
+  const [taskColor, setTaskColor] = useState(initialTaskColor);
 
   useEffect(() => {
-    const loadPreferences = async () => {
-      try {
-        const storedPrefs = await AsyncStorage.getItem("plannerPreferences");
-        if (storedPrefs) {
-          const parsedPrefs = JSON.parse(storedPrefs);
-          setPreferences(parsedPrefs[selectedDate] || {});
-          setClassColor(parsedPrefs.globalClassColor || "#FFD700");
-          setTaskColor(parsedPrefs.globalTaskColor || "#ADD8E6");
-        }
-      } catch (error) {
-        console.error("Error loading preferences:", error);
-      }
-    };
-
     if (visible) {
-      loadPreferences();
+      setLocalPrefs(datePreferences);
+      setClassColor(initialClassColor);
+      setTaskColor(initialTaskColor);
     }
-  }, [visible, selectedDate]);
+  }, [visible, selectedDate, datePreferences, initialClassColor, initialTaskColor]);
 
   const toggleSection = (sectionId) => {
     setExpandedSections((prev) => ({
@@ -42,45 +53,30 @@ export default function CustomizeModal({ visible, onClose, classes = [], toDoTas
   };
 
   const toggleSkippable = (classItem) => {
-    setPreferences((prev) => ({
+    setLocalPrefs((prev) => ({
       ...prev,
       [classItem.id]: {
-        title: classItem.title, // Store the course name
+        ...prev[classItem.id],
+        title: classItem.title,
         skippable: !prev[classItem.id]?.skippable,
       },
     }));
   };
 
   const toggleImportant = (taskItem) => {
-    setPreferences((prev) => ({
+    setLocalPrefs((prev) => ({
       ...prev,
       [taskItem.id]: {
-        title: taskItem.title, // Store the task name
+        ...prev[taskItem.id],
+        title: taskItem.title,
         important: !prev[taskItem.id]?.important,
       },
     }));
   };
 
-  const savePreferences = async () => {
-    try {
-      const storedPrefs = await AsyncStorage.getItem("plannerPreferences");
-      const parsedPrefs = storedPrefs ? JSON.parse(storedPrefs) : {};
-
-      const updatedPrefs = {
-        ...parsedPrefs,
-        [selectedDate]: { ...(parsedPrefs[selectedDate] || {}), ...preferences },
-        globalClassColor: classColor,
-        globalTaskColor: taskColor,
-      };
-
-      await AsyncStorage.setItem("plannerPreferences", JSON.stringify(updatedPrefs));
-
-      onPreferencesSaved({ classColor, taskColor });
-
-      onClose();
-    } catch (error) {
-      console.error("Error saving preferences:", error);
-    }
+  const handleSavePreferences = () => {
+    onSavePreferences(localPrefs, classColor, taskColor);
+    onClose();
   };
 
   return (
@@ -92,9 +88,15 @@ export default function CustomizeModal({ visible, onClose, classes = [], toDoTas
         {classes.length > 0 ? (
           classes.map((item) => (
             <View key={item.id} style={styles.itemContainer}>
-              <TouchableOpacity onPress={() => toggleSection(item.id)} style={styles.sectionToggle}>
+              <TouchableOpacity
+                onPress={() => toggleSection(item.id)}
+                style={styles.sectionToggle}
+              >
                 <Text style={[styles.classText, { color: "#666" }]}>{item.title}</Text>
-                <IconButton icon={expandedSections[item.id] ? "chevron-up" : "chevron-down"} size={20} />
+                <IconButton
+                  icon={expandedSections[item.id] ? "chevron-up" : "chevron-down"}
+                  size={20}
+                />
               </TouchableOpacity>
 
               {expandedSections[item.id] && (
@@ -102,7 +104,7 @@ export default function CustomizeModal({ visible, onClose, classes = [], toDoTas
                   <View style={styles.optionRow}>
                     <Text style={styles.optionTitle}>Skippable:</Text>
                     <Switch
-                      value={preferences[item.id]?.skippable || false}
+                      value={!!localPrefs[item.id]?.skippable}
                       onValueChange={() => toggleSkippable(item)}
                     />
                   </View>
@@ -114,15 +116,17 @@ export default function CustomizeModal({ visible, onClose, classes = [], toDoTas
           <Text style={styles.emptyText}>No classes for this day</Text>
         )}
 
-        {/* Global Class Color Picker */}
         <Text style={styles.optionTitle}>Class Color:</Text>
         <View style={styles.colorContainer}>
-          {["#FFD700", "#87CEEB", "#90EE90", "#FF6347"].map((color) => (
+          {["#FFD6E0", "#FFEFCF", "#D1F0FF"].map((color) => (
             <TouchableOpacity
               key={color}
               style={[
                 styles.colorOption,
-                { backgroundColor: color, borderWidth: classColor === color ? 2 : 0 },
+                {
+                  backgroundColor: color,
+                  borderWidth: classColor === color ? 2 : 0,
+                },
               ]}
               onPress={() => setClassColor(color)}
             />
@@ -133,9 +137,15 @@ export default function CustomizeModal({ visible, onClose, classes = [], toDoTas
         {toDoTasks.length > 0 ? (
           toDoTasks.map((item) => (
             <View key={item.id} style={styles.itemContainer}>
-              <TouchableOpacity onPress={() => toggleSection(item.id)} style={styles.sectionToggle}>
+              <TouchableOpacity
+                onPress={() => toggleSection(item.id)}
+                style={styles.sectionToggle}
+              >
                 <Text style={[styles.classText, { color: "#666" }]}>{item.title}</Text>
-                <IconButton icon={expandedSections[item.id] ? "chevron-up" : "chevron-down"} size={20} />
+                <IconButton
+                  icon={expandedSections[item.id] ? "chevron-up" : "chevron-down"}
+                  size={20}
+                />
               </TouchableOpacity>
 
               {expandedSections[item.id] && (
@@ -143,7 +153,7 @@ export default function CustomizeModal({ visible, onClose, classes = [], toDoTas
                   <View style={styles.optionRow}>
                     <Text style={styles.optionTitle}>Important:</Text>
                     <Switch
-                      value={preferences[item.id]?.important || false}
+                      value={!!localPrefs[item.id]?.important}
                       onValueChange={() => toggleImportant(item)}
                     />
                   </View>
@@ -157,12 +167,15 @@ export default function CustomizeModal({ visible, onClose, classes = [], toDoTas
 
         <Text style={styles.optionTitle}>To-Do Task Color:</Text>
         <View style={styles.colorContainer}>
-          {["#FFB6C1", "#ADD8E6", "#98FB98", "#FFA07A"].map((color) => (
+          {["#D9F2D9", "#E2D9F2", "#FFE4CA"].map((color) => (
             <TouchableOpacity
               key={color}
               style={[
                 styles.colorOption,
-                { backgroundColor: color, borderWidth: taskColor === color ? 2 : 0 },
+                {
+                  backgroundColor: color,
+                  borderWidth: taskColor === color ? 2 : 0,
+                },
               ]}
               onPress={() => setTaskColor(color)}
             />
@@ -171,8 +184,11 @@ export default function CustomizeModal({ visible, onClose, classes = [], toDoTas
 
       </ScrollView>
 
-      {/* SAVE BUTTON */}
-      <Button mode="contained" onPress={savePreferences} style={styles.saveButton}>
+      <Button
+        mode="contained"
+        onPress={handleSavePreferences}
+        style={styles.saveButton}
+      >
         Save Preferences
       </Button>
     </Modal>
