@@ -21,11 +21,12 @@ jest.mock('@react-navigation/native', () => ({
       backgroundColor: '#FF0000' 
     }))
   );
+
   import React from 'react';
   import { Text, TouchableHighlight, Pressable } from 'react-native';
   import { fireEvent, render } from '@testing-library/react-native';
   
-  // Import the actual component 
+  // Import the actual component
   import MapResultItem from '../app/components/navigation/MapResults/MapResultItem';
   
   describe('MapResultItem Component Tests', () => {
@@ -121,21 +122,23 @@ jest.mock('@react-navigation/native', () => ({
         mockProps.setStartPosition(mockProps.building.name);
       };
       
+      // Call the function directly
       handleSetStart();
       
+      // Assertions
       expect(mockProps.setStart).toHaveBeenCalledWith(mockProps.building.point);
       expect(mockProps.setStartPosition).toHaveBeenCalledWith(mockProps.building.name);
     });
     
-    // Test with start location set
-    it('should call setEnd when start is already set', () => {
+    it('should call fetchTravelTime for all transport modes when start is set', async () => {
+      // Create props with start already set
       const propsWithStart = {
         ...mockProps,
-        start: { latitude: 45.496, longitude: -73.577 }
+        start: { latitude: 45.496, longitude: -73.577 }, 
+        fetchTravelTime: jest.fn().mockResolvedValue(true) 
       };
       
-      // Extract and test the function
-      const handleSetStart = () => {
+      const handleSetStart = async () => {
         if (propsWithStart.start != null && propsWithStart.start !== propsWithStart.location?.coords) {
           propsWithStart.setIsRoute(true);
           propsWithStart.setIsSearch(true);
@@ -148,31 +151,61 @@ jest.mock('@react-navigation/native', () => ({
           propsWithStart.setMetroTravelTime(null);
           propsWithStart.setWalkTravelTime(null);
         
-          // Fetch times from start point to selected building
-          propsWithStart.fetchTravelTime(propsWithStart.start, propsWithStart.building.point, 'DRIVING');
-          propsWithStart.fetchTravelTime(propsWithStart.start, propsWithStart.building.point, 'BICYCLING');
-          propsWithStart.fetchTravelTime(propsWithStart.start, propsWithStart.building.point, 'TRANSIT');
-          propsWithStart.fetchTravelTime(propsWithStart.start, propsWithStart.building.point, 'WALKING');
+          const fetchAllTravelTimes = async () => {
+            await Promise.all([
+              propsWithStart.fetchTravelTime(propsWithStart.start, propsWithStart.building.point, 'DRIVING'),
+              propsWithStart.fetchTravelTime(propsWithStart.start, propsWithStart.building.point, 'BICYCLING'),
+              propsWithStart.fetchTravelTime(propsWithStart.start, propsWithStart.building.point, 'TRANSIT'),
+              propsWithStart.fetchTravelTime(propsWithStart.start, propsWithStart.building.point, 'WALKING'),
+            ]);
+          };
+          
+          await fetchAllTravelTimes();
           return;
         }
         propsWithStart.setStart(propsWithStart.building.point);
         propsWithStart.setStartPosition(propsWithStart.building.name);
       };
       
-      // Call the function
-      handleSetStart();
+      await handleSetStart();
       
       // Assertions
       expect(propsWithStart.setIsRoute).toHaveBeenCalledWith(true);
       expect(propsWithStart.setIsSearch).toHaveBeenCalledWith(true);
       expect(propsWithStart.setDestinationPosition).toHaveBeenCalledWith(propsWithStart.building.name);
       expect(propsWithStart.setEnd).toHaveBeenCalledWith(propsWithStart.building.point);
+
+      // Check travel time resets
       expect(propsWithStart.setCarTravelTime).toHaveBeenCalledWith(null);
+      expect(propsWithStart.setBikeTravelTime).toHaveBeenCalledWith(null);
+      expect(propsWithStart.setMetroTravelTime).toHaveBeenCalledWith(null);
+      expect(propsWithStart.setWalkTravelTime).toHaveBeenCalledWith(null);
+      
       expect(propsWithStart.fetchTravelTime).toHaveBeenCalledTimes(4);
+      expect(propsWithStart.fetchTravelTime).toHaveBeenCalledWith(
+        propsWithStart.start,
+        propsWithStart.building.point,
+        'DRIVING'
+      );
+      expect(propsWithStart.fetchTravelTime).toHaveBeenCalledWith(
+        propsWithStart.start,
+        propsWithStart.building.point,
+        'BICYCLING'
+      );
+      expect(propsWithStart.fetchTravelTime).toHaveBeenCalledWith(
+        propsWithStart.start,
+        propsWithStart.building.point,
+        'TRANSIT'
+      );
+      expect(propsWithStart.fetchTravelTime).toHaveBeenCalledWith(
+        propsWithStart.start,
+        propsWithStart.building.point,
+        'WALKING'
+      );
     });
     
-    // Test handleGetDirections function
-    it('should handle get directions correctly', () => {
+    // Test handleGetDirections
+    it('should call all expected functions in handleGetDirections', () => {
       const handleGetDirections = () => {
         mockProps.setCloseTraceroute(false);
         mockProps.setEnd(mockProps.building.point);
@@ -180,18 +213,26 @@ jest.mock('@react-navigation/native', () => ({
         mockProps.setStartPosition("Your Location");
       };
       
-      // Call the function & assert
       handleGetDirections();
       
+      // assertions
       expect(mockProps.setCloseTraceroute).toHaveBeenCalledWith(false);
       expect(mockProps.setEnd).toHaveBeenCalledWith(mockProps.building.point);
       expect(mockProps.setDestinationPosition).toHaveBeenCalledWith(mockProps.building.name);
       expect(mockProps.setStartPosition).toHaveBeenCalledWith("Your Location");
+      
+      const setCloseTracerouteOrder = mockProps.setCloseTraceroute.mock.invocationCallOrder[0];
+      const setEndOrder = mockProps.setEnd.mock.invocationCallOrder[0];
+      const setDestinationPositionOrder = mockProps.setDestinationPosition.mock.invocationCallOrder[0];
+      const setStartPositionOrder = mockProps.setStartPosition.mock.invocationCallOrder[0];
+      
+      expect(setCloseTracerouteOrder).toBeLessThan(setEndOrder);
+      expect(setEndOrder).toBeLessThan(setDestinationPositionOrder);
+      expect(setDestinationPositionOrder).toBeLessThan(setStartPositionOrder);
     });
     
-    // Test navigation function
-    it('should navigate to building details', () => {
-      // Mock navigation
+    // Test handlePress function 
+    it('should navigate to Building Details with correct parameters', () => {
       const mockNavigate = jest.fn();
       const useNavigationMock = jest.requireMock('@react-navigation/native').useNavigation;
       useNavigationMock.mockReturnValue({
@@ -204,6 +245,15 @@ jest.mock('@react-navigation/native', () => ({
       
       handlePress();
       
+      expect(mockNavigate).toHaveBeenCalledTimes(1);
       expect(mockNavigate).toHaveBeenCalledWith('Building Details', mockProps.building);
+      
+    
+      const buildingParam = mockNavigate.mock.calls[0][1];
+      expect(buildingParam).toBe(mockProps.building); 
+      expect(buildingParam.name).toBe('Test Building');
+      expect(buildingParam.address).toBe('Test Address');
+      expect(buildingParam.point.latitude).toBe(45.497);
+      expect(buildingParam.point.longitude).toBe(-73.578);
     });
   });
