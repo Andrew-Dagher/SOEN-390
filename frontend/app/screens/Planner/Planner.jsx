@@ -9,25 +9,30 @@ import { fetchPublicCalendarEvents } from "../login/LoginHelper";
 import CustomizeModal from "./CustomizeModal";
 
 export default function Planner() {
+  // Date & Layout
   const [selectedDate, setSelectedDate] = useState(moment().format("YYYY-MM-DD"));
   const [currentWeekStart, setCurrentWeekStart] = useState(moment().startOf("week"));
   const [scale, setScale] = useState(1);
 
+  // Calendar Data
   const [classes, setClasses] = useState([]);
   const [toDoTasks, setToDoTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [planning, setPlanning] = useState(false);
 
+  // Preferences (Single source of truth)
   const [allPreferences, setAllPreferences] = useState({});
   const [classColor, setClassColor] = useState("#DCEDC8");
   const [taskColor, setTaskColor] = useState("#F0D9E2");
 
+  // Modal Visibility
   const [isCustomizeModalVisible, setIsCustomizeModalVisible] = useState(false);
 
+  // Environment Calendar IDs
   const CLASS_CALENDAR_ID = process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_ID1;
   const TODO_CALENDAR_ID = process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_ID2;
-  const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 
+  // Load preferences from AsyncStorage (once on mount)
   useEffect(() => {
     (async () => {
       try {
@@ -44,6 +49,7 @@ export default function Planner() {
     })();
   }, []);
 
+  // Fetch events whenever selectedDate changes
   useEffect(() => {
     const fetchEvents = async () => {
       setLoading(true);
@@ -55,6 +61,7 @@ export default function Planner() {
         const fetchedClasses = await fetchPublicCalendarEvents(CLASS_CALENDAR_ID, startDate, endDate);
         const fetchedToDoTasks = await fetchPublicCalendarEvents(TODO_CALENDAR_ID, startDate, endDate);
 
+        // Sort events by start time
         fetchedClasses.sort((a, b) => new Date(a.start.dateTime) - new Date(b.start.dateTime));
         fetchedToDoTasks.sort((a, b) => new Date(a.start.dateTime) - new Date(b.start.dateTime));
 
@@ -73,8 +80,10 @@ export default function Planner() {
     fetchEvents();
   }, [selectedDate]);
 
+  // Merge and save preferences (make sure we don't create nested keys)
   const handleSavePreferences = async (datePrefs, newClassColor, newTaskColor) => {
     try {
+      // Replace the date's preferences rather than merging nested objects
       const updated = {
         ...allPreferences,
         [selectedDate]: {
@@ -95,6 +104,7 @@ export default function Planner() {
     }
   };
 
+  // Calculate the top and height of each event for the schedule view
   const calculatePosition = (startDateTime, endDateTime) => {
     const startTime = moment(startDateTime);
     const endTime = moment(endDateTime);
@@ -105,20 +115,25 @@ export default function Planner() {
     return { top, height, displayTime: height > 50 };
   };
 
+  // Helper to extract location from event description
   const extractLocation = (description) => {
     if (!description) return "Unknown Location";
     const match = description.match(/<pre>(.*?)<\/pre>/);
     return match ? match[1] : description;
   };
 
+  // Handle planning (send data to Gemini and update calendar with optimized schedule)
   const handlePlan = async () => {
     if (planning) return;
     setPlanning(true);
     const datePrefs = allPreferences[selectedDate] || {};
 
+    // Build schedule data (invert skippable if needed, adjust according to your logic)
     const scheduleData = {
       classes: classes.map((item) => {
+        // Retrieve the preferences for this class on the selected date
         const prefs = (allPreferences[selectedDate] || {})[item.id] || {};
+        // Use grey background for skippable classes in the UI; for Gemini, we can send the actual value.
         return {
           id: item.id,
           name: item.title,
@@ -140,55 +155,56 @@ export default function Planner() {
 
     console.log("schedule Data:", JSON.stringify(scheduleData, null, 2));
 
+    // Gemini prompt with explicit formatting instructions
     const geminiPrompt = `
-      Optimize the following schedule to minimize walking distance between locations.
+Optimize the following schedule to minimize walking distance between locations.
 
-      Constraints and Guidelines:
-      1. Classes (fixed):
-        - Cannot be moved from their scheduled times.
-        - Each class has an "id", "name", "location", "start_time", "end_time", and a "skippable" flag.
-        - If a class is marked "skippable", tasks may overlap it.
-        - If a class is not skippable, no tasks may overlap its time.
+Constraints and Guidelines:
+1. Classes (fixed):
+   - Cannot be moved from their scheduled times.
+   - Each class has an "id", "name", "location", "start_time", "end_time", and a "skippable" flag.
+   - If a class is marked "skippable", tasks may overlap it.
+   - If a class is not skippable, no tasks may overlap its time.
 
-      2. Tasks (flexible):
-        - Each task has an "id", "name", "location", "start_time", "end_time", and an "important" flag.
-        - Tasks can be rescheduled if it helps minimize walking distance.
-        - If a task is "important", keep it at the same time or schedule it as early as possible.
-        - Under no circumstance should a task overlap with a class that is not skippable.
+2. Tasks (flexible):
+   - Each task has an "id", "name", "location", "start_time", "end_time", and an "important" flag.
+   - Tasks can be rescheduled if it helps minimize walking distance.
+   - If a task is "important", keep it at the same time or schedule it as early as possible.
+   - Under no circumstance should a task overlap with a class that is not skippable.
 
-      3. Minimize walking distance by scheduling tasks as close as possible to the locations of adjacent classes.
+3. Minimize walking distance by scheduling tasks as close as possible to the locations of adjacent classes.
 
-      **EVENTS SHOULD NOT CHANGE DURATION**
-      Return the optimized schedule in valid JSON exactly as follows:
+**EVENTS SHOULD NOT CHANGE DURATION**
+Return the optimized schedule in valid JSON exactly as follows:
 
-      {
-        "classes": [
-          {
-            "id": "<event id>",
-            "name": "<class name>",
-            "location": "<location>",
-            "start_time": "HH:mm",
-            "end_time": "HH:mm",
-            "skippable": <true/false>
-          },
-          ...
-        ],
-        "tasks": [
-          {
-            "id": "<event id>",
-            "name": "<task name>",
-            "location": "<location>",
-            "start_time": "HH:mm",
-            "end_time": "HH:mm",
-            "important": <true/false>
-          },
-          ...
-        ]
-      }
+{
+  "classes": [
+    {
+      "id": "<event id>",
+      "name": "<class name>",
+      "location": "<location>",
+      "start_time": "HH:mm",
+      "end_time": "HH:mm",
+      "skippable": <true/false>
+    },
+    ...
+  ],
+  "tasks": [
+    {
+      "id": "<event id>",
+      "name": "<task name>",
+      "location": "<location>",
+      "start_time": "HH:mm",
+      "end_time": "HH:mm",
+      "important": <true/false>
+    },
+    ...
+  ]
+}
 
-      Here is the schedule data:
-      ${JSON.stringify(scheduleData)}
-      `.trim();
+Here is the schedule data:
+${JSON.stringify(scheduleData)}
+`.trim();
 
     const requestBody = {
       contents: [
@@ -199,6 +215,7 @@ export default function Planner() {
       ],
     };
 
+    const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-002:generateContent?key=${apiKey}`;
 
     console.log("what is sent to gemini:\n", geminiPrompt);
@@ -240,6 +257,7 @@ export default function Planner() {
             setToDoTasks(updatedTasks);
             console.log("Updated tasks with Gemini result:", updatedTasks);
           }
+          // Optionally, update classes if optimizedSchedule.classes is provided.
         } catch (parseErr) {
           console.error("Error parsing Gemini JSON output:", parseErr);
         }
@@ -255,6 +273,7 @@ export default function Planner() {
 
   return (
     <View style={styles.container}>
+      {/* HEADER */}
       <View style={styles.header}>
         <IconButton
           icon="chevron-left"
@@ -278,6 +297,7 @@ export default function Planner() {
         />
       </View>
 
+      {/* WEEK SELECTOR */}
       <View style={styles.weekContainer}>
         {Array.from({ length: 7 }, (_, i) => {
           const date = moment(currentWeekStart).add(i, "days").format("YYYY-MM-DD");
@@ -322,7 +342,9 @@ export default function Planner() {
             })}
 
             {classes.map((item) => {
+              // Check the saved preferences for this class on the selected date
               const prefs = (allPreferences[selectedDate] || {})[item.id] || {};
+              // If skippable is true, show grey; otherwise, use the global classColor.
               const bgColor = prefs.skippable ? "#D3D3D3" : classColor;
               const { top, height, displayTime } = calculatePosition(
                 item.start.dateTime,
