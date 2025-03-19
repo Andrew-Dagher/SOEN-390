@@ -3,7 +3,6 @@
  * @description A React Native component to display the bus schedule for departures between Loyola and SGW.
  */
 
-import PropTypes from "prop-types"; // Import PropTypes
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import PropTypes from 'prop-types'; // Import PropTypes
