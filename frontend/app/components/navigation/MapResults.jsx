@@ -470,8 +470,8 @@ MapResults.propTypes = {
   setMetroTravelTime: PropTypes.func.isRequired,
   setWalkTravelTime: PropTypes.func.isRequired,
   location: PropTypes.shape({
-    latitude: PropTypes.number.isRequired,
-    longitude: PropTypes.number.isRequired,
+    latitude: PropTypes.number,
+    longitude: PropTypes.number,
   }),
   setIsRoute: PropTypes.func.isRequired,
   isRoute: PropTypes.bool.isRequired,
