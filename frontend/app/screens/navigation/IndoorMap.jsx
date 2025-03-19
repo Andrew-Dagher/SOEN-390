@@ -1,10 +1,17 @@
 /**
  * @file IndoorMap.jsx
- * @description Displays a map placeholder along with a back button.
+ * @description Displays a map placeholder along with a back button and fields for setting start and destination.
  */
 
-import React from "react";
-import { View, Text, Pressable, StatusBar, Platform } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  Pressable,
+  StatusBar,
+  Platform,
+  TextInput,
+} from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 
 const MapPage = () => {
@@ -13,8 +20,10 @@ const MapPage = () => {
   // Retrieve the selected floorplan (or map identifier) from route params
   const { selectedFloorplan } = route.params || { selectedFloorplan: "Unknown" };
 
-  // Adjust header padding based on the platform
   const headerPadding = Platform.OS === "ios" ? 48 : 32;
+  // States for Start and Destination fields
+  const [start, setStart] = useState("");
+  const [destination, setDestination] = useState("");
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F3F4F6" }}>
@@ -30,6 +39,37 @@ const MapPage = () => {
           Map of {selectedFloorplan}
         </Text>
       </View>
+
+      {/* Input fields for Start and Destination */}
+      <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
+        <TextInput
+          style={{
+            borderWidth: 1,
+            borderColor: "#D1D5DB",
+            borderRadius: 8,
+            padding: 12,
+            marginBottom: 12,
+            backgroundColor: "#FFFFFF",
+          }}
+          placeholder="Start"
+          value={start}
+          onChangeText={setStart}
+        />
+        <TextInput
+          style={{
+            borderWidth: 1,
+            borderColor: "#D1D5DB",
+            borderRadius: 8,
+            padding: 12,
+            backgroundColor: "#FFFFFF",
+          }}
+          placeholder="Destination"
+          value={destination}
+          onChangeText={setDestination}
+        />
+      </View>
+
+      {/* Map Placeholder */}
       <View
         style={{
           flex: 1,
