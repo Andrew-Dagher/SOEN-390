@@ -19,7 +19,6 @@ import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "@clerk/clerk-expo";
 import { useAppSettings } from "../../AppSettingsContext";
 import getThemeColors from "../../ColorBindTheme";
-import BottomNavBar from "../../components/BottomNavBar/BottomNavBar";
 import { loadUserData, pickImage, handleLogout } from "../../settingsUtils";
 import PropTypes from "prop-types"; 
 
@@ -135,7 +134,6 @@ export default function SettingsScreen() {
 
         </View>
       </ScrollView>
-      <BottomNavBar />
     </View>
   );
 }

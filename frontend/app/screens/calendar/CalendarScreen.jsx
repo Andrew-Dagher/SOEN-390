@@ -81,8 +81,12 @@ export default function CalendarScreen() {
   useEffect(() => {
     const loadStoredData = async () => {
       try {
-        const storedCalendars = await AsyncStorage.getItem("availableCalendars");
-        const storedSelectedCalendar = await AsyncStorage.getItem("selectedCalendar");
+        const storedCalendars = await AsyncStorage.getItem(
+          "availableCalendars"
+        );
+        const storedSelectedCalendar = await AsyncStorage.getItem(
+          "selectedCalendar"
+        );
         if (storedCalendars) {
           const parsedCalendars = JSON.parse(storedCalendars);
           setCalendars(parsedCalendars);
@@ -98,38 +102,36 @@ export default function CalendarScreen() {
     loadStoredData();
   }, []);
 
-useEffect(() => {
-  const fetchEvents = async () => {
-    if (!selectedCalendar) {
+  useEffect(() => {
+    const fetchEvents = async () => {
+      if (!selectedCalendar) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      const startDate = currentStartDate.toISOString();
+      const endDate = currentStartDate.clone().add(10, "days").toISOString();
+
+      let fetchedEvents = await fetchPublicCalendarEvents(
+        selectedCalendar,
+        startDate,
+        endDate
+      );
+
+      // Ensure the description follows "Campus, Building, Room" format
+      const regex = /^[^,]+,[^,]+,[^,]+$/;
+      fetchedEvents = fetchedEvents.filter((event) => {
+        const description = event.description?.trim() || "";
+        return regex.test(description);
+      });
+
+      setEvents(fetchedEvents);
       setLoading(false);
-      return;
-    }
+    };
 
-    setLoading(true);
-    const startDate = currentStartDate.toISOString();
-    const endDate = currentStartDate.clone().add(10, "days").toISOString();
-
-    let fetchedEvents = await fetchPublicCalendarEvents(
-      selectedCalendar,
-      startDate,
-      endDate
-    );
-
-    // Ensure the description follows "Campus, Building, Room" format
-    const regex = /^[^,]+,[^,]+,[^,]+$/;
-    fetchedEvents = fetchedEvents.filter(event => {
-      const description = event.description?.trim() || "";
-      return regex.test(description);
-    });
-
-    setEvents(fetchedEvents);
-    setLoading(false);
-  };
-
-  fetchEvents();
-}, [selectedCalendar, currentStartDate]);
-
-
+    fetchEvents();
+  }, [selectedCalendar, currentStartDate]);
 
   // 3. Now handle the conditional UI rendering
   if (!isSignedIn) {
@@ -161,12 +163,15 @@ useEffect(() => {
       </View>
     );
   }
-  trackEvent("Calendar Screen selected", {})
+  trackEvent("Calendar Screen selected", {});
   // 4. The main UI returns here
   return (
     <View style={styles.screen}>
       {/* In-App Notification */}
-      <InAppNotification message={notificationMessage} visible={notificationVisible} />
+      <InAppNotification
+        message={notificationMessage}
+        visible={notificationVisible}
+      />
 
       {/* Header with Pagination */}
       <View style={styles.header}>
@@ -201,8 +206,10 @@ useEffect(() => {
       <View style={styles.dropdownContainer}>
         <TouchableOpacity
           style={styles.dropdownButton}
-          onPress={() => {trackEvent("Get Directions to next class", {}) 
-          setModalVisible(true)}}
+          onPress={() => {
+            trackEvent("Get Directions to next class", {});
+            setModalVisible(true);
+          }}
         >
           <Text style={styles.dropdownButtonText}>
             {calendars.find((c) => c.id === selectedCalendar)?.name ||
@@ -289,7 +296,9 @@ useEffect(() => {
                         handleGoToClass(item.description, navigation)
                       }
                     >
-                      <Text style={styles.nextClassButtonText}>Go to Class</Text>
+                      <Text style={styles.nextClassButtonText}>
+                        Go to Class
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 )}
@@ -299,10 +308,6 @@ useEffect(() => {
         )}
       </View>
       <NextClassButton eventObserver={eventsObserver} />
-
-      <View style={styles.bottomNavBar}>
-        <BottomNavBar />
-      </View>
     </View>
   );
 }

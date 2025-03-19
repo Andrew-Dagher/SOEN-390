@@ -7,7 +7,6 @@ import {
   SafeAreaView,
   TouchableOpacity,
 } from "react-native";
-import BottomNavBar from "../../components/BottomNavBar/BottomNavBar";
 import HomeHeader from "../../components/Homescreen/HomeHeader/HomeHeader";
 import HomeCard from "../../components/Homescreen/HomeCard";
 import MapPic from "../../../assets/MapScreenshot.png";
@@ -19,8 +18,7 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
 /**
  * HomeScreen component renders the main home view.
- * It displays the user's name in the header, provides navigation cards,
- * and includes a bottom navigation bar.
+ * It displays the user's name in the header and provides navigation cards.
  *
  * @component
  * @returns {JSX.Element} The rendered HomeScreen component.
@@ -73,10 +71,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
-      {/* Bottom navigation bar */}
-      <View style={styles.navBarContainer}>
-        <BottomNavBar />
-      </View>
+      {/* Bottom navigation is now rendered in App.js and stays fixed across screens */}
     </View>
   );
 }
@@ -86,10 +81,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+    // Add bottom padding to ensure content doesn't get hidden behind the navbar
+    paddingBottom: 60,
   },
   mainContent: {
     flex: 1,
-    paddingBottom: 60,
   },
   cardContainer: {
     flex: 1,
@@ -99,17 +95,5 @@ const styles = StyleSheet.create({
     gap: screenHeight * 0.02,
     paddingTop: screenHeight * 0.03,
     paddingHorizontal: screenWidth * 0.05,
-  },
-  navBarContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "#fff",
-    elevation: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
 });
