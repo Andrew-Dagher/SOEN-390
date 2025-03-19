@@ -28,10 +28,12 @@ import SmallNavigationIcon from "./Icons/SmallNavigationIcon";
 import SwapIcon from "./Icons/SwapIcon";
 import ArrowIcon from "./Icons/ArrowIcon";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
-import { SGWShuttlePickup, LoyolaShuttlePickup } from '../../screens/navigation/navigationConfig';
-import { IsAtSGW } from '../../screens/navigation/navigationUtils';
+import {
+  SGWShuttlePickup,
+  LoyolaShuttlePickup,
+} from "../../screens/navigation/navigationConfig";
+import { IsAtSGW } from "../../screens/navigation/navigationUtils";
 import { trackEvent } from "@aptabase/react-native";
-
 
 // Define the styles outside of the component
 const styles = StyleSheet.create({
@@ -151,11 +153,7 @@ const styles = StyleSheet.create({
  * @param {string} props.flag - Indicates whether it's origin or destination.
  * @param {Function} props.onPlaceSelected - Function to handle place selection.
  */
-const InputAutocomplete = ({
-  placeholder,
-  flag,
-  onPlaceSelected,
-}) => (
+const InputAutocomplete = ({ placeholder, flag, onPlaceSelected }) => (
   <GooglePlacesAutocomplete
     enableHighAccuracyLocation={true}
     styles={{
@@ -190,6 +188,11 @@ const InputAutocomplete = ({
       key: process.env.EXPO_PUBLIC_GOOGLE_API_KEY,
       language: "en-us",
       types: "geocode|establishment",
+      // Montreal coordinates (latitude, longitude)
+      location: "45.5017,-73.5673",
+      // Bias results toward this location
+      radius: "50000", // 50km radius around Montreal
+      strictbounds: true, // Optional: enforces the results to be within the radius
     }}
   />
 );
@@ -241,6 +244,7 @@ const MapTraceroute = ({
   location,
   reset,
   panToMyLocation,
+  start,
   end,
   setEnd,
   setStart,
@@ -289,8 +293,8 @@ const MapTraceroute = ({
     slideOut();
     setEnd(null);
     setStart(null);
-    setWalkFromBus({start:null,end:null});
-    setWalkToBus({start:null,end:null})
+    setWalkFromBus({ start: null, end: null });
+    setWalkToBus({ start: null, end: null });
     setIsShuttle(false);
     setCloseTraceroute(true);
     reset();
@@ -316,28 +320,28 @@ const MapTraceroute = ({
       return;
     }
     setSelected("car");
-    let isSGW = IsAtSGW(location?.coords)
+    let isSGW = IsAtSGW(location?.coords);
     if (isSGW) {
       setWalkToBus({
         start: location?.coords,
-        end: SGWShuttlePickup
-      })
+        end: SGWShuttlePickup,
+      });
       setWalkFromBus({
         start: LoyolaShuttlePickup,
-        end: end
-      })
+        end: end,
+      });
     } else {
       setWalkToBus({
         start: location?.coords,
-        end: LoyolaShuttlePickup
-      })
+        end: LoyolaShuttlePickup,
+      });
       setWalkFromBus({
         start: SGWShuttlePickup,
-        end: end
-      })
+        end: end,
+      });
     }
     setIsShuttle(true);
-  }
+  };
 
   /**
    * Handles place selection from Google Places Autocomplete.
@@ -432,7 +436,7 @@ const MapTraceroute = ({
                 onPress={() => {
                   handleShuttleIntegration();
                   setMode("DRIVING");
-                  trackEvent("Mode selected", {"mode":"car"})
+                  trackEvent("Mode selected", { mode: "car" });
                 }}
                 className={`flex mr-1 p-2 rounded-3xl flex-row justify-around items-center ${
                   selected === "car" ? "bg-primary-red" : ""
@@ -452,7 +456,7 @@ const MapTraceroute = ({
                 onPress={() => {
                   setSelected("bike");
                   setMode("BICYCLING");
-                  trackEvent("Mode selected", {"mode":"bycicling"})
+                  trackEvent("Mode selected", { mode: "bycicling" });
                 }}
                 className={`flex mr-1 p-2 rounded-3xl flex-row justify-around items-center ${
                   selected === "bike" ? "bg-primary-red" : ""
@@ -472,7 +476,7 @@ const MapTraceroute = ({
                 onPress={() => {
                   setSelected("metro");
                   setMode("TRANSIT");
-                  trackEvent("Mode selected", {"mode":"transit"})
+                  trackEvent("Mode selected", { mode: "transit" });
                 }}
                 className={`flex p-2 rounded-3xl flex-row justify-around items-center ${
                   selected === "metro" ? "bg-primary-red" : ""
@@ -492,7 +496,7 @@ const MapTraceroute = ({
                 onPress={() => {
                   setSelected("walk");
                   setMode("WALKING");
-                  trackEvent("Mode selected", {"mode":"walking"})
+                  trackEvent("Mode selected", { mode: "walking" });
                 }}
                 className={`flex p-2 rounded-3xl flex-row justify-around items-center ${
                   selected === "walk" ? "bg-primary-red" : ""

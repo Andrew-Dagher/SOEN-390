@@ -59,7 +59,8 @@ MapLocation.propTypes = {
 
 const styles = StyleSheet.create({
   shadow: {
-    width: 50,
+    width: 30,
+    height: 30,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,

@@ -40,7 +40,7 @@ const HomeHeader = ({ name }) => {
 
   return (
     <View
-      className="h-[194px] items-center flex-row rounded-bl-[60px] rounded-br-[60px]"
+      className="h-[194px] items-center flex-row rounded-bl-[40px] rounded-br-[40px]"
       style={{
         backgroundColor: theme.backgroundColor,
         shadowColor: "#000",
