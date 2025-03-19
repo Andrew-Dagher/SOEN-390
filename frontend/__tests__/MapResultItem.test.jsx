@@ -25,6 +25,7 @@ jest.mock('@react-navigation/native', () => ({
   import React from 'react';
   import { Text, TouchableHighlight, Pressable } from 'react-native';
   import { fireEvent, render } from '@testing-library/react-native';
+  import { useNavigation } from "@react-navigation/native";
   
   // Import the actual component
   import MapResultItem from '../app/components/navigation/MapResults/MapResultItem';
@@ -85,6 +86,33 @@ jest.mock('@react-navigation/native', () => ({
       expect(() => {
         render(<MapResultItem {...mockProps} />);
       }).not.toThrow();
+    });
+
+    it('should call setStart if start is null', () => {
+        const { getByText } = render(<MapResultItem {...mockProps} />);
+        fireEvent.press(getByText('Set Start'));
+        expect(mockProps.setStart).toHaveBeenCalledWith(mockProps.building.point);
+        expect(mockProps.setStartPosition).toHaveBeenCalledWith(mockProps.building.name);
+     });
+
+    it('should call all expected functions in handleGetDirections', () => {
+        const { getByText } = render(<MapResultItem {...mockProps} />);
+        fireEvent.press(getByText('Get Directions'));
+        expect(mockProps.setCloseTraceroute).toHaveBeenCalledWith(false);
+        expect(mockProps.setEnd).toHaveBeenCalledWith(mockProps.building.point);
+        expect(mockProps.setDestinationPosition).toHaveBeenCalledWith(mockProps.building.name);
+    });
+
+    it("should navigate to Building Details with correct parameters", () => {
+        const mockNavigate = jest.fn();
+        
+        useNavigation.mockReturnValue({ navigate: mockNavigate });
+        const { getByText } = render(<MapResultItem {...mockProps} />);
+        // Simulate user pressing the building name
+        fireEvent.press(getByText("Test Building"));
+        expect(mockNavigate).toHaveBeenCalledTimes(1);
+        // Ensure the correct arguments were passed to navigate
+        expect(mockNavigate).toHaveBeenCalledWith("Building Details", mockProps.building);
     });
     
     it('should call setStart when "Set Start" button is pressed', () => {
