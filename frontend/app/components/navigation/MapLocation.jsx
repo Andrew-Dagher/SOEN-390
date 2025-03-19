@@ -4,9 +4,8 @@
  */
 
 import { Text, View, StyleSheet, TouchableOpacity } from "react-native";
+import PropTypes from "prop-types"; // Import PropTypes
 import LocationIcon from "./Icons/LocationIcon";
-import * as Location from "expo-location";
-import { useEffect } from "react";
 
 /**
  * MapLocation component provides a button to pan to the user's current location.
@@ -51,6 +50,12 @@ const MapLocation = ({ panToMyLocation, setLocation }) => {
       </TouchableOpacity>
     </View>
   );
+};
+
+// Define PropTypes for MapLocation component
+MapLocation.propTypes = {
+  panToMyLocation: PropTypes.func.isRequired,
+  setLocation: PropTypes.func.isRequired,
 };
 
 const styles = StyleSheet.create({

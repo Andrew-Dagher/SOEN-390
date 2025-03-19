@@ -5,6 +5,7 @@
  * and handles external link opening.
  */
 
+import PropTypes from "prop-types"; // Import PropTypes
 import React, { useState } from "react";
 import {
   View,
@@ -320,6 +321,35 @@ const BuildingDetails = ({ route }) => {
       </Modal>
     </View>
   );
+};
+BuildingDetails.propTypes = {
+  route: PropTypes.shape({
+    params: PropTypes.shape({
+      longName: PropTypes.string.isRequired,
+      address: PropTypes.string.isRequired,
+      isHandicap: PropTypes.bool,
+      isBike: PropTypes.bool,
+      isParking: PropTypes.bool,
+      isCredit: PropTypes.bool,
+      isInfo: PropTypes.bool,
+      Departments: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.arrayOf(PropTypes.string),
+      ]),
+      Services: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.arrayOf(PropTypes.string),
+      ]),
+      DepartmentLink: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.arrayOf(PropTypes.string),
+      ]),
+      ServiceLink: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.arrayOf(PropTypes.string),
+      ]),
+    }).isRequired,
+  }).isRequired,
 };
 
 export default BuildingDetails;

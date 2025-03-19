@@ -4,7 +4,7 @@
  * Features fixed height sections, keyboard-aware behavior, and maintains search bar visibility.
  * Includes sliding panel animations and filter functionality.
  */
-
+import PropTypes from "prop-types"; // Import PropTypes
 import { useEffect, useState, useRef } from "react";
 import {
   View,
@@ -463,5 +463,45 @@ const styles = StyleSheet.create({
     color: "#64748b",
   },
 });
+MapResults.propTypes = {
+  fetchTravelTime: PropTypes.func.isRequired,
+  setCarTravelTime: PropTypes.func.isRequired,
+  setBikeTravelTime: PropTypes.func.isRequired,
+  setMetroTravelTime: PropTypes.func.isRequired,
+  setWalkTravelTime: PropTypes.func.isRequired,
+  location: PropTypes.shape({
+    latitude: PropTypes.number,
+    longitude: PropTypes.number,
+  }),
+  setIsRoute: PropTypes.func.isRequired,
+  isRoute: PropTypes.bool.isRequired,
+  setCloseTraceroute: PropTypes.func.isRequired,
+  setStartPosition: PropTypes.func.isRequired,
+  setDestinationPosition: PropTypes.func.isRequired,
+  start: PropTypes.shape({
+    latitude: PropTypes.number.isRequired,
+    longitude: PropTypes.number.isRequired,
+  }),
+  setStart: PropTypes.func.isRequired,
+  end: PropTypes.shape({
+    latitude: PropTypes.number.isRequired,
+    longitude: PropTypes.number.isRequired,
+  }),
+  setEnd: PropTypes.func.isRequired,
+  searchResult: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      point: PropTypes.shape({
+        latitude: PropTypes.number.isRequired,
+        longitude: PropTypes.number.isRequired,
+      }).isRequired,
+    })
+  ).isRequired,
+  setSearchResult: PropTypes.func.isRequired,
+  searchText: PropTypes.string.isRequired,
+  setSearchText: PropTypes.func.isRequired,
+  isSearch: PropTypes.bool.isRequired,
+  setIsSearch: PropTypes.func.isRequired,
+};
 
 export default MapResults;

@@ -5,6 +5,7 @@
 
 import * as React from "react";
 import Svg, { Path } from "react-native-svg";
+import PropTypes from "prop-types"; // Import PropTypes
 
 /**
  * CarIcon component renders an SVG car icon.
@@ -26,6 +27,11 @@ const CarIcon = ({ isSelected }) => {
       />
     </Svg>
   );
+};
+
+// PropTypes validation
+CarIcon.propTypes = {
+  isSelected: PropTypes.bool.isRequired,
 };
 
 export default CarIcon;

@@ -1,14 +1,5 @@
 {
   "expo": {
-    "plugins": [
-      [
-        "@rnmapbox/maps",
-        {
-          "RNMapboxMapsVersion": "11.0.0",
-          "RNMapboxMapsDownloadToken": "sk.eyJ1IjoiYWNjaXNhIiwiYSI6ImNtNnZmaG0yZDA4OGoybHByNGxuNXdsMXAifQ.88GT6hbpi09Ijw-tkAy55g"
-        }
-      ]
-    ],
     "name": "frontend",
     "slug": "soen-390",
     "version": "1.0.0",

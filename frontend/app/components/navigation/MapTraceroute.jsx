@@ -521,6 +521,10 @@ const MapTraceroute = ({
 
 // Define PropTypes for the main MapTraceroute component
 MapTraceroute.propTypes = {
+  isShuttle: PropTypes.bool.isRequired,
+  setWalkToBus: PropTypes.func.isRequired,
+  setWalkFromBus: PropTypes.func.isRequired,
+  setIsShuttle: PropTypes.func.isRequired,
   setMode: PropTypes.func.isRequired,
   waypoints: PropTypes.array,
   setWaypoints: PropTypes.func,
