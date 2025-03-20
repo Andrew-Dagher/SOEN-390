@@ -305,7 +305,11 @@ export default function CalendarScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#862532" />
+        <ActivityIndicator
+          testID="loading-indicator" // Add test ID for loading state
+          size="large"
+          color="#862532"
+        />
       </View>
     );
   }
@@ -344,9 +348,11 @@ export default function CalendarScreen() {
         <View style={styles.headerRight}>
           <TouchableOpacity
             style={styles.calendarMenuButton}
+            testID="calendar-menu-button"
             onPress={() => setModalVisible(true)}
           >
             <View style={styles.threeDots}>
+              <Text style={{ opacity: 0, height: 0 }}>...</Text>
               <View style={styles.dot} />
               <View style={styles.dot} />
               <View style={styles.dot} />
@@ -422,7 +428,7 @@ export default function CalendarScreen() {
         {filteredEvents.length === 0 ? (
           <View style={styles.noEventsContainer}>
             <Text style={[styles.noEventsText, { fontSize: textSize }]}>
-              No events for {selectedDate.format("MMM DD, YYYY")}
+              No events for{selectedDate.format(" MMM DD, YYYY")}
             </Text>
           </View>
         ) : (
