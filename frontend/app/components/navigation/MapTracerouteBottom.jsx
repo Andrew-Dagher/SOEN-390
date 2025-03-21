@@ -9,7 +9,6 @@ import {
   Animated,
   StyleSheet,
   View,
-  Dimensions,
   TouchableOpacity,
   Text,
 } from "react-native";
@@ -160,8 +159,6 @@ const styles = StyleSheet.create({
   },
 });
 MapTracerouteBottom.propTypes = {
-  isRoute: PropTypes.bool.isRequired,
-  setIsRoute: PropTypes.func.isRequired,
   end: PropTypes.shape({
     latitude: PropTypes.number.isRequired,
     longitude: PropTypes.number.isRequired,
@@ -172,7 +169,6 @@ MapTracerouteBottom.propTypes = {
   }),
   panToStart: PropTypes.func.isRequired,
   closeTraceroute: PropTypes.bool.isRequired,
-  setCloseTraceroute: PropTypes.func.isRequired,
 };
 
 
