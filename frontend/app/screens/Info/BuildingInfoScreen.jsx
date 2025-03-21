@@ -17,7 +17,6 @@ import {
   StatusBar,
   Image,
   Modal,
-  Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import MapPinIcon from "../../components/navigation/Icons/MapPinIcon";
@@ -322,6 +321,8 @@ const BuildingDetails = ({ route }) => {
     </View>
   );
 };
+
+// Prop types validation
 BuildingDetails.propTypes = {
   route: PropTypes.shape({
     params: PropTypes.shape({
@@ -348,6 +349,7 @@ BuildingDetails.propTypes = {
         PropTypes.string,
         PropTypes.arrayOf(PropTypes.string),
       ]),
+      floorPlans: PropTypes.arrayOf(PropTypes.string),
     }).isRequired,
   }).isRequired,
 };

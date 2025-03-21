@@ -133,7 +133,7 @@ const MapResults = ({
       setBikeTravelTime={setBikeTravelTime}
       setMetroTravelTime={setMetroTravelTime}
       setWalkTravelTime={setWalkTravelTime}
-      key={idx}
+      key={building.name}
       setIsSearch={setIsSearch}
       location={location}
       isRoute={isRoute}
@@ -219,7 +219,7 @@ const MapResults = ({
     <View style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+        keyboardVerticalOffset={0} // Simplified as the condition always returned 0
         style={styles.keyboardView}
       >
         <Animated.View
@@ -463,6 +463,7 @@ const styles = StyleSheet.create({
     color: "#64748b",
   },
 });
+
 MapResults.propTypes = {
   fetchTravelTime: PropTypes.func.isRequired,
   setCarTravelTime: PropTypes.func.isRequired,

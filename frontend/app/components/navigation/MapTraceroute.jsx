@@ -217,7 +217,6 @@ InputAutocomplete.propTypes = {
  * @param {boolean} props.isRoute - Indicates if a route is currently active.
  * @param {Function} props.setIsRoute - Sets the route active state.
  * @param {Function} props.setSelectedBuilding - Sets the selected building.
- * @param {Function} props.panToMyLocation - Function to pan the map to user's current location.
  * @param {Object} props.end - Coordinates of the destination.
  * @param {Object} props.start - Coordinates of the starting point.
  * @param {Function} props.setEnd - Sets the destination coordinates.
@@ -243,7 +242,6 @@ const MapTraceroute = ({
   setMode,
   location,
   reset,
-  panToMyLocation,
   start,
   end,
   setEnd,
@@ -533,7 +531,6 @@ MapTraceroute.propTypes = {
   isRoute: PropTypes.bool,
   setIsRoute: PropTypes.func,
   setSelectedBuilding: PropTypes.func,
-  panToMyLocation: PropTypes.func,
   end: PropTypes.object,
   start: PropTypes.object,
   setEnd: PropTypes.func.isRequired,
