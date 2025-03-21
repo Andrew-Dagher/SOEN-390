@@ -41,7 +41,7 @@ const floorplanImages = {
 };
 
 
-const hallFloorGraphs= {
+const hallFloorGraphs = {
   // HALL BUILDING NODES
   1: {
     Hall_Entrance: { x: 110, y: 360, neighbors: ['Main_walway', 'Hall_1st_Basement_Escalator'] },
@@ -60,8 +60,7 @@ const hallFloorGraphs= {
     hallwayMiddleLower: { x: 200, y: 289, neighbors: ['hallwayMiddleMiddle', 'hallwayLowerLeftCorner', 'hallwayLowerRightCorner', 'h845', 'h843', 'h842', 'h841', 'h837', 'h835', 'h832'] },
     hallwayMiddleMiddle: { x: 200, y: 145, neighbors: ['hallwayMiddleUpper', 'hallwayMiddleLower', 'hallwayMiddleLeft', 'h806', 'h862', 'h860'] },
     hallwayMiddleUpper: { x: 200, y: 78, neighbors: ['hallwayHigherRightCorner', 'hallwayHigherLeftCorner', 'hallwayMiddleMiddle','h806', 'h862', 'h860', 'h813', 'h811', 'h807', 'h806', 'h805', 'h803', 'h801', 'womensBathroom', 'mensBathroom'] },
-    hallwayMiddleLeft:{ x: 65, y: 145, neighbors: ['hallwayMiddleMiddle', 'hallwayLowerLeftCorner', 'hallwayHigherLeftCorner', 'h863', 'h862', 'h861', 'h860', 'h859', 'h857', 'h855', 'h854', 'h853', 'h852'] },
-
+    hallwayMiddleLeft: { x: 65, y: 145, neighbors: ['hallwayMiddleMiddle', 'hallwayLowerLeftCorner', 'hallwayHigherLeftCorner', 'h863', 'h862', 'h861', 'h860', 'h859', 'h857', 'h855', 'h854', 'h853', 'h852'] },
     // lower section
     h849: { x: 30, y: 325, neighbors: ['hallwayLowerLeftCorner'] },
     h847: { x: 70, y: 325, neighbors: ['hallwayLowerLeftCorner'] },
@@ -74,7 +73,6 @@ const hallFloorGraphs= {
     h833: { x: 300, y: 325, neighbors: ['hallwayLowerRightCorner'] },
     h832: { x: 232, y: 245, neighbors: ['hallwayLowerRightCorner','hallwayMiddleLower'] },
     h831: { x: 345, y: 325, neighbors: ['hallwayLowerRightCorner'] },
-
     // Right section
     h829: { x: 345, y: 285, neighbors: ['hallwayLowerRightCorner'] },
     h827: { x: 345, y: 220, neighbors: ['hallwayLowerRightCorner', 'hallwayHigherRightCorner'] },
@@ -85,7 +83,6 @@ const hallFloorGraphs= {
     h820: { x: 265, y: 168, neighbors: ['hallwayLowerRightCorner', 'hallwayHigherRightCorner'] },
     h819: { x: 345, y: 85, neighbors: ['hallwayHigherRightCorner'] },
     h817: { x: 345, y: 50, neighbors: ['hallwayHigherRightCorner'] },
-
     // Top section
     h815: { x: 305, y: 40, neighbors: ['hallwayHigherRightCorner'] },
     h813: { x: 270, y: 40, neighbors: ['hallwayHigherRightCorner', 'hallwayMiddleUpper'] },
@@ -97,7 +94,6 @@ const hallFloorGraphs= {
     h801: { x: 75, y: 40, neighbors: ['hallwayHigherLeftCorner', 'hallwayMiddleUpper'] },
     womensBathroom: { x: 143, y: 95, neighbors: ['hallwayHigherLeftCorner', 'hallwayMiddleUpper'] },
     mensBathroom: { x: 235, y: 95, neighbors: ['hallwayHigherRightCorner', 'hallwayMiddleUpper'] },
-
     // Right section
     h867: { x: 35, y: 40, neighbors: ['hallwayHigherLeftCorner'] },
     h865: { x: 27, y: 64, neighbors: ['hallwayHigherLeftCorner'] },
@@ -128,7 +124,7 @@ const hallFloorGraphs= {
 };
 
 // JOHN MOLSON BUILDING NODES
-const jmFloorGraphs= {
+const jmFloorGraphs = {
   1: {},
   'S2': {
     Tunnel: { x: 53, y: 176, neighbors: ['hallway'] },
@@ -164,14 +160,15 @@ const BuildingDetails = ({ route }) => {
     setModalVisible(true);
   };
 
-  const renderListItem = (item, link, index) => {
+  // Updated: Use item itself as key instead of the array index.
+  const renderListItem = (item, link) => {
     if (!item) return null;
 
     // Handle Floor Plans separately
     if (activeTab === "Floorplans") {
       return (
         <Pressable
-          key={index}
+          key={`list-item-${item}`}
           onPress={() => handleFloorplanPress(link)}
           className="py-4"
         >
@@ -182,7 +179,7 @@ const BuildingDetails = ({ route }) => {
 
     return (
       <Pressable
-        key={index}
+        key={`list-item-${item}`}
         onPress={() => handleLinkPress(link)}
         className="flex flex-row items-center py-4 bg-white"
       >
@@ -225,10 +222,10 @@ const BuildingDetails = ({ route }) => {
 
     return (
       <View className="px-4">
-        {itemsArray.map((item, index, array) => (
-          <View key={index}>
-            {renderListItem(item, linksArray[index], index)}
-            {index < array.length - 1 && (
+        {itemsArray.map((item, idx, array) => (
+          <View key={`list-wrapper-${item}`}>
+            {renderListItem(item, linksArray[idx])}
+            {idx < array.length - 1 && (
               <View className="border-b border-gray-100" />
             )}
           </View>
@@ -306,15 +303,20 @@ const BuildingDetails = ({ route }) => {
 
       <Modal testID="floorplanModal" visible={modalVisible} transparent={true} animationType="fade">
         <Pressable
-         testID="modal-background"
+          testID="modal-background"
           style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.8)", justifyContent: "center", alignItems: "center" }}
           onPress={(e) => {
             console.log("Image pressed at:", e.nativeEvent.locationX, e.nativeEvent.locationY);
-            setModalVisible(false)}}
+            setModalVisible(false);
+          }}
         >
-          
           {selectedFloorplan && (
-            <Image source={floorplanImages[selectedFloorplan]} style={{ width: "90%", height: "90%", resizeMode: "contain" }} allowUniversalAccessFromFileURLs={true}  testID="modal-image"/>
+            <Image
+              source={floorplanImages[selectedFloorplan]}
+              style={{ width: "90%", height: "90%", resizeMode: "contain" }}
+              allowUniversalAccessFromFileURLs={true}
+              testID="modal-image"
+            />
           )}
         </Pressable>
       </Modal>
