@@ -17,7 +17,6 @@ import {
   StatusBar,
   Image,
   Modal,
-  Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import MapPinIcon from "../../components/navigation/Icons/MapPinIcon";
@@ -348,6 +347,38 @@ BuildingDetails.propTypes = {
         PropTypes.string,
         PropTypes.arrayOf(PropTypes.string),
       ]),
+    }).isRequired,
+  }).isRequired,
+};
+
+// Prop types validation
+BuildingDetails.propTypes = {
+  route: PropTypes.shape({
+    params: PropTypes.shape({
+      longName: PropTypes.string.isRequired,
+      address: PropTypes.string.isRequired,
+      isHandicap: PropTypes.bool,
+      isBike: PropTypes.bool,
+      isParking: PropTypes.bool,
+      isCredit: PropTypes.bool,
+      isInfo: PropTypes.bool,
+      Departments: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.arrayOf(PropTypes.string),
+      ]),
+      Services: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.arrayOf(PropTypes.string),
+      ]),
+      DepartmentLink: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.arrayOf(PropTypes.string),
+      ]),
+      ServiceLink: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.arrayOf(PropTypes.string),
+      ]),
+      floorPlans: PropTypes.arrayOf(PropTypes.string),
     }).isRequired,
   }).isRequired,
 };

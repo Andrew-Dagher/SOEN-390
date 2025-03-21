@@ -29,15 +29,11 @@ import StartIcon from "./Icons/StartIcon";
  */
 
 const MapTracerouteBottom = ({
-  isRoute,
-  setIsRoute,
   end,
   start,
   panToStart,
   closeTraceroute,
-  setCloseTraceroute,
 }) => {
-  const screenHeight = Dimensions.get("window").height;
   const slideAnim = useRef(new Animated.Value(100)).current;
 
   /**

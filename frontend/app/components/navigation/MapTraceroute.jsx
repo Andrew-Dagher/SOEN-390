@@ -243,7 +243,6 @@ const MapTraceroute = ({
   setMode,
   location,
   reset,
-  panToMyLocation,
   start,
   end,
   setEnd,

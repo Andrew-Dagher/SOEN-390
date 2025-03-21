@@ -3,7 +3,7 @@
  * @description A React Native component that provides a button to fetch and center the user's current location on the map.
  */
 
-import { Text, View, StyleSheet, TouchableOpacity } from "react-native";
+import { View, StyleSheet, TouchableOpacity } from "react-native";
 import PropTypes from "prop-types"; // Import PropTypes
 import LocationIcon from "./Icons/LocationIcon";
 
