@@ -39,7 +39,7 @@ const BuildingDetails = ({ route }) => {
   };
 
   const handleFloorplanPress = (floorplan) => {
-    navigation.navigate("MapPage", { selectedFloorplan: floorplan });
+    navigation.navigate("InDoorScreen", { selectedFloorplan: floorplan });
   };
 
   const renderListItem = (item, link, index) => {
@@ -70,6 +70,7 @@ const BuildingDetails = ({ route }) => {
   };
 
   const renderContent = () => {
+
     let items, links;
     switch (activeTab) {
       case "Departments":
@@ -99,7 +100,20 @@ const BuildingDetails = ({ route }) => {
 
     const itemsArray = Array.isArray(items) ? items : [items];
     const linksArray = Array.isArray(links) ? links : [links];
+    if (activeTab == 'Floorplans') {
+      return (
+        <View className="px-4">
+          <Pressable
+            onPress={() => handleFloorplanPress(links)}
+            className="py-4"
+          >
+            <Text className="text-blue-600">Indoor Map</Text>
+          </Pressable>
+            
+        </View>
+      )
 
+    }
     return (
       <View className="px-4">
         {itemsArray.map((item, index, array) => (
@@ -151,6 +165,7 @@ const BuildingDetails = ({ route }) => {
         <View className="mx-4 bg-white rounded-xl overflow-hidden">
           <View className="flex flex-row border-b border-gray-200">
             {['Departments', 'Services', 'Floorplans'].map((tab) => (
+              
               (tab !== 'Floorplans' || (building.floorPlans && building.floorPlans.length > 0)) && (
                 <Pressable
                   key={tab}

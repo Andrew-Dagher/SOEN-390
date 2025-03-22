@@ -22,7 +22,7 @@ import "../global.css";
 import HomeScreen from "./screens/home/HomeScreen";
 import CalendarScreen from "./screens/calendar/CalendarScreen";
 import NavigationScreen from "./screens/navigation/NavigationScreen";
-import MapPage from "./screens/navigation/IndoorMap";
+import InDoorScreen from "./screens/indoor/InDoorScreen";
 import LoginScreen from "./screens/login/LoginScreen";
 import SettingsScreen from "./screens/settings/settingsScreen";
 import BuildingInfoScreen from "./screens/Info/BuildingInfoScreen";
@@ -90,8 +90,8 @@ export default function App() {
                   component={LoginScreen}
                 />
                  <Stack.Screen 
-                  name="MapPage" 
-                  component={MapPage} 
+                  name="InDoorScreen" 
+                  component={InDoorScreen} 
                   options={{ headerShown: false }} 
                 />
               </Stack.Navigator>

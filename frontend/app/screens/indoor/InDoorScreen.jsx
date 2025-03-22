@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 
-const MapPage = () => {
+const InDoorScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   // Retrieve the selected floorplan (or map identifier) from route params
@@ -87,4 +87,4 @@ const MapPage = () => {
   );
 };
 
-export default MapPage;
+export default InDoorScreen;
