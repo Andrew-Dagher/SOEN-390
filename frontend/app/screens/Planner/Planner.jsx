@@ -18,12 +18,6 @@ export default function Planner() {
   const [currentWeekStart, setCurrentWeekStart] = useState(
     moment().startOf("week")
   );
-  const [selectedDate, setSelectedDate] = useState(
-    moment().format("YYYY-MM-DD")
-  );
-  const [currentWeekStart, setCurrentWeekStart] = useState(
-    moment().startOf("week")
-  );
   const [scale, setScale] = useState(1);
 
   // Calendar Data
