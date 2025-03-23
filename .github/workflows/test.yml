@@ -141,9 +141,10 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const branch = process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF.replace('refs/heads/', '');
-            const encodedBranch = encodeURIComponent(branch);
-            return { encodedBranch };
+            const branch = context.payload.pull_request
+              ? context.payload.pull_request.head.ref
+              : context.ref.replace('refs/heads/', '');
+            return { encodedBranch: encodeURIComponent(branch) };
 
       - name: Find Global Coverage Comment
         uses: peter-evans/find-comment@v1
