@@ -18,7 +18,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { WebView } from 'react-native-webview';
 import getThemeColors from "../../ColorBindTheme";
 import { useAppSettings } from "../../AppSettingsContext";
-import { pickerList, areRoomsOnSameFloor, getFloorIdByRoomId } from "./inDoorConfig";
+import { pickerList, areRoomsOnSameFloor, areRoomsOnSameBuilding, getFloorIdByRoomId, getEntranceByRoomId, getUrlFromRoomId} from "./inDoorUtil";
 import DropDownPicker from 'react-native-dropdown-picker';
 
 const InDoorScreen = () => {
@@ -28,37 +28,52 @@ const InDoorScreen = () => {
   const { textSize } = useAppSettings();
   
   // Retrieve the selected floorplan (or map identifier) from route params
-  const { selectedFloorplan, building } = route.params || { selectedFloorplan: "Unknown" };
+  const { building, step1 } = route.params || { selectedFloorplan: "Unknown" };
   
   const headerPadding = Platform.OS === "ios" ? 48 : 32;
   const [floorPlanURL, setFloorPlanURL] = useState(building.floorPlans)
-  const [isInterCampus, setIsInterCampus] = useState(false);
+  const [nextFloorPlanURL, setNextFloorPlanURL] = useState(building.floorPlans);
+  const [isSameFloor, setIsSameFloor] = useState(true);
+  const [isNextFloor, setIsNextFloor] = useState(false);
   const [open, setOpen] = useState(false);
   const [open1, setOpen1] = useState(false);
-  const [value, setValue] = useState(null);
-  const [value1, setValue1] = useState(null);
+  const [value, setValue] = useState(step1?.value || null);
+  const [value1, setValue1] = useState(step1?.value1 || null);
   const [items, setItems] = useState(pickerList);
   const [items1, setItems1] = useState(pickerList);
   const [openWebView, setOpenWebView] = useState(false);
 
+  const handleNextFloor = () => {
+    if (isNextFloor) setIsNextFloor(false);
+    if (!isNextFloor) setIsNextFloor(true);
+  }
+
   const handleToCampus = () => {
-    console.log(value)
-    console.log(value1)
     if (value == null || value1 == null) return;
 
-    let floorId = getFloorIdByRoomId(value)
+    let floorId = getFloorIdByRoomId(value);
+    let nextFloorId = getFloorIdByRoomId(value1);
+    let entranceLoc = getEntranceByRoomId(value);
+    let nextEntranceLoc = getEntranceByRoomId(value1);
 
     if (areRoomsOnSameFloor(value, value1)) {
-      console.log("on same floor")
-      setFloorPlanURL(building.floorPlans+"&floor="+floorId+"&location="+value+"&departure="+value1)
+      setFloorPlanURL(building.floorPlans+"&floor="+floorId+"&location="+value+"&departure="+value1);
       setOpenWebView(true);
       return;
+    } else {
+      setIsSameFloor(false);
+      setFloorPlanURL(building.floorPlans+"&floor="+floorId+"&departure="+value+"&location="+entranceLoc);
+
+      let buildingURL = areRoomsOnSameBuilding(value, value1) ? building.floorPlans : getUrlFromRoomId(value1);
+      setNextFloorPlanURL(buildingURL+"&floor="+nextFloorId+"&location="+value1+"&departure="+nextEntranceLoc);
+      setOpenWebView(true);
     }
   }
 
   useEffect(() => {
-
-  }, [isInterCampus, floorPlanURL])
+    console.log(floorPlanURL)
+    console.log(nextFloorPlanURL)
+  }, [openWebView, isNextFloor, isSameFloor, nextFloorPlanURL])
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F3F4F6" }}>
@@ -78,7 +93,6 @@ const InDoorScreen = () => {
 
      
       {/* Map Placeholder */}
-    {!isInterCampus && (
       <View>
         <View className={'flex items-center'}>
           <View className={'flex flex-row items-center justify-center w-3/4 mb-2'}>
@@ -104,24 +118,43 @@ const InDoorScreen = () => {
             />
           </View>
           
-          
-          <TouchableHighlight
-            style={[
-              styles.shadow,
-              { backgroundColor: theme.backgroundColor },
-            ]}
-            className="rounded-xl p-4 bg-primary-red mt-2"
-            onPress={handleToCampus}
-          >
-            <View className="flex flex-row justify-around items-center">
-              <Text
-                style={[{ fontSize: textSize }]}
-                className="color-white  font-bold"
-              >
-                Search
-              </Text>
-            </View>
-          </TouchableHighlight>
+          <View className='flex flex-row justify-between items-center'>
+            <TouchableHighlight
+              style={[
+                styles.shadow,
+                { backgroundColor: theme.backgroundColor },
+              ]}
+              className="rounded-xl p-4 bg-primary-red m-2"
+              onPress={handleToCampus}
+            >
+              <View className="flex flex-row justify-around items-center">
+                <Text
+                  style={[{ fontSize: textSize }]}
+                  className="color-white  font-bold"
+                >
+                  Search
+                </Text>
+              </View>
+            </TouchableHighlight>
+
+            {openWebView && !isSameFloor && <TouchableHighlight
+              style={[
+                styles.shadow,
+                { backgroundColor: theme.backgroundColor },
+              ]}
+              className={`rounded-xl p-4 ${!isNextFloor ? 'bg-primary-red' : 'bg-primary-accent'} m-2`}
+              onPress={handleNextFloor}
+            >
+              <View className="flex flex-row justify-around items-center">
+                <Text
+                  style={[{ fontSize: textSize }]}
+                  className="color-white  font-bold"
+                >
+                  {!isNextFloor ? 'Next Floor' : 'Prev Floor'}
+                </Text>
+              </View>
+            </TouchableHighlight>}
+          </View>
         </View>
         <WebView
           className={"h-5/6"}
@@ -137,7 +170,6 @@ const InDoorScreen = () => {
           source={{ uri: building.floorPlans }}
         />
       </View>
-          )}
     {openWebView && (
       <WebView
         style={[{
@@ -150,52 +182,9 @@ const InDoorScreen = () => {
           alignItems: "center",
         },
         styles.shadow]}
-        source={{ uri: floorPlanURL }}
+        source={{ uri: !isNextFloor ? floorPlanURL : nextFloorPlanURL }}
       />  
     )}
-    {/* {isInterCampus && (
-      <View className={'h-5/6'}>
-        <View className={'h-3/6'}>
-          <Text>
-            SGW Building
-          </Text>
-          <WebView
-            style={[{
-              flex: 1,
-              marginHorizontal: 16,
-              marginBottom: 25,
-              backgroundColor: "#D1D5DB",
-              borderRadius: 8,
-              justifyContent: "center",
-              alignItems: "center",
-            },
-            styles.shadow]}
-            source={{ uri: building.floorPlans }}
-          />
-        </View>
-        <View className={'h-3/6'}>
-          <Text>
-            Loyola Building
-          </Text>
-          <WebView
-            style={[{
-              flex: 1,
-              marginHorizontal: 16,
-              marginBottom: 50,
-              backgroundColor: "#D1D5DB",
-              borderRadius: 8,
-              justifyContent: "center",
-              alignItems: "center",
-            },
-            styles.shadow]}
-            source={{ uri: building.floorPlans }}
-          /> 
-        </View>
-        
-      </View>
-    )} */}
-      
-        
     </View>
   );
 };

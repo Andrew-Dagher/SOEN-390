@@ -89,7 +89,7 @@ export default function App() {
                   options={{ headerShown: false }}
                   component={LoginScreen}
                 />
-                 <Stack.Screen 
+                <Stack.Screen 
                   name="InDoorScreen" 
                   component={InDoorScreen} 
                   options={{ headerShown: false }} 
