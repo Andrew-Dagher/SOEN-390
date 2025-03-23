@@ -10,8 +10,12 @@ import CustomizeModal from "./CustomizeModal";
 
 export default function Planner() {
   // Date & Layout
-  const [selectedDate, setSelectedDate] = useState(moment().format("YYYY-MM-DD"));
-  const [currentWeekStart, setCurrentWeekStart] = useState(moment().startOf("week"));
+  const [selectedDate, setSelectedDate] = useState(
+    moment().format("YYYY-MM-DD")
+  );
+  const [currentWeekStart, setCurrentWeekStart] = useState(
+    moment().startOf("week")
+  );
   const [scale, setScale] = useState(1);
 
   // Calendar Data
@@ -40,8 +44,10 @@ export default function Planner() {
         if (storedPrefs) {
           const parsedPrefs = JSON.parse(storedPrefs) || {};
           setAllPreferences(parsedPrefs);
-          if (parsedPrefs.globalClassColor) setClassColor(parsedPrefs.globalClassColor);
-          if (parsedPrefs.globalTaskColor) setTaskColor(parsedPrefs.globalTaskColor);
+          if (parsedPrefs.globalClassColor)
+            setClassColor(parsedPrefs.globalClassColor);
+          if (parsedPrefs.globalTaskColor)
+            setTaskColor(parsedPrefs.globalTaskColor);
         }
       } catch (error) {
         console.error("Error loading preferences:", error);
@@ -58,12 +64,24 @@ export default function Planner() {
         const endDate = moment(selectedDate).endOf("day").toISOString();
         console.log(`Fetching events from ${startDate} to ${endDate}`);
 
-        const fetchedClasses = await fetchPublicCalendarEvents(CLASS_CALENDAR_ID, startDate, endDate);
-        const fetchedToDoTasks = await fetchPublicCalendarEvents(TODO_CALENDAR_ID, startDate, endDate);
+        const fetchedClasses = await fetchPublicCalendarEvents(
+          CLASS_CALENDAR_ID,
+          startDate,
+          endDate
+        );
+        const fetchedToDoTasks = await fetchPublicCalendarEvents(
+          TODO_CALENDAR_ID,
+          startDate,
+          endDate
+        );
 
         // Sort events by start time
-        fetchedClasses.sort((a, b) => new Date(a.start.dateTime) - new Date(b.start.dateTime));
-        fetchedToDoTasks.sort((a, b) => new Date(a.start.dateTime) - new Date(b.start.dateTime));
+        fetchedClasses.sort(
+          (a, b) => new Date(a.start.dateTime) - new Date(b.start.dateTime)
+        );
+        fetchedToDoTasks.sort(
+          (a, b) => new Date(a.start.dateTime) - new Date(b.start.dateTime)
+        );
 
         setClasses(fetchedClasses);
         setToDoTasks(fetchedToDoTasks);
@@ -81,7 +99,11 @@ export default function Planner() {
   }, [selectedDate]);
 
   // Merge and save preferences (make sure we don't create nested keys)
-  const handleSavePreferences = async (datePrefs, newClassColor, newTaskColor) => {
+  const handleSavePreferences = async (
+    datePrefs,
+    newClassColor,
+    newTaskColor
+  ) => {
     try {
       // Replace the date's preferences rather than merging nested objects
       const updated = {
@@ -98,7 +120,10 @@ export default function Planner() {
       setTaskColor(newTaskColor);
 
       await AsyncStorage.setItem("plannerPreferences", JSON.stringify(updated));
-      console.log("Updated prefs in Planner:", JSON.stringify(updated, null, 2));
+      console.log(
+        "Updated prefs in Planner:",
+        JSON.stringify(updated, null, 2)
+      );
     } catch (error) {
       console.error("Error saving preferences in Planner:", error);
     }
@@ -236,7 +261,10 @@ ${JSON.stringify(scheduleData)}
         if (match && match[1]) {
           geminiText = match[1].trim();
         } else {
-          geminiText = geminiText.split("\n").filter(line => line.trim().startsWith("{")).join("\n");
+          geminiText = geminiText
+            .split("\n")
+            .filter((line) => line.trim().startsWith("{"))
+            .join("\n");
         }
         console.log("Gemini Optimized Text:", geminiText);
 
@@ -248,10 +276,16 @@ ${JSON.stringify(scheduleData)}
               title: t.name,
               description: `Location: ${t.location}`,
               start: {
-                dateTime: moment(`${selectedDate} ${t.start_time}`, "YYYY-MM-DD HH:mm").toISOString(),
+                dateTime: moment(
+                  `${selectedDate} ${t.start_time}`,
+                  "YYYY-MM-DD HH:mm"
+                ).toISOString(),
               },
               end: {
-                dateTime: moment(`${selectedDate} ${t.end_time}`, "YYYY-MM-DD HH:mm").toISOString(),
+                dateTime: moment(
+                  `${selectedDate} ${t.end_time}`,
+                  "YYYY-MM-DD HH:mm"
+                ).toISOString(),
               },
             }));
             setToDoTasks(updatedTasks);
@@ -272,7 +306,7 @@ ${JSON.stringify(scheduleData)}
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} testID="planner-screen">
       {/* HEADER */}
       <View style={styles.header}>
         <IconButton
@@ -283,7 +317,9 @@ ${JSON.stringify(scheduleData)}
           }
         />
         <View style={styles.headerMiddle}>
-          <Text variant="titleLarge" style={styles.headerText}>Planner</Text>
+          <Text variant="titleLarge" style={styles.headerText}>
+            Planner
+          </Text>
           <Text variant="bodyMedium" style={styles.dateText}>
             {moment(selectedDate).format("MMM DD, YYYY")}
           </Text>
@@ -300,17 +336,32 @@ ${JSON.stringify(scheduleData)}
       {/* WEEK SELECTOR */}
       <View style={styles.weekContainer}>
         {Array.from({ length: 7 }, (_, i) => {
-          const date = moment(currentWeekStart).add(i, "days").format("YYYY-MM-DD");
+          const date = moment(currentWeekStart)
+            .add(i, "days")
+            .format("YYYY-MM-DD");
           return (
             <TouchableOpacity
               key={date}
-              style={[styles.dateButton, selectedDate === date && styles.selectedDate]}
+              style={[
+                styles.dateButton,
+                selectedDate === date && styles.selectedDate,
+              ]}
               onPress={() => setSelectedDate(date)}
             >
-              <Text style={[styles.dayText, selectedDate === date && styles.selectedDateText]}>
+              <Text
+                style={[
+                  styles.dayText,
+                  selectedDate === date && styles.selectedDateText,
+                ]}
+              >
                 {moment(date).format("dd")}
               </Text>
-              <Text style={[styles.dateText, selectedDate === date && styles.selectedDateText]}>
+              <Text
+                style={[
+                  styles.dateText,
+                  selectedDate === date && styles.selectedDateText,
+                ]}
+              >
                 {moment(date).format("D")}
               </Text>
             </TouchableOpacity>
@@ -319,7 +370,11 @@ ${JSON.stringify(scheduleData)}
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#862532" style={styles.loadingIndicator} />
+        <ActivityIndicator
+          size="large"
+          color="#862532"
+          style={styles.loadingIndicator}
+        />
       ) : (
         <PinchGestureHandler
           onGestureEvent={(event) => {
@@ -329,13 +384,22 @@ ${JSON.stringify(scheduleData)}
           }}
         >
           <ScrollView
-            contentContainerStyle={[styles.scheduleContainer, { height: 1800 * scale }]}
+            contentContainerStyle={[
+              styles.scheduleContainer,
+              { height: 1800 * scale },
+            ]}
             showsVerticalScrollIndicator
           >
             {Array.from({ length: 15 }, (_, i) => {
-              const hourLabel = moment().startOf("day").add(8 + i, "hours").format("h A");
+              const hourLabel = moment()
+                .startOf("day")
+                .add(8 + i, "hours")
+                .format("h A");
               return (
-                <View key={hourLabel} style={[styles.timeSlot, { height: 80 * scale }]}>
+                <View
+                  key={hourLabel}
+                  style={[styles.timeSlot, { height: 80 * scale }]}
+                >
                   <Text style={styles.timeText}>{hourLabel}</Text>
                 </View>
               );
@@ -417,6 +481,7 @@ ${JSON.stringify(scheduleData)}
       </TouchableOpacity>
 
       <TouchableOpacity
+        testID="customize-button"
         style={styles.customizeButton}
         onPress={() => setIsCustomizeModalVisible(true)}
       >
@@ -424,6 +489,7 @@ ${JSON.stringify(scheduleData)}
       </TouchableOpacity>
 
       <CustomizeModal
+        testID="customize-modal"
         visible={isCustomizeModalVisible}
         onClose={() => setIsCustomizeModalVisible(false)}
         classes={classes}
