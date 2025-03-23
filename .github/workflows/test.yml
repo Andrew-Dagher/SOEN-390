@@ -23,10 +23,10 @@ jobs:
           cd backend
           npm ci
 
-      - name: Run Backend Tests with Coverage
+      - name: Run Backend Tests with Coverage and Save Summary
         run: |
           cd backend
-          npm test -- --coverage
+          npm test -- --coverage | tee coverage_summary.txt
 
       - name: Upload Backend Coverage Report
         uses: actions/upload-artifact@v4
@@ -51,6 +51,7 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
+            // If this is a pull request, use the head ref; otherwise, extract the branch from context.ref
             const branch = context.payload.pull_request ? context.payload.pull_request.head.ref : context.ref.replace('refs/heads/', '');
             const encodedBranch = encodeURIComponent(branch);
             return { encodedBranch };
@@ -72,7 +73,7 @@ jobs:
           body: |
             **Backend Code Coverage Report**
 
-            [Codecov Report](https://app.codecov.io/github/Andrew-Dagher/SOEN-390/tree/${{ steps.encode_branch.outputs.encodedBranch }})
+            [![codecov](https://codecov.io/gh/Andrew-Dagher/SOEN-390/branch/${{ steps.encode_branch.outputs.encodedBranch }}/graph/badge.svg)](https://app.codecov.io/github/Andrew-Dagher/SOEN-390/tree/${{ steps.encode_branch.outputs.encodedBranch }})
           reactions: rocket
 
       - name: Update Backend Coverage Comment
@@ -83,7 +84,7 @@ jobs:
           body: |
             **Backend Code Coverage Report**
 
-            [Codecov Report](https://app.codecov.io/github/Andrew-Dagher/SOEN-390/tree/${{ steps.encode_branch.outputs.encodedBranch }})
+            [![codecov](https://codecov.io/gh/Andrew-Dagher/SOEN-390/branch/${{ steps.encode_branch.outputs.encodedBranch }}/graph/badge.svg)](https://app.codecov.io/github/Andrew-Dagher/SOEN-390/tree/${{ steps.encode_branch.outputs.encodedBranch }})
           reactions: hooray
 
   test_frontend:
@@ -102,10 +103,10 @@ jobs:
           cd frontend
           npm install
 
-      - name: Run Frontend Tests with Coverage
+      - name: Run Frontend Tests with Coverage and Save Summary
         run: |
           cd frontend
-          npm run test -- --coverage
+          npm run test -- --coverage | tee coverage_summary.txt
 
       - name: Upload Frontend Coverage Report
         uses: actions/upload-artifact@v4
@@ -151,7 +152,7 @@ jobs:
           body: |
             **Frontend Code Coverage Report**
 
-            [Codecov Report](https://app.codecov.io/github/Andrew-Dagher/SOEN-390/tree/${{ steps.encode_branch_frontend.outputs.encodedBranch }})
+            [![codecov](https://codecov.io/gh/Andrew-Dagher/SOEN-390/branch/${{ steps.encode_branch_frontend.outputs.encodedBranch }}/graph/badge.svg)](https://app.codecov.io/github/Andrew-Dagher/SOEN-390/tree/${{ steps.encode_branch_frontend.outputs.encodedBranch }})
           reactions: rocket
 
       - name: Update Frontend Coverage Comment
@@ -162,7 +163,7 @@ jobs:
           body: |
             **Frontend Code Coverage Report**
 
-            [Codecov Report](https://app.codecov.io/github/Andrew-Dagher/SOEN-390/tree/${{ steps.encode_branch_frontend.outputs.encodedBranch }})
+            [![codecov](https://codecov.io/gh/Andrew-Dagher/SOEN-390/branch/${{ steps.encode_branch_frontend.outputs.encodedBranch }}/graph/badge.svg)](https://app.codecov.io/github/Andrew-Dagher/SOEN-390/tree/${{ steps.encode_branch_frontend.outputs.encodedBranch }})
           reactions: hooray
 
   sonar_scan:
