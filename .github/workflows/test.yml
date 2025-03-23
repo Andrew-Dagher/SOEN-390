@@ -11,15 +11,26 @@ jobs:
     name: Retrieve Branch Name
     runs-on: ubuntu-latest
     outputs:
-      branch: ${{ steps.get_branch.outputs.branch }}
+      branch: ${{ steps.set_branch.outputs.branch }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
-      - name: Display Branch Name
-        id: get_branch
+
+      - name: Determine Branch Name
+        id: set_branch
         run: |
-          echo "Current Branch: ${{ github.ref }}"
-          echo "branch=${GITHUB_REF}" >> $GITHUB_OUTPUT
+          echo "Event Name: ${{ github.event_name }}"
+          # If this is a pull_request event, use the PR head ref. Otherwise, use the branch from GITHUB_REF.
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "Branch from PR: ${{ github.event.pull_request.head.ref }}"
+            echo "branch=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
+          else
+            # For push events, GITHUB_REF is something like "refs/heads/main" 
+            # so we strip off "refs/heads/" to get just the branch name.
+            BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+            echo "Branch from Push: $BRANCH_NAME"
+            echo "branch=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          fi
 
   test_backend:
     runs-on: ubuntu-latest
@@ -65,8 +76,11 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            // For non-PR events, we encode the branch name
-            const branch = context.payload.pull_request ? context.payload.pull_request.head.ref : context.ref.replace('refs/heads/', '');
+            // For non-PR events, we encode the branch name (example usage).
+            // This step is optional if you only need the raw branch name above.
+            const branch = context.payload.pull_request
+              ? context.payload.pull_request.head.ref
+              : context.ref.replace('refs/heads/', '');
             const encodedBranch = encodeURIComponent(branch);
             return { encodedBranch };
 
@@ -114,7 +128,9 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const branch = context.payload.pull_request ? context.payload.pull_request.head.ref : context.ref.replace('refs/heads/', '');
+            const branch = context.payload.pull_request
+              ? context.payload.pull_request.head.ref
+              : context.ref.replace('refs/heads/', '');
             const encodedBranch = encodeURIComponent(branch);
             return { encodedBranch };
 
@@ -193,5 +209,9 @@ jobs:
           body: |
             **Codecov Coverage Report**
 
+            <!-- 
+              Use the branch output from the retrieve_branch job. This is 
+              the raw branch name for the PR (or push), e.g. "setup/#182-Setup-CodeCov".
+            -->
             [![codecov](https://codecov.io/gh/Andrew-Dagher/SOEN-390/branch/${{ needs.retrieve_branch.outputs.branch }}/graph/badge.svg)](https://app.codecov.io/github/Andrew-Dagher/SOEN-390/tree/${{ needs.retrieve_branch.outputs.branch }})
           reactions: hooray
