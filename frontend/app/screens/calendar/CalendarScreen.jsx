@@ -21,21 +21,15 @@ import { NotificationObserver } from "./NotificationObserver";
 import InAppNotification from "../../components/InAppNotification";
 import NextClassButton from "../../components/Calendar/NextClassButton";
 import { trackEvent } from "@aptabase/react-native";
-import CoachMarks from 'react-native-coachmarks';
+import { Coachmark } from "react-native-coachmark";
 
 export default function CalendarScreen() {
-  // 1. Always call hooks at the top
   const navigation = useNavigation();
   const { isSignedIn } = useAuth();
 
-  // Create an instance of EventObserver (always called)
   const [eventsObserver] = useState(new EventObserver());
-
-  // In-app notification state
   const [notificationMessage, setNotificationMessage] = useState("");
   const [notificationVisible, setNotificationVisible] = useState(false);
-
-  // Other state
   const [events, setEvents] = useState([]);
   const [expandedEvent, setExpandedEvent] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -47,61 +41,39 @@ export default function CalendarScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [showCoachMark, setShowCoachMark] = useState(false);
 
-
-  // 2. Then do your effects or other hooks
   useEffect(() => {
     const observerCallback = (events) => {
       NotificationObserver(events, showInAppNotification, currentStartDate);
     };
 
     eventsObserver.subscribe(observerCallback);
-
-    return () => {
-      eventsObserver.unsubscribe(observerCallback);
-    };
+    return () => eventsObserver.unsubscribe(observerCallback);
   }, [eventsObserver, currentStartDate]);
 
-  // Show in-app notification
   const showInAppNotification = (message) => {
-    console.log("Triggering In-App Notification:", message);
     setNotificationMessage(message);
     setNotificationVisible(true);
-
-    // Hide after 5 seconds
-    setTimeout(() => {
-      setNotificationVisible(false);
-    }, 5000);
+    setTimeout(() => setNotificationVisible(false), 5000);
   };
 
-  // Notify observer whenever `events` changes
   useEffect(() => {
-    if (events.length > 0) {
-      eventsObserver.notify(events);
-    }
+    if (events.length > 0) eventsObserver.notify(events);
   }, [events, eventsObserver]);
 
-  // Load stored calendars & selected calendar from AsyncStorage
   useEffect(() => {
     const loadStoredData = async () => {
       try {
-        const storedCalendars = await AsyncStorage.getItem(
-          "availableCalendars"
-        );
-        const storedSelectedCalendar = await AsyncStorage.getItem(
-          "selectedCalendar"
-        );
+        const storedCalendars = await AsyncStorage.getItem("availableCalendars");
+        const storedSelectedCalendar = await AsyncStorage.getItem("selectedCalendar");
         if (storedCalendars) {
           const parsedCalendars = JSON.parse(storedCalendars);
           setCalendars(parsedCalendars);
           setSelectedCalendar(storedSelectedCalendar || parsedCalendars[0]?.id);
-        } else {
-          console.log("No calendars found in storage.");
         }
       } catch (error) {
         console.error("Error loading stored calendar data:", error);
       }
     };
-
     loadStoredData();
   }, []);
 
@@ -111,7 +83,6 @@ export default function CalendarScreen() {
         setLoading(false);
         return;
       }
-
       setLoading(true);
       const startDate = currentStartDate.toISOString();
       const endDate = currentStartDate.clone().add(10, "days").toISOString();
@@ -122,7 +93,6 @@ export default function CalendarScreen() {
         endDate
       );
 
-      // Ensure the description follows "Campus, Building, Room" format
       const regex = /^[^,]+,[^,]+,[^,]+$/;
       fetchedEvents = fetchedEvents.filter((event) => {
         const description = event.description?.trim() || "";
@@ -136,57 +106,35 @@ export default function CalendarScreen() {
     fetchEvents();
   }, [selectedCalendar, currentStartDate]);
 
-  // 3. Now handle the conditional UI rendering
-  // Show coach mark when not signed in (only on first render)
   useEffect(() => {
-    if (!isSignedIn) {
-      setShowCoachMark(true);
-    }
+    if (!isSignedIn) setShowCoachMark(true);
   }, [isSignedIn]);
 
   if (!isSignedIn) {
     return (
       <View style={styles.guestContainer}>
-        <GoToLoginButton
-          onPress={async () => {
-            try {
-              await AsyncStorage.removeItem("sessionId");
-              await AsyncStorage.removeItem("userData");
-              await AsyncStorage.removeItem("guestMode");
-              navigation.reset({ index: 0, routes: [{ name: "Login" }] });
-            } catch (error) {
-              console.error("Login Redirect Error:", error);
-            }
-          }}
-        />
+        <Coachmark
+          message="Sign in to access your calendar events!"
+          autoShow={showCoachMark}
+          onHide={() => setShowCoachMark(false)}
+        >
+          <GoToLoginButton
+            onPress={async () => {
+              try {
+                await AsyncStorage.removeItem("sessionId");
+                await AsyncStorage.removeItem("userData");
+                await AsyncStorage.removeItem("guestMode");
+                navigation.reset({ index: 0, routes: [{ name: "Login" }] });
+              } catch (error) {
+                console.error("Login Redirect Error:", error);
+              }
+            }}
+          />
+        </Coachmark>
+
         <View style={styles.bottomNavBar}>
           <BottomNavBar />
         </View>
-
-        {/* Coach Mark Modal */}
-        <Modal
-          animationType="fade"
-          transparent={true}
-          visible={showCoachMark}
-          onRequestClose={() => setShowCoachMark(false)}
-        >
-          <View style={styles.coachMarkOverlay}>
-            <View style={styles.coachMarkContainer}>
-              <Text style={styles.coachMarkText}>
-                Sign in to access your calendar events!
-              </Text>
-              <Text style={styles.coachMarkSubText}>
-                Tap the button below to log in.
-              </Text>
-              <TouchableOpacity
-                style={styles.coachMarkButton}
-                onPress={() => setShowCoachMark(false)}
-              >
-                <Text style={styles.coachMarkButtonText}>Got it</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
       </View>
     );
   }
@@ -198,17 +146,16 @@ export default function CalendarScreen() {
       </View>
     );
   }
+
   trackEvent("Calendar Screen selected", {});
-  // 4. The main UI returns here
+
   return (
     <View style={styles.screen}>
-      {/* In-App Notification */}
       <InAppNotification
         message={notificationMessage}
         visible={notificationVisible}
       />
 
-      {/* Header with Pagination */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.paginationButton}
@@ -229,7 +176,6 @@ export default function CalendarScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Date Range Display */}
       <View style={styles.centeredDateContainer}>
         <Text style={styles.centeredDateText}>
           {currentStartDate.format("MMM DD")} -{" "}
@@ -237,7 +183,6 @@ export default function CalendarScreen() {
         </Text>
       </View>
 
-      {/* Calendar Selection (Modal) */}
       <View style={styles.dropdownContainer}>
         <TouchableOpacity
           style={styles.dropdownButton}
@@ -294,7 +239,6 @@ export default function CalendarScreen() {
         </Modal>
       </View>
 
-      {/* Events List */}
       <View style={styles.container}>
         {events.length === 0 ? (
           <Text style={styles.noEventsText}>
@@ -323,8 +267,6 @@ export default function CalendarScreen() {
                       {moment(item.start.dateTime).format("YYYY-MM-DD HH:mm")} -{" "}
                       {moment(item.end.dateTime).format("HH:mm")}
                     </Text>
-
-                    {/* "Go to Class" button => calls handleGoToClass */}
                     <TouchableOpacity
                       style={styles.nextClassButton}
                       onPress={() =>
