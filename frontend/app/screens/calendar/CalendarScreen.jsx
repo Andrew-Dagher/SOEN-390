@@ -211,6 +211,25 @@ export default function CalendarScreen() {
     return () => eventsObserver.unsubscribe(observerCallback);
   }, [eventsObserver, selectedDate]);
 
+  //AsyncStorage for guide
+// AsyncStorage for guide
+useEffect(() => {
+  const checkCoachmarkStatus = async () => {
+    try {
+      const seen = await AsyncStorage.getItem("hasSeenCalendarCoachmark");
+      if (!seen) {
+        setShowCoachMark(true);
+        await AsyncStorage.setItem("hasSeenCalendarCoachmark", "true");
+      }
+    } catch (error) {
+      console.error("Coachmark Storage Error:", error);
+    }
+  };
+
+  checkCoachmarkStatus();
+}, []);
+
+
   // Notify observer when events change
   useEffect(() => {
     if (events.length > 0) {
