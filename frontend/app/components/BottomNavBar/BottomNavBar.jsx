@@ -1,6 +1,6 @@
 /**
  * @file BottomNavBar.jsx
- * @description A fixed bottom navigation bar with four navigation options: Home, Navigation, Calendar, and Settings.
+ * @description A fixed bottom navigation bar with five navigation options: Home, Navigation, Calendar, Library, and Settings.
  * The component conditionally uses React Navigation's hooks and handles cases when not in a navigation context.
  */
 
@@ -21,9 +21,11 @@ import NavigationActive from "./NavigationIcons/NavigationActive";
 import NavigationInactive from "./NavigationIcons/NavigationInactive";
 import SettingsActive from "./SettingsIcons/SettingsActive";
 import SettingsInactive from "./SettingsIcons/SettingsInactive";
+import PlannerActive from "./PlannerIcons/PlannerActive";
+import PlannerInactive from "./PlannerIcons/PlannerInactive";
 
 /**
- * BottomNavBar component renders a fixed bottom navigation bar with four navigation options.
+ * BottomNavBar component renders a fixed bottom navigation bar with navigation options.
  *
  * @component
  * @param {Object} props - Component props
@@ -81,6 +83,18 @@ export default function BottomNavBar({ navigation = null, route = null }) {
           )}
         </Pressable>
 
+        {/* Planner Button: Navigate to Planner screen */}
+        <Pressable
+          onPress={() => navigateTo("Planner")}
+          style={styles.navButton}
+        >
+          {currentScreen === "Planner" ? (
+            <PlannerActive />
+          ) : (
+            <PlannerInactive />
+          )}
+        </Pressable>
+
         {/* Settings Button: Navigate to Settings screen */}
         <Pressable
           onPress={() => navigateTo("Settings")}
@@ -126,19 +140,22 @@ const styles = StyleSheet.create({
   },
   navbarContent: {
     flexDirection: "row", // Arrange buttons in a row
-    justifyContent: "space-around", // Distribute space evenly around the buttons
+    justifyContent: "space-evenly", // Changed from space-around to space-evenly for more balanced spacing
     alignItems: "center", // Center items vertically
     height: 50, // Reduced height for the navigation bar
     backgroundColor: "#FFFFFF", // White background
     borderTopWidth: 1, // Top border width
     borderTopColor: "#d6d6d6", // Light gray border color
+    paddingHorizontal: 6, // Added horizontal padding to bring icons closer to edges
     paddingTop: 4, // Reduced padding at the top
     marginBottom: Platform.OS === "android" ? 0 : -18,
   },
   navButton: {
-    flex: 1, // Each button takes equal space
+    flex: 0, // Changed from flex: 1 to flex: 0 to avoid equal spacing
     justifyContent: "center", // Center content vertically
     alignItems: "center", // Center content horizontally
-    paddingVertical: 6, // Add some vertical padding for touch area
+    paddingVertical: 6, // Vertical padding for touch area
+    paddingHorizontal: 8, // Reduced horizontal padding to bring icons closer
+    minWidth: 40, // Set minimum width to ensure touch target
   },
 });
