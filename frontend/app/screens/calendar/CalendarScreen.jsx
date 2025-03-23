@@ -371,9 +371,9 @@ export default function CalendarScreen() {
       </View>
       {/* Week Selector */}
       <View style={styles.weekContainer}>
-        {weekDays.map((day, index) => (
+        {weekDays.map((day) => (
           <TouchableOpacity
-            key={index}
+            key={`day-${day.format("YYYY-MM-DD")}`}
             style={[
               styles.dayContainer,
               day.isSame(selectedDate, "day") && styles.selectedDayContainer,
@@ -405,9 +405,9 @@ export default function CalendarScreen() {
               <View style={styles.dayEventDotsContainer}>
                 {eventsByDay[day.format("YYYY-MM-DD")]
                   .slice(0, 3)
-                  .map((event, i) => (
+                  .map((event) => (
                     <View
-                      key={`dot-${event.id}-${i}`}
+                      key={`dot-${event.id}`}
                       style={[
                         styles.dayEventDot,
                         { backgroundColor: event.color },
@@ -438,8 +438,8 @@ export default function CalendarScreen() {
               <View style={styles.timelineContent}>
                 {/* Hours column */}
                 <View style={styles.hoursColumn}>
-                  {timeSlots.map((slot, index) => (
-                    <View key={index} style={styles.timeSlotRow}>
+                  {timeSlots.map((slot) => (
+                    <View key={`timeslot-${slot}`} style={styles.timeSlotRow}>
                       <Text
                         style={[
                           slot.endsWith("00")
@@ -461,9 +461,9 @@ export default function CalendarScreen() {
                 {/* Events container */}
                 <View style={styles.eventsColumn}>
                   {/* Time slot grid lines */}
-                  {timeSlots.map((slot, index) => (
+                  {timeSlots.map((slot) => (
                     <View
-                      key={`line-${index}`}
+                      key={`grid-line-${slot}`}
                       style={[
                         slot.endsWith("00")
                           ? styles.hourSlotLine
@@ -473,11 +473,11 @@ export default function CalendarScreen() {
                   ))}
 
                   {/* Positioned events with adaptive height */}
-                  {positionedEvents.map((event, eventIndex) => {
+                  {positionedEvents.map((event) => {
                     const eventColor = getEventColor(event);
                     return (
                       <TouchableOpacity
-                        key={event.id}
+                        key={`event-${event.id}`}
                         style={[
                           styles.eventCard,
                           {
@@ -575,7 +575,7 @@ export default function CalendarScreen() {
             </Text>
             {calendars.map((calendar, index) => (
               <TouchableOpacity
-                key={calendar.id}
+                key={`calendar-${calendar.id}`}
                 style={[
                   styles.modalItem,
                   index === calendars.length - 1 ? styles.modalLastItem : null,
