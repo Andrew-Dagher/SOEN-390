@@ -1,4 +1,9 @@
-import { render, fireEvent, waitFor } from "@testing-library/react-native";
+import {
+  render,
+  fireEvent,
+  waitFor,
+  screen,
+} from "@testing-library/react-native";
 
 import Planner from "../app/screens/Planner/Planner";
 jest.mock("@clerk/clerk-expo", () => ({
@@ -24,6 +29,8 @@ describe("<Planner />", () => {
     const { getByTestId } = render(<Planner />);
     const button = await waitFor(() => getByTestId("customize-button"));
     fireEvent.press(button);
+    // screen.debug(undefined, Infinity);
     expect(getByTestId("planner-screen")).toBeTruthy();
+    expect(getByTestId("customize-modal")).toBeTruthy();
   });
 });
