@@ -4,6 +4,7 @@
  */
 
 import * as React from "react";
+import PropTypes from "prop-types"; // Import PropTypes
 import Svg, { Path } from "react-native-svg";
 
 /**
@@ -43,5 +44,14 @@ const InformationIcon = ({
     />
   </Svg>
 );
+
+// PropTypes validation
+InformationIcon.propTypes = {
+  width: PropTypes.number,
+  height: PropTypes.number,
+  fill: PropTypes.string,
+  stroke: PropTypes.string,
+  strokeWidth: PropTypes.number,
+};
 
 export default InformationIcon;

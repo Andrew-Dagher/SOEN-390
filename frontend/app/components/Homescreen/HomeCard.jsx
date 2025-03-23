@@ -5,9 +5,10 @@
  */
 
 import React from "react";
-
 import { View, Text, Image, StyleSheet, Dimensions } from "react-native";
+import PropTypes from "prop-types"; // Import PropTypes
 import { useAppSettings } from "../../AppSettingsContext";
+
 // Get screen dimensions for responsive design.
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
@@ -20,24 +21,31 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
  * @param {string} props.text - The text to overlay on the image.
  * @returns {JSX.Element} The rendered HomeCard component.
  */
-export default function HomeCard(props) {
+export default function HomeCard({ image, text }) {
   const { textSize } = useAppSettings();
 
   return (
     <View style={styles.card}>
       {/* Container for the image */}
       <View style={styles.imageContainer}>
-        <Image source={props.image} style={styles.image} resizeMode="contain" />
+        <Image source={image} style={styles.image} resizeMode="contain" />
       </View>
       {/* Overlay text container */}
       <View style={styles.textContainer}>
-        <Text style={[styles.cardText, { fontSize: textSize }]}>
-          {props.text}
-        </Text>
+        <Text style={[styles.cardText, { fontSize: textSize }]}>{text}</Text>
       </View>
     </View>
   );
 }
+
+// PropTypes validation
+HomeCard.propTypes = {
+  image: PropTypes.oneOfType([
+    PropTypes.number, // For local images (require('./image.png'))
+    PropTypes.shape({ uri: PropTypes.string }), // For remote images ({ uri: 'https://example.com/image.jpg' })
+  ]).isRequired,
+  text: PropTypes.string.isRequired,
+};
 
 const styles = StyleSheet.create({
   // Card container styling with responsive dimensions and shadow effects.
@@ -79,3 +87,4 @@ const styles = StyleSheet.create({
     fontSize: screenWidth * 0.045, // Responsive font size
   },
 });
+
