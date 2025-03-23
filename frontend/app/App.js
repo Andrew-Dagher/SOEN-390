@@ -86,6 +86,7 @@ export default function App() {
                     component={NavigationScreen}
                   />
                   <Stack.Screen name="Settings" component={SettingsScreen} />
+                  <Stack.Screen name="Planner" component={Planner} />
                   <Stack.Screen
                     name="Building Details"
                     component={BuildingInfoScreen}
