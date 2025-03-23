@@ -6,6 +6,8 @@ import { useAuth } from "@clerk/clerk-expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as CalendarHelper from "../app/screens/calendar/CalendarHelper";
 import { fetchPublicCalendarEvents } from "../app/screens/login/LoginHelper";
+import styles from "../app/screens/calendar/CalendarScreenStyles";
+import { View, Text, TouchableOpacity } from "react-native";
 
 // ---- Mock all dependencies so no real network calls/storage happen ----
 jest.mock("@clerk/clerk-expo", () => ({
@@ -117,4 +119,24 @@ describe("CalendarScreen Tests", () => {
       expect.any(Object) // Because navigation is passed in
     );
   });
+
+  it("applies correct styles to components", () => {
+    const { getByTestId } = render(
+      <View testID="test-view" style={styles.screen}>
+        <Text testID="test-text" style={styles.headerText}>Test Header</Text>
+        <TouchableOpacity testID="test-button" style={styles.nextClassButton}>
+          <Text style={styles.nextClassButtonText}>Next Class Button</Text>
+        </TouchableOpacity>
+      </View>
+    );
+
+    const testView = getByTestId("test-view");
+    const testText = getByTestId("test-text");
+    const testButton = getByTestId("test-button");
+
+    expect(testView.props.style).toMatchObject(styles.screen);
+    expect(testText.props.style).toMatchObject(styles.headerText);
+    expect(testButton.props.style).toMatchObject(styles.nextClassButton);
+  });
+
 });

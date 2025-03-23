@@ -21,8 +21,10 @@ import { NotificationObserver } from "./NotificationObserver";
 import InAppNotification from "../../components/InAppNotification";
 import NextClassButton from "../../components/Calendar/NextClassButton";
 import { trackEvent } from "@aptabase/react-native";
+import CoachMarks from 'react-native-coachmarks';
 
 export default function CalendarScreen() {
+  // 1. Always call hooks at the top
   const navigation = useNavigation();
   const { isSignedIn } = useAuth();
 
@@ -32,9 +34,6 @@ export default function CalendarScreen() {
   // In-app notification state
   const [notificationMessage, setNotificationMessage] = useState("");
   const [notificationVisible, setNotificationVisible] = useState(false);
-
-  // Coach mark state
-  const [showCoachMark, setShowCoachMark] = useState(false);
 
   // Other state
   const [events, setEvents] = useState([]);
@@ -46,7 +45,10 @@ export default function CalendarScreen() {
     moment().startOf("day")
   );
   const [modalVisible, setModalVisible] = useState(false);
+  const [showCoachMark, setShowCoachMark] = useState(false);
 
+
+  // 2. Then do your effects or other hooks
   useEffect(() => {
     const observerCallback = (events) => {
       NotificationObserver(events, showInAppNotification, currentStartDate);
@@ -65,6 +67,7 @@ export default function CalendarScreen() {
     setNotificationMessage(message);
     setNotificationVisible(true);
 
+    // Hide after 5 seconds
     setTimeout(() => {
       setNotificationVisible(false);
     }, 5000);
@@ -81,8 +84,12 @@ export default function CalendarScreen() {
   useEffect(() => {
     const loadStoredData = async () => {
       try {
-        const storedCalendars = await AsyncStorage.getItem("availableCalendars");
-        const storedSelectedCalendar = await AsyncStorage.getItem("selectedCalendar");
+        const storedCalendars = await AsyncStorage.getItem(
+          "availableCalendars"
+        );
+        const storedSelectedCalendar = await AsyncStorage.getItem(
+          "selectedCalendar"
+        );
         if (storedCalendars) {
           const parsedCalendars = JSON.parse(storedCalendars);
           setCalendars(parsedCalendars);
@@ -115,8 +122,9 @@ export default function CalendarScreen() {
         endDate
       );
 
+      // Ensure the description follows "Campus, Building, Room" format
       const regex = /^[^,]+,[^,]+,[^,]+$/;
-      fetchedEvents = fetchedEvents.filter(event => {
+      fetchedEvents = fetchedEvents.filter((event) => {
         const description = event.description?.trim() || "";
         return regex.test(description);
       });
@@ -128,6 +136,7 @@ export default function CalendarScreen() {
     fetchEvents();
   }, [selectedCalendar, currentStartDate]);
 
+  // 3. Now handle the conditional UI rendering
   // Show coach mark when not signed in (only on first render)
   useEffect(() => {
     if (!isSignedIn) {
@@ -189,13 +198,17 @@ export default function CalendarScreen() {
       </View>
     );
   }
-
   trackEvent("Calendar Screen selected", {});
-
+  // 4. The main UI returns here
   return (
     <View style={styles.screen}>
-      <InAppNotification message={notificationMessage} visible={notificationVisible} />
+      {/* In-App Notification */}
+      <InAppNotification
+        message={notificationMessage}
+        visible={notificationVisible}
+      />
 
+      {/* Header with Pagination */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.paginationButton}
@@ -216,6 +229,7 @@ export default function CalendarScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Date Range Display */}
       <View style={styles.centeredDateContainer}>
         <Text style={styles.centeredDateText}>
           {currentStartDate.format("MMM DD")} -{" "}
@@ -223,6 +237,7 @@ export default function CalendarScreen() {
         </Text>
       </View>
 
+      {/* Calendar Selection (Modal) */}
       <View style={styles.dropdownContainer}>
         <TouchableOpacity
           style={styles.dropdownButton}
@@ -279,6 +294,7 @@ export default function CalendarScreen() {
         </Modal>
       </View>
 
+      {/* Events List */}
       <View style={styles.container}>
         {events.length === 0 ? (
           <Text style={styles.noEventsText}>
@@ -307,13 +323,17 @@ export default function CalendarScreen() {
                       {moment(item.start.dateTime).format("YYYY-MM-DD HH:mm")} -{" "}
                       {moment(item.end.dateTime).format("HH:mm")}
                     </Text>
+
+                    {/* "Go to Class" button => calls handleGoToClass */}
                     <TouchableOpacity
                       style={styles.nextClassButton}
                       onPress={() =>
                         handleGoToClass(item.description, navigation)
                       }
                     >
-                      <Text style={styles.nextClassButtonText}>Go to Class</Text>
+                      <Text style={styles.nextClassButtonText}>
+                        Go to Class
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 )}
@@ -323,10 +343,6 @@ export default function CalendarScreen() {
         )}
       </View>
       <NextClassButton eventObserver={eventsObserver} />
-
-      <View style={styles.bottomNavBar}>
-        <BottomNavBar />
-      </View>
     </View>
   );
 }

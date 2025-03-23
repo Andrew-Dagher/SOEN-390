@@ -2,8 +2,8 @@
  * @file GoogleSignInButton.jsx
  * @description A React Native component for a Google Sign-In button with styling and shadow effects.
  */
-
-import { TouchableOpacity, Image, Text, View } from "react-native";
+import { TouchableOpacity, Image, Text } from "react-native";
+import PropTypes from "prop-types"; // Import PropTypes
 
 /**
  * GoogleSignInButton component for Google authentication.
@@ -40,6 +40,11 @@ const GoogleSignInButton = ({ onPress }) => {
       <Text className="text-black text-lg font-semibold">Continue with Google</Text>
     </TouchableOpacity>
   );
+};
+
+// PropTypes validation
+GoogleSignInButton.propTypes = {
+  onPress: PropTypes.func.isRequired,
 };
 
 export default GoogleSignInButton;

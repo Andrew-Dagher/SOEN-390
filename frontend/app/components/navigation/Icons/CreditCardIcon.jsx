@@ -2,8 +2,8 @@
  * @file CreditCardIcon.jsx
  * @description Renders a credit card icon with customizable width, height, and color.
  */
-
 import React from "react";
+import PropTypes from "prop-types"; // Import PropTypes
 import Svg, { Path } from "react-native-svg";
 
 /**
@@ -26,5 +26,12 @@ const CreditCardIcon = ({ width = 20, height = 14, color = "#E6863C" }) => (
     />
   </Svg>
 );
+
+// PropTypes validation
+CreditCardIcon.propTypes = {
+  width: PropTypes.number,
+  height: PropTypes.number,
+  color: PropTypes.string,
+};
 
 export default CreditCardIcon;

@@ -19,7 +19,6 @@ import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "@clerk/clerk-expo";
 import { useAppSettings } from "../../AppSettingsContext";
 import getThemeColors from "../../ColorBindTheme";
-import BottomNavBar from "../../components/BottomNavBar/BottomNavBar";
 import { loadUserData, pickImage, handleLogout } from "../../settingsUtils";
 import PropTypes from "prop-types"; 
 
@@ -34,10 +33,10 @@ export default function SettingsScreen() {
   const navigation = useNavigation();
   const { signOut, isSignedIn } = useAuth();
 
-  const [isWheelchairAccessEnabled, setWheelchairAccessEnabled] = useState(false);
+  const [isWheelchairAccessEnabled, setIsWheelchairAccessEnabled] = useState(false);
   const [tempProfileImage, setTempProfileImage] = useState(profileImage);
   const [userName, setUserName] = useState("Guest");
-  const [isColorBlindModeEnabled, setColorBlindModeEnabled] = useState(!!colorBlindMode);
+  const [isColorBlindModeEnabled, setIsColorBlindModeEnabled] = useState(!!colorBlindMode);
   const [tempSize, setTempSize] = useState(textSize);
 
   useEffect(() => { loadUserData(setUserName, setProfileImage); }, []);
@@ -70,7 +69,7 @@ export default function SettingsScreen() {
           label="Mobility disability"
           description="Enable features optimized for wheelchair users."
           value={isWheelchairAccessEnabled}
-          onChange={setWheelchairAccessEnabled}
+          onChange={setIsWheelchairAccessEnabled}
           textSize={textSize} 
         />
 
@@ -80,7 +79,7 @@ export default function SettingsScreen() {
             label="Color vision deficient"
             value={isColorBlindModeEnabled}
             onChange={(value) => {
-              setColorBlindModeEnabled(value);
+              setIsColorBlindModeEnabled(value);
               if (!value) setColorBlindMode(null);
             }}
             textSize={textSize}
@@ -135,7 +134,6 @@ export default function SettingsScreen() {
 
         </View>
       </ScrollView>
-      <BottomNavBar />
     </View>
   );
 }

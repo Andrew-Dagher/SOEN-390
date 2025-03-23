@@ -47,26 +47,30 @@ export default function CampusMap({ navigationParams }) {
   const navigation = useNavigation();
 
   const [searchResult, setSearchResult] = useState([]);
-  const [isSelected, setIsSelected] = useState(false);
-  const [locationData, setLocationData] = useState(SGWLocation);
+  // Removed unused isSelected state
+  // const [isSelected, setIsSelected] = useState(false);
+  // Replace state with a constant because locationData is never updated
+  const locationData = SGWLocation;
+  // Removed unused errorMsg state
+  // const [errorMsg, setErrorMsg] = useState(null);
   const [isSearch, setIsSearch] = useState(false);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [start, setStart] = useState(); // start lat lng of traceroute
-  const [end, setEnd] = useState(); // destination lt lng of traceroute
+  const [end, setEnd] = useState(); // destination lat lng of traceroute
   const [location, setLocation] = useState(null); // current user location
-  const [errorMsg, setErrorMsg] = useState(null); // error message when getting location
   const [searchText, setSearchText] = useState(""); // textinput value
   const [closeTraceroute, setCloseTraceroute] = useState(false); // bool to hide traceroute
   const [startPosition, setStartPosition] = useState(""); // name of start position for traceroute
   const [destinationPosition, setDestinationPosition] = useState(""); // name of destination position for traceroute
-  const [waypoints, setWaypoints] = useState([]); // array of waypoints traceroutes that should be rendered by the GoogleAPI
+  // Removed unused waypoints state and its setter
+  // const [waypoints, setWaypoints] = useState([]); // array of waypoints traceroutes that should be rendered by the GoogleAPI
   const [campus, setCampus] = useState("sgw");
   const [mode, setMode] = useState("WALKING"); // Mode of transportation
   const [isRoute, setIsRoute] = useState(false);
-  const [carTravelTime, setCarTravelTime] = useState(null); //Estimated travel time by car
-  const [bikeTravelTime, setBikeTravelTime] = useState(null); //Estimated travel time by bicycle
-  const [metroTravelTime, setMetroTravelTime] = useState(null); //Estimated travel time by public transit
-  const [walkTravelTime, setWalkTravelTime] = useState(null); //Estimated travel time on foot
+  const [carTravelTime, setCarTravelTime] = useState(null); // Estimated travel time by car
+  const [bikeTravelTime, setBikeTravelTime] = useState(null); // Estimated travel time by bicycle
+  const [metroTravelTime, setMetroTravelTime] = useState(null); // Estimated travel time by public transit
+  const [walkTravelTime, setWalkTravelTime] = useState(null); // Estimated travel time on foot
   const [walkToBus, setWalkToBus] = useState({
     start: null,
     end: null,
@@ -124,6 +128,7 @@ export default function CampusMap({ navigationParams }) {
       }
     };
   }, [navigation, route]);
+
   const fetchTravelTime = async (start, end, mode) => {
     if (!start || !end) return;
 
@@ -176,17 +181,16 @@ export default function CampusMap({ navigationParams }) {
       }
 
       const route = data.routes[0];
-      if (!route || !route.legs || !route.legs[0]) {
+      // Use optional chaining for a more concise check
+      if (!route?.legs?.[0]) {
         console.error("No valid route found");
         return;
       }
 
       const duration = route.legs[0].duration.text;
-      // Update the appropriate state based on the mode
       setTravelTime[mode]?.(duration);
     } catch (error) {
       console.error(`Error fetching ${mode} directions:`, error);
-      // Set error state for the specific mode
       setTravelTime[mode]?.("Error");
     }
   };
@@ -232,7 +236,6 @@ export default function CampusMap({ navigationParams }) {
       setMetroTravelTime(null);
       setWalkTravelTime(null);
 
-      // Fetch times from start point to selected building
       const fetchAllTravelTimes = async () => {
         await Promise.all([
           fetchTravelTime(start, selectedBuilding.point, "DRIVING"),
@@ -250,7 +253,7 @@ export default function CampusMap({ navigationParams }) {
 
   const handleGetDirections = () => {
     try {
-      trackEvent("Get Directions", { "selected building":selectedBuilding.name });
+      trackEvent("Get Directions", { "selected building": selectedBuilding.name });
       console.log("Event tracked");
       setIsRoute(true);
       setIsSearch(true);
@@ -261,21 +264,15 @@ export default function CampusMap({ navigationParams }) {
       }
       setStartPosition("Your Location");
 
-      // Reset all travel times before fetching new ones
       setCarTravelTime(null);
       setBikeTravelTime(null);
       setMetroTravelTime(null);
       setWalkTravelTime(null);
 
-      // Fetch travel times for all modes
       const fetchAllTravelTimes = async () => {
         await Promise.all([
           fetchTravelTime(location?.coords, selectedBuilding.point, "DRIVING"),
-          fetchTravelTime(
-            location?.coords,
-            selectedBuilding.point,
-            "BICYCLING"
-          ),
+          fetchTravelTime(location?.coords, selectedBuilding.point, "BICYCLING"),
           fetchTravelTime(location?.coords, selectedBuilding.point, "TRANSIT"),
           fetchTravelTime(location?.coords, selectedBuilding.point, "WALKING"),
         ]);
@@ -288,14 +285,14 @@ export default function CampusMap({ navigationParams }) {
   };
 
   const handleLoyola = () => {
-    trackEvent("Switched to Loyola", {})
+    trackEvent("Switched to Loyola", {});
     setCampus("loyola");
     ref.current?.animateToRegion(LoyolaLocation);
   };
 
   const handleSGW = () => {
     setCampus("sgw");
-    trackEvent("Switched to SGW", {})
+    trackEvent("Switched to SGW", {});
     ref.current?.animateToRegion(SGWLocation);
   };
 
@@ -303,20 +300,20 @@ export default function CampusMap({ navigationParams }) {
   const handleMarkerPress = (building) => {
     setIsSearch(false);
     setSelectedBuilding(building);
-    trackEvent("Selected building", {"building":building.name})
-    setIsSelected(true);
+    trackEvent("Selected building", { building: building.name });
+    // Removed unused setIsSelected(true) call
   };
 
   const panToMyLocation = () => {
     ref.current?.animateToRegion(location.coords);
   };
 
-  const renderPolygons = polygons.map((building, idx) => {
+  const renderPolygons = polygons.map((building) => {
     return (
-      <View key={idx}>
+      <View key={building.name}>
         {end == null ? (
           <Marker
-            testID={"building-" + idx}
+            testID={"building-" + building.name}
             coordinate={building.point}
             onPress={() => handleMarkerPress(building)}
             image={require("../../../assets/concordia-logo.png")}
@@ -350,7 +347,6 @@ export default function CampusMap({ navigationParams }) {
     setStart(null);
     setSelectedBuilding(null);
     setCloseTraceroute(false);
-    setIsSelected(false);
   };
 
   const handleMapPress = () => {};
@@ -362,19 +358,20 @@ export default function CampusMap({ navigationParams }) {
 
   useEffect(() => {
     console.log("is route: " + isRoute);
-  }, [isRoute, waypoints, mode, isShuttle, end]);
+  }, [isRoute, mode, isShuttle, end]); // removed waypoints from dependency
 
   useEffect(() => {
-    if (location != null && start != location.coords) return;
+    if (location != null && start != location?.coords) return;
     async function getCurrentLocation() {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        setErrorMsg("Permission to access location was denied");
+        // Removed errorMsg state assignment; you can add logging if needed.
+        console.error("Permission to access location was denied");
         return;
       }
 
       let location = await Location.getCurrentPositionAsync({});
-      trackEvent("Check current Location", {"Location":location})
+      trackEvent("Check current Location", { Location: location });
       setLocation(location);
     }
     getCurrentLocation();
@@ -452,18 +449,17 @@ export default function CampusMap({ navigationParams }) {
             apikey={process.env.EXPO_PUBLIC_GOOGLE_API_KEY}
             strokeColor="#862532"
             strokeWidth={6}
-            waypoints={waypoints}
+            waypoints={[]} // replaced state with an empty array literal
             mode={mode}
             onReady={traceRouteOnReady}
           />
         ) : null}
-        {/* Render bus markers directly within the MapView */}
-        {busMarkers.map((bus, idx) => {
+        {busMarkers.map((bus) => {
           console.log("rendering bus marker", bus);
           return (
             <Marker
               testID="bus-marker"
-              key={bus.id} // Add a key prop
+              key={bus.id}
               coordinate={{
                 latitude: bus.latitude,
                 longitude: bus.longitude,
@@ -495,6 +491,7 @@ export default function CampusMap({ navigationParams }) {
           end={end}
           setStart={setStart}
           setEnd={setEnd}
+          startPosition={startPosition}
           destinationPosition={destinationPosition}
           setDestinationPosition={setDestinationPosition}
           setStartPosition={setStartPosition}
@@ -607,7 +604,6 @@ export default function CampusMap({ navigationParams }) {
                     Set Start
                   </Text>
                 )}
-
                 <NavigationIcon />
               </View>
             </TouchableHighlight>
@@ -627,7 +623,6 @@ export default function CampusMap({ navigationParams }) {
                 >
                   Get Directions
                 </Text>
-
                 <DirectionsIcon />
               </View>
             </TouchableHighlight>
