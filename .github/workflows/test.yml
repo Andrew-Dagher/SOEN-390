@@ -162,15 +162,15 @@ jobs:
       - name: Get SonarCloud Results
         run: "echo 'Check SonarCloud Report: https://sonarcloud.io/dashboard?id=Andrew-Dagher_SOEN-390&branch=${GITHUB_REF##*/}'"
 
-      - name: Get Encoded Branch Name for Combined Coverage
+      # Instead of encoding the branch name here, we return the plain branch name.
+      - name: Get Branch Name for Combined Coverage
         if: ${{ github.event_name == 'pull_request' }}
-        id: encode_branch_combined
+        id: branch_name_combined
         uses: actions/github-script@v6
         with:
           script: |
             const branch = context.payload.pull_request ? context.payload.pull_request.head.ref : context.ref.replace('refs/heads/', '');
-            const encodedBranch = encodeURIComponent(branch);
-            return { encodedBranch };
+            return { branch };
 
       - name: Find Combined Codecov Coverage Comment
         if: ${{ github.event_name == 'pull_request' }}
@@ -189,7 +189,7 @@ jobs:
           body: |
             **Combined Codecov Coverage Report**
 
-            [![codecov](https://codecov.io/gh/Andrew-Dagher/SOEN-390/branch/${{ steps.encode_branch_combined.outputs.encodedBranch }}/graph/badge.svg)](https://app.codecov.io/github/Andrew-Dagher/SOEN-390/tree/${{ steps.encode_branch_combined.outputs.encodedBranch }})
+            [![codecov](https://codecov.io/gh/Andrew-Dagher/SOEN-390/branch/${{ steps.branch_name_combined.outputs.branch }}/graph/badge.svg)](https://app.codecov.io/github/Andrew-Dagher/SOEN-390/tree/${{ steps.branch_name_combined.outputs.branch }})
           reactions: hooray
 
       - name: Update Combined Codecov Coverage Comment
@@ -200,5 +200,5 @@ jobs:
           body: |
             **Combined Codecov Coverage Report**
 
-            [![codecov](https://codecov.io/gh/Andrew-Dagher/SOEN-390/branch/${{ steps.encode_branch_combined.outputs.encodedBranch }}/graph/badge.svg)](https://app.codecov.io/github/Andrew-Dagher/SOEN-390/tree/${{ steps.encode_branch_combined.outputs.encodedBranch }})
+            [![codecov](https://codecov.io/gh/Andrew-Dagher/SOEN-390/branch/${{ steps.branch_name_combined.outputs.branch }}/graph/badge.svg)](https://app.codecov.io/github/Andrew-Dagher/SOEN-390/tree/${{ steps.branch_name_combined.outputs.branch }})
           reactions: hooray
