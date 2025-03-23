@@ -39,45 +39,52 @@ jobs:
         with:
           name: backend-coverage-summary
           path: backend/coverage_summary.txt
-          
+
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: Andrew-Dagher/SOEN-390
 
-      - name: Comment Backend Coverage on PR
-        if: github.event_name == 'pull_request'
+      - name: Read Backend Coverage Summary
+        id: read_backend
+        run: |
+          if [ -f backend/coverage_summary.txt ]; then
+            summary=$(cat backend/coverage_summary.txt)
+          else
+            summary="Coverage summary not found."
+          fi
+          echo "summary<<EOF" >> $GITHUB_OUTPUT
+          echo "$summary" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Get Encoded Branch Name
+        id: encode_branch
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const fs = require('fs');
-            const summaryPath = 'backend/coverage_summary.txt';
-            let summary = 'Coverage summary not found.';
-            if (fs.existsSync(summaryPath)) {
-              summary = fs.readFileSync(summaryPath, 'utf8');
-            }
-            // Determine branch name from the PR or fallback for push events
-            const branchName = context.payload.pull_request ? context.payload.pull_request.head.ref : context.ref.replace('refs/heads/', '');
-            const encodedBranch = encodeURIComponent(branchName);
-            const codecovBadge = `[![codecov](https://codecov.io/gh/Andrew-Dagher/SOEN-390/branch/${encodedBranch}/graph/badge.svg)](https://app.codecov.io/github/Andrew-Dagher/SOEN-390/tree/${encodedBranch})`;
-            const message = `
-            **Backend Code Coverage Report** 
-      
-            \`\`\`
-            ${summary}
-            \`\`\`
-      
-            ${codecovBadge}
-            `;
-            github.rest.issues.createComment({
-              issue_number: context.payload.pull_request.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: message
-            });
+            const branch = context.payload.pull_request
+              ? context.payload.pull_request.head.ref
+              : context.ref.replace('refs/heads/', '');
+            const encodedBranch = encodeURIComponent(branch);
+            return { encodedBranch };
 
+      - name: Comment Backend Coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-id: backend-coverage
+          body: |
+            **Backend Code Coverage Report**
+
+            ```bash
+            ${{ steps.read_backend.outputs.summary }}
+            ```
+
+            [![codecov](https://codecov.io/gh/Andrew-Dagher/SOEN-390/branch/${{ steps.encode_branch.outputs.encodedBranch }}/graph/badge.svg)](https://app.codecov.io/github/Andrew-Dagher/SOEN-390/tree/${{ steps.encode_branch.outputs.encodedBranch }})
+  
   test_frontend:
     runs-on: ubuntu-latest
     steps:
@@ -117,38 +124,45 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: Andrew-Dagher/SOEN-390
 
-      - name: Comment Backend Coverage on PR
-        if: github.event_name == 'pull_request'
+      - name: Read Frontend Coverage Summary
+        id: read_frontend
+        run: |
+          if [ -f frontend/coverage_summary.txt ]; then
+            summary=$(cat frontend/coverage_summary.txt)
+          else
+            summary="Coverage summary not found."
+          fi
+          echo "summary<<EOF" >> $GITHUB_OUTPUT
+          echo "$summary" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Get Encoded Branch Name for Frontend
+        id: encode_branch_frontend
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const fs = require('fs');
-            const summaryPath = 'backend/coverage_summary.txt';
-            let summary = 'Coverage summary not found.';
-            if (fs.existsSync(summaryPath)) {
-              summary = fs.readFileSync(summaryPath, 'utf8');
-            }
-            // Determine branch name from the PR or fallback for push events
-            const branchName = context.payload.pull_request ? context.payload.pull_request.head.ref : context.ref.replace('refs/heads/', '');
-            const encodedBranch = encodeURIComponent(branchName);
-            const codecovBadge = `[![codecov](https://codecov.io/gh/Andrew-Dagher/SOEN-390/branch/${encodedBranch}/graph/badge.svg)](https://app.codecov.io/github/Andrew-Dagher/SOEN-390/tree/${encodedBranch})`;
-            const message = `
-            **Backend Code Coverage Report** 
-      
-            \`\`\`
-            ${summary}
-            \`\`\`
-      
-            ${codecovBadge}
-            `;
-            github.rest.issues.createComment({
-              issue_number: context.payload.pull_request.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: message
-            });
-        
+            const branch = context.payload.pull_request
+              ? context.payload.pull_request.head.ref
+              : context.ref.replace('refs/heads/', '');
+            const encodedBranch = encodeURIComponent(branch);
+            return { encodedBranch };
+
+      - name: Comment Frontend Coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-id: frontend-coverage
+          body: |
+            **Frontend Code Coverage Report**
+
+            ```bash
+            ${{ steps.read_frontend.outputs.summary }}
+            ```
+
+            [![codecov](https://codecov.io/gh/Andrew-Dagher/SOEN-390/branch/${{ steps.encode_branch_frontend.outputs.encodedBranch }}/graph/badge.svg)](https://app.codecov.io/github/Andrew-Dagher/SOEN-390/tree/${{ steps.encode_branch_frontend.outputs.encodedBranch }})
+  
   sonar_scan:
     runs-on: ubuntu-latest
     needs: [test_backend, test_frontend]
