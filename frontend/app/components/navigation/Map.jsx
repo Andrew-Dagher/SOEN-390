@@ -14,6 +14,8 @@ import MapView, {
 } from "react-native-maps";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import MapViewDirections from "react-native-maps-directions";
+import { Coachmark } from "react-native-coachmark";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import NavigationIcon from "./Icons/NavigationIcon";
 import DirectionsIcon from "./Icons/DirectionsIcon";
 import {
@@ -349,7 +351,7 @@ export default function CampusMap({ navigationParams }) {
     setCloseTraceroute(false);
   };
 
-  const handleMapPress = () => {};
+  const handleMapPress = () => { };
 
   const panToStart = () => {
     if (start == null) return;
@@ -377,6 +379,34 @@ export default function CampusMap({ navigationParams }) {
     getCurrentLocation();
   }, []);
 
+  const [showCoachMarkCampusSwitch, setShowCoachMarkCampusSwitch] = useState(false);
+  const [showCoachMarkDirections, setShowCoachMarkDirections] = useState(false);
+  useEffect(() => {
+    const checkCoachmarks = async () => {
+      try {
+        const hasSeenCampusSwitch = await AsyncStorage.getItem("hasSeenCampusSwitchCoachmark");
+        const hasSeenDirections = await AsyncStorage.getItem("hasSeenDirectionsCoachmark");
+  
+        console.log("hasSeenCampusSwitchCoachmark:", hasSeenCampusSwitch);
+        console.log("hasSeenDirectionsCoachmark:", hasSeenDirections);
+  
+        if (!hasSeenCampusSwitch) {
+          setShowCoachMarkCampusSwitch(true);
+          await AsyncStorage.setItem("hasSeenCampusSwitchCoachmark", "true");
+        }
+  
+        if (!hasSeenDirections) {
+          setShowCoachMarkDirections(true);
+          await AsyncStorage.setItem("hasSeenDirectionsCoachmark", "true");
+        }
+      } catch (err) {
+        console.error("Failed to read/set coachmark state:", err);
+      }
+    };
+  
+    checkCoachmarks();
+  }, []);
+  
   return (
     <View style={styles.container}>
       <MapView
@@ -548,24 +578,33 @@ export default function CampusMap({ navigationParams }) {
           setSearchText={setSearchText}
         />
       )}
-
       {!isSearch && (
         <View className="absolute h-full justify-end items-center">
-          <View
-            style={styles.shadow}
-            className="mb-40 rounded-xl bg-white p-4 ml-8"
+          <Coachmark
+            message="Tap here to switch between SGW and Loyola campuses!"
+            autoShow
+            visible={showCoachMarkCampusSwitch}
+            onHide={async () => {
+              await AsyncStorage.setItem("hasSeenCampusSwitchCoachmark", "true");
+              setShowCoachMarkCampusSwitch(false);
+            }}
           >
-            <TouchableHighlight
-              underlayColor={"white"}
-              onPress={handleLoyola}
-              className="mb-4"
+            <View
+              style={styles.shadow}
+              className="mb-40 rounded-xl bg-white p-4 ml-8"
             >
-              <LoyolaIcon campus={campus} />
-            </TouchableHighlight>
-            <TouchableHighlight underlayColor={"white"} onPress={handleSGW}>
-              <SGWIcon campus={campus} />
-            </TouchableHighlight>
-          </View>
+              <TouchableHighlight
+                underlayColor={"white"}
+                onPress={handleLoyola}
+                className="mb-4"
+              >
+                <LoyolaIcon campus={campus} />
+              </TouchableHighlight>
+              <TouchableHighlight underlayColor={"white"} onPress={handleSGW}>
+                <SGWIcon campus={campus} />
+              </TouchableHighlight>
+            </View>
+          </Coachmark>
         </View>
       )}
 
@@ -578,6 +617,15 @@ export default function CampusMap({ navigationParams }) {
 
       {selectedBuilding && !isSearch && (
         <View className="absolute w-full bottom-20">
+          <Coachmark
+            message="Set your start point or get directions here"
+            autoShow
+            visible={showCoachMarkDirections}
+            onHide={async () => {
+              await AsyncStorage.setItem("hasSeenDirectionsCoachmark", "true");
+              setShowCoachMarkDirections(false);
+            }}
+          >
           <View className="flex flex-row justify-center items-center">
             <TouchableHighlight
               testID="set-start-end"
@@ -627,6 +675,7 @@ export default function CampusMap({ navigationParams }) {
               </View>
             </TouchableHighlight>
           </View>
+          </Coachmark>
         </View>
       )}
 
