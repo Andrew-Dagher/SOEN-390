@@ -23,10 +23,10 @@ jobs:
           cd backend
           npm ci
 
-      - name: Run Backend Tests with Coverage and Save Summary
+      - name: Run Backend Tests with Coverage
         run: |
           cd backend
-          npm test -- --coverage | tee coverage_summary.txt
+          npm test -- --coverage
 
       - name: Upload Backend Coverage Report
         uses: actions/upload-artifact@v4
@@ -34,78 +34,11 @@ jobs:
           name: backend-coverage
           path: backend/coverage/lcov.info
 
-      - name: Upload Backend Coverage Summary
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-coverage-summary
-          path: backend/coverage_summary.txt
-
-      - name: Upload coverage reports to Codecov
+      - name: Upload coverage reports to Codecov (Backend)
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: Andrew-Dagher/SOEN-390
-
-      - name: Read Backend Coverage Summary
-        id: read_backend
-        run: |
-          if [ -f backend/coverage_summary.txt ]; then
-            summary=$(cat backend/coverage_summary.txt)
-          else
-            summary="Coverage summary not found."
-          fi
-          echo "summary<<EOF" >> $GITHUB_OUTPUT
-          echo "$summary" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Get Encoded Branch Name
-        id: encode_branch
-        uses: actions/github-script@v6
-        with:
-          script: |
-            // For pull requests, GITHUB_HEAD_REF is available; otherwise, use context.ref.
-            const branch = process.env.GITHUB_HEAD_REF || context.ref.replace('refs/heads/', '');
-            const encodedBranch = encodeURIComponent(branch);
-            return { encodedBranch };
-
-      - name: Find Backend Coverage Comment
-        if: ${{ github.event_name == 'pull_request' }}
-        uses: peter-evans/find-comment@v1
-        id: find_backend
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: '**Backend Code Coverage Report**'
-
-      - name: Create Backend Coverage Comment
-        if: ${{ github.event_name == 'pull_request' && steps.find_backend.outputs.comment-id == '' }}
-        uses: peter-evans/create-or-update-comment@v1
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            **Backend Code Coverage Report**
-
-            ```bash
-            ${{ steps.read_backend.outputs.summary }}
-            ```
-
-            [![codecov](https://codecov.io/gh/Andrew-Dagher/SOEN-390/branch/${{ steps.encode_branch.outputs.encodedBranch }}/graph/badge.svg)](https://app.codecov.io/github/Andrew-Dagher/SOEN-390/tree/${{ steps.encode_branch.outputs.encodedBranch }})
-          reactions: rocket
-
-      - name: Update Backend Coverage Comment
-        if: ${{ github.event_name == 'pull_request' && steps.find_backend.outputs.comment-id != '' }}
-        uses: peter-evans/create-or-update-comment@v1
-        with:
-          comment-id: ${{ steps.find_backend.outputs.comment-id }}
-          body: |
-            **Backend Code Coverage Report**
-
-            ```bash
-            ${{ steps.read_backend.outputs.summary }}
-            ```
-
-            [![codecov](https://codecov.io/gh/Andrew-Dagher/SOEN-390/branch/${{ steps.encode_branch.outputs.encodedBranch }}/graph/badge.svg)](https://app.codecov.io/github/Andrew-Dagher/SOEN-390/tree/${{ steps.encode_branch.outputs.encodedBranch }})
-          reactions: hooray
 
   test_frontend:
     runs-on: ubuntu-latest
@@ -123,10 +56,10 @@ jobs:
           cd frontend
           npm install
 
-      - name: Run Frontend Tests with Coverage and Save Summary
+      - name: Run Frontend Tests with Coverage
         run: |
           cd frontend
-          npm run test -- --coverage | tee coverage_summary.txt
+          npm run test -- --coverage
 
       - name: Upload Frontend Coverage Report
         uses: actions/upload-artifact@v4
@@ -134,77 +67,11 @@ jobs:
           name: frontend-coverage
           path: frontend/coverage/lcov.info
 
-      - name: Upload Frontend Coverage Summary
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-coverage-summary
-          path: frontend/coverage_summary.txt
-
-      - name: Upload coverage reports to Codecov
+      - name: Upload coverage reports to Codecov (Frontend)
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: Andrew-Dagher/SOEN-390
-
-      - name: Read Frontend Coverage Summary
-        id: read_frontend
-        run: |
-          if [ -f frontend/coverage_summary.txt ]; then
-            summary=$(cat frontend/coverage_summary.txt)
-          else
-            summary="Coverage summary not found."
-          fi
-          echo "summary<<EOF" >> $GITHUB_OUTPUT
-          echo "$summary" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Get Encoded Branch Name for Frontend
-        id: encode_branch_frontend
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const branch = process.env.GITHUB_HEAD_REF || context.ref.replace('refs/heads/', '');
-            const encodedBranch = encodeURIComponent(branch);
-            return { encodedBranch };
-
-      - name: Find Frontend Coverage Comment
-        if: ${{ github.event_name == 'pull_request' }}
-        uses: peter-evans/find-comment@v1
-        id: find_frontend
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: '**Frontend Code Coverage Report**'
-
-      - name: Create Frontend Coverage Comment
-        if: ${{ github.event_name == 'pull_request' && steps.find_frontend.outputs.comment-id == '' }}
-        uses: peter-evans/create-or-update-comment@v1
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            **Frontend Code Coverage Report**
-
-            ```bash
-            ${{ steps.read_frontend.outputs.summary }}
-            ```
-
-            [![codecov](https://codecov.io/gh/Andrew-Dagher/SOEN-390/branch/${{ steps.encode_branch_frontend.outputs.encodedBranch }}/graph/badge.svg)](https://app.codecov.io/github/Andrew-Dagher/SOEN-390/tree/${{ steps.encode_branch_frontend.outputs.encodedBranch }})
-          reactions: rocket
-
-      - name: Update Frontend Coverage Comment
-        if: ${{ github.event_name == 'pull_request' && steps.find_frontend.outputs.comment-id != '' }}
-        uses: peter-evans/create-or-update-comment@v1
-        with:
-          comment-id: ${{ steps.find_frontend.outputs.comment-id }}
-          body: |
-            **Frontend Code Coverage Report**
-
-            ```bash
-            ${{ steps.read_frontend.outputs.summary }}
-            ```
-
-            [![codecov](https://codecov.io/gh/Andrew-Dagher/SOEN-390/branch/${{ steps.encode_branch_frontend.outputs.encodedBranch }}/graph/badge.svg)](https://app.codecov.io/github/Andrew-Dagher/SOEN-390/tree/${{ steps.encode_branch_frontend.outputs.encodedBranch }})
-          reactions: hooray
 
   sonar_scan:
     runs-on: ubuntu-latest
@@ -242,12 +109,6 @@ jobs:
           name: frontend-coverage
           path: frontend/coverage
 
-      - name: Print Backend Coverage Report
-        run: cat backend/coverage/lcov.info || echo "Backend coverage report not found"
-
-      - name: Print Frontend Coverage Report
-        run: cat frontend/coverage/lcov.info || echo "Frontend coverage report not found"
-
       - name: Run SonarCloud Analysis
         run: |
           export PATH="/opt/sonar-scanner/bin:$PATH"
@@ -260,6 +121,6 @@ jobs:
             -Dsonar.exclusions=**/__tests__/**,**/*.test.js \
             -Dsonar.coverage.exclusions=**/__tests__/**,**/*.test.js \
             -Dsonar.javascript.lcov.reportPaths=backend/coverage/lcov.info,frontend/coverage/lcov.info || (echo "SonarCloud analysis failed" && exit 1)
-      
+
       - name: Get SonarCloud Results
         run: "echo 'Check SonarCloud Report: https://sonarcloud.io/dashboard?id=Andrew-Dagher_SOEN-390&branch=${GITHUB_REF##*/}'"
