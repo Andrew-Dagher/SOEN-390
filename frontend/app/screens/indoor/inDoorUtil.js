@@ -59,4 +59,4 @@ export const getUrlFromRoomId = (roomId) => {
 };
   
 
-export const pickerList = toPickerList(building);
+export const pickerList = toPickerList();
