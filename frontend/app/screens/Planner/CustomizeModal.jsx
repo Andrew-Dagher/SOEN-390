@@ -1,15 +1,10 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
+import { View, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import { Modal, Text, Switch, Button, IconButton } from "react-native-paper";
 
 /**
  * CustomizeModal
- * 
+ *
  * @param {boolean} visible
  * @param {() => void} onClose
  * @param {Array} classes
@@ -31,7 +26,6 @@ export default function CustomizeModal({
   initialTaskColor = "#ADD8E6",
   onSavePreferences,
 }) {
-
   const [localPrefs, setLocalPrefs] = useState({});
   const [expandedSections, setExpandedSections] = useState({});
   const [classColor, setClassColor] = useState(initialClassColor);
@@ -43,7 +37,7 @@ export default function CustomizeModal({
       setClassColor(initialClassColor);
       setTaskColor(initialTaskColor);
     }
-  }, [visible, selectedDate, datePreferences, initialClassColor, initialTaskColor]);
+  }, [visible, initialClassColor, initialTaskColor]);
 
   const toggleSection = (sectionId) => {
     setExpandedSections((prev) => ({
@@ -80,10 +74,14 @@ export default function CustomizeModal({
   };
 
   return (
-    <Modal visible={visible} onDismiss={onClose} contentContainerStyle={styles.modalContainer}>
+    <Modal
+      visible={visible}
+      onDismiss={onClose}
+      contentContainerStyle={styles.modalContainer}
+      testID="customize-modal"
+    >
       <Text style={styles.title}>Customize Planner</Text>
       <ScrollView style={styles.scrollContainer}>
-
         <Text style={styles.sectionTitle}>Classes</Text>
         {classes.length > 0 ? (
           classes.map((item) => (
@@ -92,9 +90,13 @@ export default function CustomizeModal({
                 onPress={() => toggleSection(item.id)}
                 style={styles.sectionToggle}
               >
-                <Text style={[styles.classText, { color: "#666" }]}>{item.title}</Text>
+                <Text style={[styles.classText, { color: "#666" }]}>
+                  {item.title}
+                </Text>
                 <IconButton
-                  icon={expandedSections[item.id] ? "chevron-up" : "chevron-down"}
+                  icon={
+                    expandedSections[item.id] ? "chevron-up" : "chevron-down"
+                  }
                   size={20}
                 />
               </TouchableOpacity>
@@ -104,6 +106,7 @@ export default function CustomizeModal({
                   <View style={styles.optionRow}>
                     <Text style={styles.optionTitle}>Skippable:</Text>
                     <Switch
+                      testID={`skippable-switch-${item.id}`}
                       value={!!localPrefs[item.id]?.skippable}
                       onValueChange={() => toggleSkippable(item)}
                     />
@@ -141,9 +144,13 @@ export default function CustomizeModal({
                 onPress={() => toggleSection(item.id)}
                 style={styles.sectionToggle}
               >
-                <Text style={[styles.classText, { color: "#666" }]}>{item.title}</Text>
+                <Text style={[styles.classText, { color: "#666" }]}>
+                  {item.title}
+                </Text>
                 <IconButton
-                  icon={expandedSections[item.id] ? "chevron-up" : "chevron-down"}
+                  icon={
+                    expandedSections[item.id] ? "chevron-up" : "chevron-down"
+                  }
                   size={20}
                 />
               </TouchableOpacity>
@@ -181,7 +188,6 @@ export default function CustomizeModal({
             />
           ))}
         </View>
-
       </ScrollView>
 
       <Button
