@@ -373,13 +373,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
-
-  // Three dots menu styles
-  calendarMenuButton: {
-    padding: 8,
-    marginRight: 8,
-    borderRadius: 20,
-  },
   threeDots: {
     flexDirection: "column",
     justifyContent: "center",
