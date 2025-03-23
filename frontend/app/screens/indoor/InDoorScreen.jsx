@@ -10,15 +10,16 @@ import {
   Pressable,
   StatusBar,
   Platform,
-  TextInput,
   StyleSheet,
   TouchableHighlight
 } from "react-native";
+
+import Map from '../../components/navigation/Map';
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { WebView } from 'react-native-webview';
 import getThemeColors from "../../ColorBindTheme";
 import { useAppSettings } from "../../AppSettingsContext";
-import { pickerList, areRoomsOnSameFloor, areRoomsOnSameBuilding, getFloorIdByRoomId, getEntranceByRoomId, getUrlFromRoomId} from "./inDoorUtil";
+import { pickerList, areRoomsOnSameFloor, areRoomsOnSameBuilding, getFloorIdByRoomId, getEntranceByRoomId, getUrlFromRoomId } from "./inDoorUtil";
 import DropDownPicker from 'react-native-dropdown-picker';
 
 const InDoorScreen = () => {
@@ -26,12 +27,12 @@ const InDoorScreen = () => {
   const route = useRoute();
   const theme = getThemeColors();
   const { textSize } = useAppSettings();
-  
+
   // Retrieve the selected floorplan (or map identifier) from route params
   const { building, step1 } = route.params || { selectedFloorplan: "Unknown" };
-  
+
   const headerPadding = Platform.OS === "ios" ? 48 : 32;
-  const [floorPlanURL, setFloorPlanURL] = useState(building.floorPlans)
+  const [floorPlanURL, setFloorPlanURL] = useState(building.floorPlans);
   const [nextFloorPlanURL, setNextFloorPlanURL] = useState(building.floorPlans);
   const [isSameFloor, setIsSameFloor] = useState(true);
   const [isNextFloor, setIsNextFloor] = useState(false);
@@ -41,12 +42,16 @@ const InDoorScreen = () => {
   const [value1, setValue1] = useState(step1?.value1 || null);
   const [items, setItems] = useState(pickerList);
   const [items1, setItems1] = useState(pickerList);
-  const [openWebView, setOpenWebView] = useState(false);
+  const [selectedStart, setSelectedStart] = useState(null);
+  const [selectedEnd, setSelectedEnd] = useState(null);
+  
+  // currentStep: 0 = Search, 1 = Departure Indoor, 2 = Outdoor Directions, 3 = Destination Indoor
+  const [currentStep, setCurrentStep] = useState(0);
 
   const handleNextFloor = () => {
     if (isNextFloor) setIsNextFloor(false);
-    if (!isNextFloor) setIsNextFloor(true);
-  }
+    else setIsNextFloor(true);
+  };
 
   const handleToCampus = () => {
     if (value == null || value1 == null) return;
@@ -57,134 +62,188 @@ const InDoorScreen = () => {
     let nextEntranceLoc = getEntranceByRoomId(value1);
 
     if (areRoomsOnSameFloor(value, value1)) {
-      setFloorPlanURL(building.floorPlans+"&floor="+floorId+"&location="+value+"&departure="+value1);
-      setOpenWebView(true);
-      return;
+      // If rooms are on the same floor, directly show the indoor map
+      setFloorPlanURL(building.floorPlans + "&floor=" + floorId + "&location=" + value + "&departure=" + value1);
+      setCurrentStep(1);
     } else {
+      // Multi-floor or multi-building navigation
       setIsSameFloor(false);
-      setFloorPlanURL(building.floorPlans+"&floor="+floorId+"&departure="+value+"&location="+entranceLoc);
+      // Step 1: Departure indoor map with departure information
+      setFloorPlanURL(building.floorPlans + "&floor=" + floorId + "&departure=" + value + "&location=" + entranceLoc);
 
       let buildingURL = areRoomsOnSameBuilding(value, value1) ? building.floorPlans : getUrlFromRoomId(value1);
-      setNextFloorPlanURL(buildingURL+"&floor="+nextFloorId+"&location="+value1+"&departure="+nextEntranceLoc);
-      setOpenWebView(true);
+      // Prepare destination indoor map URL (for step 3)
+      setNextFloorPlanURL(buildingURL + "&floor=" + nextFloorId + "&location=" + value1 + "&departure=" + nextEntranceLoc);
+      
+      // Begin at step 1 (departure indoor). User can then proceed to outdoor directions.
+      setCurrentStep(1);
     }
-  }
+  };
+
+  const goToOutdoorDirections = () => {
+    setCurrentStep(2);
+  };
+
+  const goToDestinationIndoor = () => {
+    setCurrentStep(3);
+  };
+
+  const goBackStep = () => {
+    setCurrentStep(prev => (prev > 1 ? prev - 1 : prev));
+  };
 
   useEffect(() => {
-    console.log(floorPlanURL)
-    console.log(nextFloorPlanURL)
-  }, [openWebView, isNextFloor, isSameFloor, nextFloorPlanURL])
+    console.log("Departure URL:", floorPlanURL);
+    console.log("Destination URL:", nextFloorPlanURL);
+  }, [floorPlanURL, nextFloorPlanURL]);
+
+  useEffect(() => {
+    if (currentStep === 2) {
+      console.log("Route in step 2:", route);
+  
+      if (route.params?.isSGW) {
+        route.params.campus = "sgw";
+      } else {
+        route.params.campus = "loyola";
+      }
+  
+      // Ensure longName exists and then set buildingName to its lowercase version.
+      if (route.params?.longName) {
+        route.params.buildingName = route.params.longName.toLowerCase();
+      }
+    }
+  }, [currentStep, route]);
+  
+  
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F3F4F6" }}>
       <StatusBar barStyle="dark-content" />
-      <View className={" h-1/6 flex flex-row justify-around items-center"} style={{ paddingTop: headerPadding, paddingHorizontal: 16 }}>
-        <Pressable
-          onPress={() => navigation.goBack()}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
+      <View style={{ paddingTop: headerPadding, paddingHorizontal: 16, flexDirection: "row", justifyContent: "space-around", alignItems: "center", height: "15%" }}>
+        <Pressable onPress={() => navigation.goBack()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Text style={{ fontSize: 24, fontWeight: "300" }}>←</Text>
         </Pressable>
-        <Text style={{ fontSize: 24, fontWeight: "700", marginVertical: 8 }}>
-          Map of {building.name}
-        </Text>
-   
+        <Text style={{ fontSize: 24, fontWeight: "700" }}>Map of {building.name}</Text>
       </View>
 
-     
-      {/* Map Placeholder */}
-      <View>
-        <View className={'flex items-center'}>
-          <View className={'flex flex-row items-center justify-center w-3/4 mb-2'}>
-            <Text className={'m-2 font-bold'}>Start</Text>
-            <DropDownPicker
-              open={open}
-              value={value}
-              items={items}
-              setOpen={setOpen}
-              setValue={setValue}
-              setItems={setItems}
-            />
-          </View>
-          <View className={'flex flex-row items-center justify-center w-3/4'}>
-            <Text className={'m-2 font-bold'}>Destination</Text>
-            <DropDownPicker
-              open={open1}
-              value={value1}
-              items={items1}
-              setOpen={setOpen1}
-              setValue={setValue1}
-              setItems={setItems1}
-            />
-          </View>
-          
-          <View className='flex flex-row justify-between items-center'>
-            <TouchableHighlight
-              style={[
-                styles.shadow,
-                { backgroundColor: theme.backgroundColor },
-              ]}
-              className="rounded-xl p-4 bg-primary-red m-2"
-              onPress={handleToCampus}
-            >
-              <View className="flex flex-row justify-around items-center">
-                <Text
-                  style={[{ fontSize: textSize }]}
-                  className="color-white  font-bold"
-                >
-                  Search
-                </Text>
-              </View>
-            </TouchableHighlight>
+      {/* Dropdown selectors */}
+      <View style={{ alignItems: "center", marginBottom: 10 }}>
+        {/* Start Dropdown */}
+        <View style={{ zIndex: open ? 3000 : 3000, width: "75%", marginBottom: 8 }}>
+          <Text style={{ margin: 8, fontWeight: "bold" }}>Start</Text>
+          <DropDownPicker
+            style={{ zIndex: 3000, elevation: 3000 }}
+            dropDownContainerStyle={{ zIndex: 3000, elevation: 3000 }}
+            open={open}
+            value={value}
+            items={items}
+            setOpen={setOpen}
+            setValue={setValue}
+            setItems={setItems}
+            onSelectItem={(item) => {
+              setSelectedStart(item.label); // Update label state when item is selected
+            }}
+          />
+        </View>
 
-            {openWebView && !isSameFloor && <TouchableHighlight
-              style={[
-                styles.shadow,
-                { backgroundColor: theme.backgroundColor },
-              ]}
-              className={`rounded-xl p-4 ${!isNextFloor ? 'bg-primary-red' : 'bg-primary-accent'} m-2`}
-              onPress={handleNextFloor}
+        {/* Destination Dropdown */}
+        <View style={{ zIndex: open1 ? 2000 : 2000, width: "75%", marginBottom: 8 }}>
+          <Text style={{ margin: 8, fontWeight: "bold" }}>Destination</Text>
+          <DropDownPicker
+            style={{ zIndex: 2000, elevation: 2000 }}
+            dropDownContainerStyle={{ zIndex: 2000, elevation: 2000 }}
+            open={open1}
+            value={value1}
+            items={items1}
+            setOpen={setOpen1}
+            setValue={setValue1}
+            setItems={setItems1}
+            onSelectItem={(item) => {
+              setSelectedEnd(item.label); // Update label state when item is selected
+            }}
+          />
+        </View>
+        
+        
+          <TouchableHighlight
+            style={[styles.shadow, { backgroundColor: theme.backgroundColor, borderRadius: 8, padding: 12, margin: 8 }]}
+            onPress={handleToCampus}
+          >
+            <Text style={{ fontSize: textSize, color: "white", fontWeight: "bold" }}>Search</Text>
+          </TouchableHighlight>
+  
+      </View>
+
+      {/* Render views based on current step */}
+      {currentStep === 1 && (
+        <View style={{ flex: 1 }}>
+          <WebView
+            style={{
+              flex: 1,
+              marginHorizontal: 16,
+              marginBottom: 50,
+              backgroundColor: "#D1D5DB",
+              borderRadius: 8,
+            }}
+            source={{ uri: floorPlanURL }}
+          />
+          {!isSameFloor && (
+            <View style={{ flexDirection: "row", justifyContent: "center", margin: 16 }}>
+              <TouchableHighlight
+                style={[styles.shadow, { backgroundColor: theme.backgroundColor, padding: 12, borderRadius: 8 }]}
+                onPress={goToOutdoorDirections}
+              >
+                <Text style={{ fontSize: textSize, color: "white", fontWeight: "bold" }}>Outdoor Directions</Text>
+              </TouchableHighlight>
+            </View>
+          )}
+        </View>
+      )}
+
+      {currentStep === 2 && (
+        <View style={{ flex: 1 }}>
+          <Map navigationParams={{ start: selectedStart, end: selectedEnd, indoor: true }} />
+          <View style={{ flexDirection: "row", justifyContent: "space-around", margin: 16 }}>
+            <TouchableHighlight
+              style={[styles.shadow, { backgroundColor: theme.backgroundColor, padding: 12, borderRadius: 8 }]}
+              onPress={goBackStep}
             >
-              <View className="flex flex-row justify-around items-center">
-                <Text
-                  style={[{ fontSize: textSize }]}
-                  className="color-white  font-bold"
-                >
-                  {!isNextFloor ? 'Next Floor' : 'Prev Floor'}
-                </Text>
-              </View>
-            </TouchableHighlight>}
+              <Text style={{ fontSize: textSize, color: "white", fontWeight: "bold" }}>Back</Text>
+            </TouchableHighlight>
+            <TouchableHighlight
+              style={[styles.shadow, { backgroundColor: theme.backgroundColor, padding: 12, borderRadius: 8 }]}
+              onPress={goToDestinationIndoor}
+            >
+              <Text style={{ fontSize: textSize, color: "white", fontWeight: "bold" }}>Next</Text>
+            </TouchableHighlight>
           </View>
         </View>
+      )}
+
+      {currentStep === 3 && (
+        <View style={{ flex: 1 }}>
         <WebView
-          className={"h-5/6"}
           style={{
             flex: 1,
             marginHorizontal: 16,
             marginBottom: 50,
             backgroundColor: "#D1D5DB",
             borderRadius: 8,
-            justifyContent: "center",
-            alignItems: "center",
           }}
-          source={{ uri: building.floorPlans }}
+          source={{ uri: nextFloorPlanURL }}
         />
+        
+          <View style={{ flexDirection: "row", justifyContent: "center", margin: 16 }}>
+            <TouchableHighlight
+              style={[styles.shadow, { backgroundColor: theme.backgroundColor, padding: 12, borderRadius: 8 }]}
+              onPress={goToOutdoorDirections}
+            >
+              <Text style={{ fontSize: textSize, color: "white", fontWeight: "bold" }}>Back</Text>
+            </TouchableHighlight>
+          </View>
+ 
       </View>
-    {openWebView && (
-      <WebView
-        style={[{
-          flex: 1,
-          marginHorizontal: 16,
-          marginBottom: 50,
-          backgroundColor: "#D1D5DB",
-          borderRadius: 8,
-          justifyContent: "center",
-          alignItems: "center",
-        },
-        styles.shadow]}
-        source={{ uri: !isNextFloor ? floorPlanURL : nextFloorPlanURL }}
-      />  
-    )}
+      )}
     </View>
   );
 };
