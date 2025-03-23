@@ -66,6 +66,9 @@ export default function HomeScreen() {
           <TouchableOpacity onPress={() => navigation.navigate("Calendar")}>
             <HomeCard image={CalendarPic} text="Access your calendar" />
           </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate("Planner")}>
+            <HomeCard image={CalendarPic} text="p" />
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
       {/* Bottom navigation is now rendered in App.js and stays fixed across screens */}
