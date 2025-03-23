@@ -18,6 +18,12 @@ export default function Planner() {
   const [currentWeekStart, setCurrentWeekStart] = useState(
     moment().startOf("week")
   );
+  const [selectedDate, setSelectedDate] = useState(
+    moment().format("YYYY-MM-DD")
+  );
+  const [currentWeekStart, setCurrentWeekStart] = useState(
+    moment().startOf("week")
+  );
   const [scale, setScale] = useState(1);
 
   // Calendar Data
@@ -387,7 +393,7 @@ ${JSON.stringify(scheduleData)}
   const currentMonthYear = moment(selectedDate).format("MMMM YYYY");
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} testID="planner-screen">
       {/* HEADER */}
       <View style={styles.header}>
         <View style={styles.headerLeftContainer}>
@@ -644,6 +650,7 @@ ${JSON.stringify(scheduleData)}
         </LinearGradient>
       </TouchableOpacity>
       <CustomizeModal
+        testID="customize-modal"
         visible={isCustomizeModalVisible}
         onClose={() => setIsCustomizeModalVisible(false)}
         classes={classes}

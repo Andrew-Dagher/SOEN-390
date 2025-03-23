@@ -37,13 +37,7 @@ export default function CustomizeModal({
       setClassColor(initialClassColor);
       setTaskColor(initialTaskColor);
     }
-  }, [
-    visible,
-    selectedDate,
-    datePreferences,
-    initialClassColor,
-    initialTaskColor,
-  ]);
+  }, [visible, initialClassColor, initialTaskColor]);
 
   const toggleSection = (sectionId) => {
     setExpandedSections((prev) => ({
@@ -84,6 +78,7 @@ export default function CustomizeModal({
       visible={visible}
       onDismiss={onClose}
       contentContainerStyle={styles.modalContainer}
+      testID="customize-modal"
     >
       <Text style={styles.title}>Customize Planner</Text>
       <ScrollView style={styles.scrollContainer}>
@@ -95,6 +90,9 @@ export default function CustomizeModal({
                 onPress={() => toggleSection(item.id)}
                 style={styles.sectionToggle}
               >
+                <Text style={[styles.classText, { color: "#666" }]}>
+                  {item.title}
+                </Text>
                 <Text style={[styles.classText, { color: "#666" }]}>
                   {item.title}
                 </Text>
@@ -111,6 +109,7 @@ export default function CustomizeModal({
                   <View style={styles.optionRow}>
                     <Text style={styles.optionTitle}>Skippable:</Text>
                     <Switch
+                      testID={`skippable-switch-${item.id}`}
                       value={!!localPrefs[item.id]?.skippable}
                       onValueChange={() => toggleSkippable(item)}
                     />
@@ -145,6 +144,7 @@ export default function CustomizeModal({
           toDoTasks.map((item) => (
             <View key={item.id} style={styles.itemContainer}>
               <TouchableOpacity
+                testID={`task-toggle-${item.id}`}
                 onPress={() => toggleSection(item.id)}
                 style={styles.sectionToggle}
               >
@@ -164,6 +164,7 @@ export default function CustomizeModal({
                   <View style={styles.optionRow}>
                     <Text style={styles.optionTitle}>Important:</Text>
                     <Switch
+                      testID={`important-switch-${item.id}`}
                       value={!!localPrefs[item.id]?.important}
                       onValueChange={() => toggleImportant(item)}
                     />
