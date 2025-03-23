@@ -39,6 +39,12 @@ jobs:
         with:
           name: backend-coverage-summary
           path: backend/coverage_summary.txt
+          
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: Andrew-Dagher/SOEN-390
 
       - name: Comment Backend Coverage on PR
         if: github.event_name == 'pull_request'
@@ -98,6 +104,12 @@ jobs:
         with:
           name: frontend-coverage-summary
           path: frontend/coverage_summary.txt
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: Andrew-Dagher/SOEN-390
 
       - name: Comment Frontend Coverage on PR
         if: github.event_name == 'pull_request'
