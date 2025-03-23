@@ -63,8 +63,8 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            // For pull requests, GITHUB_HEAD_REF is available; otherwise, use context.ref.
-            const branch = process.env.GITHUB_HEAD_REF || context.ref.replace('refs/heads/', '');
+            // If this is a pull request, use the head ref; otherwise, extract the branch from context.ref
+            const branch = context.payload.pull_request ? context.payload.pull_request.head.ref : context.ref.replace('refs/heads/', '');
             const encodedBranch = encodeURIComponent(branch);
             return { encodedBranch };
 
@@ -79,7 +79,7 @@ jobs:
 
       - name: Create Backend Coverage Comment
         if: ${{ github.event_name == 'pull_request' && steps.find_backend.outputs.comment-id == '' }}
-        uses: peter-evans/create-or-update-comment@v1
+        uses: peter-evans/create-or-update-comment@v2
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
@@ -94,7 +94,7 @@ jobs:
 
       - name: Update Backend Coverage Comment
         if: ${{ github.event_name == 'pull_request' && steps.find_backend.outputs.comment-id != '' }}
-        uses: peter-evans/create-or-update-comment@v1
+        uses: peter-evans/create-or-update-comment@v2
         with:
           comment-id: ${{ steps.find_backend.outputs.comment-id }}
           body: |
@@ -163,7 +163,7 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const branch = process.env.GITHUB_HEAD_REF || context.ref.replace('refs/heads/', '');
+            const branch = context.payload.pull_request ? context.payload.pull_request.head.ref : context.ref.replace('refs/heads/', '');
             const encodedBranch = encodeURIComponent(branch);
             return { encodedBranch };
 
@@ -178,7 +178,7 @@ jobs:
 
       - name: Create Frontend Coverage Comment
         if: ${{ github.event_name == 'pull_request' && steps.find_frontend.outputs.comment-id == '' }}
-        uses: peter-evans/create-or-update-comment@v1
+        uses: peter-evans/create-or-update-comment@v2
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
@@ -193,7 +193,7 @@ jobs:
 
       - name: Update Frontend Coverage Comment
         if: ${{ github.event_name == 'pull_request' && steps.find_frontend.outputs.comment-id != '' }}
-        uses: peter-evans/create-or-update-comment@v1
+        uses: peter-evans/create-or-update-comment@v2
         with:
           comment-id: ${{ steps.find_frontend.outputs.comment-id }}
           body: |
