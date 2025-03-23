@@ -24,6 +24,7 @@ describe("<CustomizeModal />", () => {
     const { getByTestId, getByText } = render(
       <CustomizeModal
         visible={true}
+        toDoTasks={[{ id: 1, title: "Test Task" }]}
         classes={[{ id: 1, title: "Test Class" }]}
         onClose={() => {}}
         selectedDate={"2023-05-01"}
@@ -32,8 +33,11 @@ describe("<CustomizeModal />", () => {
     );
     const saveButton = await waitFor(() => getByText("Save Preferences"));
     const classButton = await waitFor(() => getByText("Test Class"));
+    const taskToggle = await waitFor(() => getByTestId("task-toggle-1"));
+
     fireEvent.press(saveButton);
     fireEvent.press(classButton);
+    fireEvent.press(taskToggle);
     expect(getByTestId("customize-modal")).toBeTruthy();
   });
 });

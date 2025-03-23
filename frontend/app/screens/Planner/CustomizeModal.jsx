@@ -141,6 +141,7 @@ export default function CustomizeModal({
           toDoTasks.map((item) => (
             <View key={item.id} style={styles.itemContainer}>
               <TouchableOpacity
+                testID={`task-toggle-${item.id}`}
                 onPress={() => toggleSection(item.id)}
                 style={styles.sectionToggle}
               >
@@ -160,6 +161,7 @@ export default function CustomizeModal({
                   <View style={styles.optionRow}>
                     <Text style={styles.optionTitle}>Important:</Text>
                     <Switch
+                      testID={`important-switch-${item.id}`}
                       value={!!localPrefs[item.id]?.important}
                       onValueChange={() => toggleImportant(item)}
                     />
