@@ -71,19 +71,6 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: Andrew-Dagher/SOEN-390
 
-      - name: Get Encoded Branch Name
-        id: encode_branch
-        uses: actions/github-script@v6
-        with:
-          script: |
-            // For non-PR events, we encode the branch name (example usage).
-            // This step is optional if you only need the raw branch name above.
-            const branch = context.payload.pull_request
-              ? context.payload.pull_request.head.ref
-              : context.ref.replace('refs/heads/', '');
-            const encodedBranch = encodeURIComponent(branch);
-            return { encodedBranch };
-
   test_frontend:
     runs-on: ubuntu-latest
     steps:
@@ -122,17 +109,6 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: Andrew-Dagher/SOEN-390
-
-      - name: Get Encoded Branch Name for Frontend
-        id: encode_branch_frontend
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const branch = context.payload.pull_request
-              ? context.payload.pull_request.head.ref
-              : context.ref.replace('refs/heads/', '');
-            const encodedBranch = encodeURIComponent(branch);
-            return { encodedBranch };
 
   sonar_scan:
     runs-on: ubuntu-latest
@@ -191,27 +167,3 @@ jobs:
       
       - name: Get SonarCloud Results
         run: "echo 'Check SonarCloud Report: https://sonarcloud.io/dashboard?id=Andrew-Dagher_SOEN-390&branch=${GITHUB_REF##*/}'"
-
-      - name: Find Codecov Coverage Comment
-        if: ${{ github.event_name == 'pull_request' }}
-        uses: peter-evans/find-comment@v1
-        id: find_combined
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: '**Codecov Coverage Report**'
-
-      - name: Create Codecov Coverage Comment
-        if: ${{ github.event_name == 'pull_request' && steps.find_combined.outputs.comment-id == '' }}
-        uses: peter-evans/create-or-update-comment@v2
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            **Codecov Coverage Report**
-
-            <!-- 
-              Use the branch output from the retrieve_branch job. This is 
-              the raw branch name for the PR (or push), e.g. "setup/#182-Setup-CodeCov".
-            -->
-            [![codecov](https://codecov.io/gh/Andrew-Dagher/SOEN-390/branch/${{ needs.retrieve_branch.outputs.branch }}/graph/badge.svg)](https://app.codecov.io/github/Andrew-Dagher/SOEN-390/tree/${{ needs.retrieve_branch.outputs.branch }})
-          reactions: hooray
