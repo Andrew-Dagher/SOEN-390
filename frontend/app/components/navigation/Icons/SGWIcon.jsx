@@ -4,6 +4,7 @@
  */
 
 import * as React from "react";
+import PropTypes from "prop-types"; // Import PropTypes
 import { View } from "react-native";
 import Svg, { G, Path, Defs, ClipPath, Text } from "react-native-svg";
 
@@ -69,5 +70,10 @@ const SGWIcon = ({ campus }) => (
     </Svg>
   </View>
 );
+
+// Define PropTypes for SGWIcon component
+SGWIcon.propTypes = {
+  campus: PropTypes.string.isRequired,
+};
 
 export default SGWIcon;

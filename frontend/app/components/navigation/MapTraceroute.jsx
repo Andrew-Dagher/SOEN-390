@@ -10,11 +10,9 @@ import {
   Animated,
   StyleSheet,
   View,
-  Button,
   Dimensions,
   Text,
   TouchableOpacity,
-  TextInput,
   ScrollView,
 } from "react-native";
 import PropTypes from "prop-types";
@@ -217,7 +215,6 @@ InputAutocomplete.propTypes = {
  * @param {boolean} props.isRoute - Indicates if a route is currently active.
  * @param {Function} props.setIsRoute - Sets the route active state.
  * @param {Function} props.setSelectedBuilding - Sets the selected building.
- * @param {Function} props.panToMyLocation - Function to pan the map to user's current location.
  * @param {Object} props.end - Coordinates of the destination.
  * @param {Object} props.start - Coordinates of the starting point.
  * @param {Function} props.setEnd - Sets the destination coordinates.
@@ -243,7 +240,6 @@ const MapTraceroute = ({
   setMode,
   location,
   reset,
-  panToMyLocation,
   start,
   end,
   setEnd,
@@ -521,15 +517,13 @@ const MapTraceroute = ({
 
 // Define PropTypes for the main MapTraceroute component
 MapTraceroute.propTypes = {
+  isShuttle: PropTypes.bool.isRequired,
+  setWalkToBus: PropTypes.func.isRequired,
+  setWalkFromBus: PropTypes.func.isRequired,
+  setIsShuttle: PropTypes.func.isRequired,
   setMode: PropTypes.func.isRequired,
-  waypoints: PropTypes.array,
-  setWaypoints: PropTypes.func,
   location: PropTypes.object,
   reset: PropTypes.func.isRequired,
-  isRoute: PropTypes.bool,
-  setIsRoute: PropTypes.func,
-  setSelectedBuilding: PropTypes.func,
-  panToMyLocation: PropTypes.func,
   end: PropTypes.object,
   start: PropTypes.object,
   setEnd: PropTypes.func.isRequired,
@@ -540,7 +534,6 @@ MapTraceroute.propTypes = {
   setDestinationPosition: PropTypes.func.isRequired,
   closeTraceroute: PropTypes.bool.isRequired,
   setCloseTraceroute: PropTypes.func.isRequired,
-  setIsSearch: PropTypes.func,
   carTravelTime: PropTypes.string,
   bikeTravelTime: PropTypes.string,
   metroTravelTime: PropTypes.string,
