@@ -23,10 +23,10 @@ jobs:
           cd backend
           npm ci
 
-      - name: Run Backend Tests with Coverage
+      - name: Run Backend Tests with Coverage and Save Summary
         run: |
           cd backend
-          npm test -- --coverage
+          npm test -- --coverage | tee coverage_summary.txt
 
       - name: Upload Backend Coverage Report
         uses: actions/upload-artifact@v4
@@ -34,11 +34,27 @@ jobs:
           name: backend-coverage
           path: backend/coverage/lcov.info
 
-      - name: Upload coverage reports to Codecov (Backend)
+      - name: Upload Backend Coverage Summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage-summary
+          path: backend/coverage_summary.txt
+
+      - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: Andrew-Dagher/SOEN-390
+
+      - name: Get Encoded Branch Name
+        id: encode_branch
+        uses: actions/github-script@v6
+        with:
+          script: |
+            // If this is a pull request, use the head ref; otherwise, extract the branch from context.ref
+            const branch = context.payload.pull_request ? context.payload.pull_request.head.ref : context.ref.replace('refs/heads/', '');
+            const encodedBranch = encodeURIComponent(branch);
+            return { encodedBranch };
 
   test_frontend:
     runs-on: ubuntu-latest
@@ -56,10 +72,10 @@ jobs:
           cd frontend
           npm install
 
-      - name: Run Frontend Tests with Coverage
+      - name: Run Frontend Tests with Coverage and Save Summary
         run: |
           cd frontend
-          npm run test -- --coverage
+          npm run test -- --coverage | tee coverage_summary.txt
 
       - name: Upload Frontend Coverage Report
         uses: actions/upload-artifact@v4
@@ -67,11 +83,26 @@ jobs:
           name: frontend-coverage
           path: frontend/coverage/lcov.info
 
-      - name: Upload coverage reports to Codecov (Frontend)
+      - name: Upload Frontend Coverage Summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage-summary
+          path: frontend/coverage_summary.txt
+
+      - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: Andrew-Dagher/SOEN-390
+
+      - name: Get Encoded Branch Name for Frontend
+        id: encode_branch_frontend
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const branch = context.payload.pull_request ? context.payload.pull_request.head.ref : context.ref.replace('refs/heads/', '');
+            const encodedBranch = encodeURIComponent(branch);
+            return { encodedBranch };
 
   sonar_scan:
     runs-on: ubuntu-latest
@@ -130,48 +161,3 @@ jobs:
       
       - name: Get SonarCloud Results
         run: "echo 'Check SonarCloud Report: https://sonarcloud.io/dashboard?id=Andrew-Dagher_SOEN-390&branch=${GITHUB_REF##*/}'"
-
-  post_coverage:
-    if: ${{ github.event_name == 'pull_request' }}
-    runs-on: ubuntu-latest
-    needs: [test_backend, test_frontend]
-    steps:
-      - name: Get Encoded Branch Name
-        id: encode_branch
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const branch = context.payload.pull_request
-              ? context.payload.pull_request.head.ref
-              : context.ref.replace('refs/heads/', '');
-            return { encodedBranch: encodeURIComponent(branch) };
-
-      - name: Find Global Coverage Comment
-        uses: peter-evans/find-comment@v1
-        id: find_global
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: '**Global Code Coverage Report**'
-
-      - name: Create Global Coverage Comment
-        if: ${{ steps.find_global.outputs.comment-id == '' }}
-        uses: peter-evans/create-or-update-comment@v2
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            **Global Code Coverage Report**
-
-            [![codecov](https://codecov.io/gh/Andrew-Dagher/SOEN-390/branch/${{ steps.encode_branch.outputs.encodedBranch }}/graph/badge.svg)](https://app.codecov.io/github/Andrew-Dagher/SOEN-390/tree/${{ steps.encode_branch.outputs.encodedBranch }})
-          reactions: rocket
-
-      - name: Update Global Coverage Comment
-        if: ${{ steps.find_global.outputs.comment-id != '' }}
-        uses: peter-evans/create-or-update-comment@v2
-        with:
-          comment-id: ${{ steps.find_global.outputs.comment-id }}
-          body: |
-            **Global Code Coverage Report**
-
-            [![codecov](https://codecov.io/gh/Andrew-Dagher/SOEN-390/branch/${{ steps.encode_branch.outputs.encodedBranch }}/graph/badge.svg)](https://app.codecov.io/github/Andrew-Dagher/SOEN-390/tree/${{ steps.encode_branch.outputs.encodedBranch }})
-          reactions: hooray
