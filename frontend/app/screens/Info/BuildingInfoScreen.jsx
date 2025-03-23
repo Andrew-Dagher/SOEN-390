@@ -39,7 +39,7 @@ const BuildingDetails = ({ route }) => {
   };
 
   const handleFloorplanPress = (floorplan) => {
-    navigation.navigate("InDoorScreen", { selectedFloorplan: floorplan });
+    navigation.navigate("InDoorScreen", { building: building, selectedFloorplan: floorplan });
   };
 
   const renderListItem = (item, link, index) => {
