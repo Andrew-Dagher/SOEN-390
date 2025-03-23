@@ -409,6 +409,7 @@ ${JSON.stringify(scheduleData)}
         </View>
         <View style={styles.headerRightContainer}>
           <IconButton
+            testID="customize-button"
             icon="dots-vertical"
             size={24}
             onPress={() => setIsCustomizeModalVisible(true)}

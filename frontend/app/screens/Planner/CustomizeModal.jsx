@@ -93,9 +93,6 @@ export default function CustomizeModal({
                 <Text style={[styles.classText, { color: "#666" }]}>
                   {item.title}
                 </Text>
-                <Text style={[styles.classText, { color: "#666" }]}>
-                  {item.title}
-                </Text>
                 <IconButton
                   icon={
                     expandedSections[item.id] ? "chevron-up" : "chevron-down"
