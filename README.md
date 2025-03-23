@@ -1,5 +1,10 @@
 # SOEN-390
 temp readme for repo setup (maybe we move this somewhere else later)
+
+## Codecov Report
+[![codecov](https://codecov.io/gh/<user>/<repo>/branch/main/graph/badge.svg)](https://app.codecov.io/github/Andrew-Dagher/SOEN-390/tree/main)
+
+
 ## Frontend
 
 ```
@@ -38,3 +43,5 @@ You can install Expo Go on the app store. Use your camera to scan the qr code ge
 7. Copy the following link into the browser of your emulator to download the apk file: https://expo.dev/accounts/ricobadir/projects/frontend/builds/01a2cd5c-1cb1-4f24-bdbf-ce83ce1a1d49
 8. npx expo start
 9. press a to open android
+
+
