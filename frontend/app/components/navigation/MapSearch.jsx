@@ -3,10 +3,10 @@
  * @description A search bar component for searching campus buildings on the map.
  */
 
-import { useState } from "react";
 import { View, TextInput, StyleSheet } from "react-native";
 import SearchIcon from "./Icons/SearchIcon";
 import { polygons } from "../../screens/navigation/navigationConfig";
+import PropTypes from "prop-types";
 
 /**
  * MapSearch component allows users to search for buildings on the campus map.
@@ -20,9 +20,7 @@ import { polygons } from "../../screens/navigation/navigationConfig";
  * @param {Function} props.setSearchText - Function that update search text input
  */
 const MapSearch = ({
-  searchResult,
   setSearchResult,
-  isSearch,
   setIsSearch,
   searchText,
   setSearchText,
@@ -68,5 +66,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 });
+
+// Prop types validation
+MapSearch.propTypes = {
+  setSearchResult: PropTypes.func.isRequired,
+  setIsSearch: PropTypes.func.isRequired,
+  searchText: PropTypes.string.isRequired,
+  setSearchText: PropTypes.func.isRequired,
+};
+
 
 export default MapSearch;

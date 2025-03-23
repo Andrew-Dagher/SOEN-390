@@ -4,6 +4,7 @@
  */
 
 import * as React from "react";
+import PropTypes from "prop-types"; // Import PropTypes
 import Svg, { Path } from "react-native-svg";
 
 /**
@@ -37,5 +38,12 @@ const WheelChairIcon = ({ width = 20, height = 20, color = "#E6863C" }) => (
     />
   </Svg>
 );
+
+// Define PropTypes for WheelChairIcon component
+WheelChairIcon.propTypes = {
+  width: PropTypes.number,
+  height: PropTypes.number,
+  color: PropTypes.string,
+};
 
 export default WheelChairIcon;
