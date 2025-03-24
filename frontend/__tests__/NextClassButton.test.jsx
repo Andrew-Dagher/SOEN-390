@@ -2,7 +2,7 @@ import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
-import NextClassButton from '../app/components/calendar/NextClassButton';
+import NextClassButton from '../app/components/calendar/NextClassButton'; // Adjust path as needed
 import { Animated } from 'react-native';
 
 // Mock dependencies
@@ -37,27 +37,21 @@ describe('NextClassButton', () => {
     jest.clearAllMocks();
   });
 
-  // Test 1: Component doesn't render when no events
   it('returns null when there are no upcoming events', () => {
     const mockObserver = createMockObserver();
     const { queryByText } = render(<NextClassButton eventObserver={mockObserver} />);
-
     expect(queryByText('Go to My Next Class')).toBeNull();
     expect(mockObserver.subscribe).toHaveBeenCalled();
   });
 
-  // Test 2: Component renders with upcoming event
   it('renders button when there is an upcoming event', async () => {
     const mockObserver = createMockObserver();
     const { findByText } = render(<NextClassButton eventObserver={mockObserver} />);
-
-    // Simulate event update
     const callback = mockObserver.subscribe.mock.calls[0][0];
     callback([{
       start: { dateTime: new Date(Date.now() + 10000).toISOString() },
       description: 'Campus A, Building 1'
     }]);
-
     const buttonText = await findByText('Go to My Next Class');
     expect(buttonText).toBeTruthy();
     expect(Animated.timing).toHaveBeenCalledWith(
@@ -70,20 +64,16 @@ describe('NextClassButton', () => {
     );
   });
 
-  // Test 3: Handles navigation to next class
   it('navigates to next class location when button is pressed', async () => {
     const mockObserver = createMockObserver();
     const { findByText } = render(<NextClassButton eventObserver={mockObserver} />);
-
     const callback = mockObserver.subscribe.mock.calls[0][0];
     callback([{
       start: { dateTime: new Date(Date.now() + 10000).toISOString() },
       description: 'Campus A, Building 1'
     }]);
-
     const button = await findByText('Go to My Next Class');
     fireEvent.press(button);
-
     await waitFor(() => {
       expect(Location.getCurrentPositionAsync).toHaveBeenCalled();
       expect(mockNavigation.navigate).toHaveBeenCalledWith(
@@ -100,134 +90,142 @@ describe('NextClassButton', () => {
     });
   });
 
-  // Test 4: Handles empty event list
   it('clears location when events array is empty', () => {
     const mockObserver = createMockObserver();
     const { queryByText, rerender } = render(<NextClassButton eventObserver={mockObserver} />);
-
     const callback = mockObserver.subscribe.mock.calls[0][0];
-    callback([]); // Empty event array
-
+    callback([]);
     rerender(<NextClassButton eventObserver={mockObserver} />);
     expect(queryByText('Go to My Next Class')).toBeNull();
   });
 
-  // Test 5: Handles error in location fetching
   it('handles location fetching error gracefully', async () => {
     const mockObserver = createMockObserver();
     Location.getCurrentPositionAsync.mockRejectedValue(new Error('Location error'));
     const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
-
     const { findByText } = render(<NextClassButton eventObserver={mockObserver} />);
-
     const callback = mockObserver.subscribe.mock.calls[0][0];
     callback([{
       start: { dateTime: new Date(Date.now() + 10000).toISOString() },
       description: 'Campus A, Building 1'
     }]);
-
     const button = await findByText('Go to My Next Class');
     fireEvent.press(button);
-
     await waitFor(() => {
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         'Error navigating to next class:',
         expect.any(Error)
       );
     });
-
     consoleErrorSpy.mockRestore();
   });
 
-  // Test 6: Cleans up subscription on unmount
   it('unsubscribes from observer on unmount', () => {
     const mockObserver = createMockObserver();
     const { unmount } = render(<NextClassButton eventObserver={mockObserver} />);
-
     const callback = mockObserver.subscribe.mock.calls[0][0];
     unmount();
-
     expect(mockObserver.unsubscribe).toHaveBeenCalledWith(callback);
   });
-});
 
-
-
-it('correctly sorts and selects the earliest upcoming event', async () => {
-  const mockObserver = createMockObserver();
-  const { findByText } = render(<NextClassButton eventObserver={mockObserver} />);
-
-  const now = new Date();
-  const callback = mockObserver.subscribe.mock.calls[0][0];
-  callback([
-    {
-      start: { dateTime: new Date(now.getTime() + 20000).toISOString() }, // Later event
-      description: 'Campus B, Building 2'
-    },
-    {
-      start: { dateTime: new Date(now.getTime() + 10000).toISOString() }, // Earlier event
-      description: 'Campus A, Building 1'
-    },
-    {
-      start: { dateTime: new Date(now.getTime() - 10000).toISOString() }, // Past event
-      description: 'Campus C, Building 3'
-    }
-  ]);
-
-  const buttonText = await findByText('Go to My Next Class');
-  expect(buttonText).toBeTruthy();
-
-  fireEvent.press(buttonText);
-  await waitFor(() => {
-    expect(mockNavigation.navigate).toHaveBeenCalledWith(
-      'Navigation',
-      expect.objectContaining({
-        campus: 'campus a', // Should use the earliest upcoming event (Campus A)
-        buildingName: 'Building 1'
-      })
-    );
+  it('correctly sorts and selects the earliest upcoming event', async () => {
+    const mockObserver = createMockObserver();
+    const { findByText } = render(<NextClassButton eventObserver={mockObserver} />);
+    const now = new Date();
+    const callback = mockObserver.subscribe.mock.calls[0][0];
+    callback([
+      {
+        start: { dateTime: new Date(now.getTime() + 20000).toISOString() },
+        description: 'Campus B, Building 2'
+      },
+      {
+        start: { dateTime: new Date(now.getTime() + 10000).toISOString() },
+        description: 'Campus A, Building 1'
+      },
+      {
+        start: { dateTime: new Date(now.getTime() - 10000).toISOString() },
+        description: 'Campus C, Building 3'
+      }
+    ]);
+    const buttonText = await findByText('Go to My Next Class');
+    expect(buttonText).toBeTruthy();
+    fireEvent.press(buttonText);
+    await waitFor(() => {
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(
+        'Navigation',
+        expect.objectContaining({
+          campus: 'campus a',
+          buildingName: 'Building 1'
+        })
+      );
+    });
   });
-});
 
+  it('sets location to null when all events are in the past', () => {
+    const mockObserver = createMockObserver();
+    const { queryByText, rerender } = render(<NextClassButton eventObserver={mockObserver} />);
+    const now = new Date();
+    const callback = mockObserver.subscribe.mock.calls[0][0];
+    callback([
+      {
+        start: { dateTime: new Date(now.getTime() - 20000).toISOString() },
+        description: 'Campus A, Building 1'
+      },
+      {
+        start: { dateTime: new Date(now.getTime() - 10000).toISOString() },
+        description: 'Campus B, Building 2'
+      }
+    ]);
+    rerender(<NextClassButton eventObserver={mockObserver} />);
+    expect(queryByText('Go to My Next Class')).toBeNull();
+  });
 
-it('sets location to null when all events are in the past', () => {
-  const mockObserver = createMockObserver();
-  const { queryByText, rerender } = render(<NextClassButton eventObserver={mockObserver} />);
-
-  const now = new Date();
-  const callback = mockObserver.subscribe.mock.calls[0][0];
-  callback([
-    {
-      start: { dateTime: new Date(now.getTime() - 20000).toISOString() }, // Past event
-      description: 'Campus A, Building 1'
-    },
-    {
-      start: { dateTime: new Date(now.getTime() - 10000).toISOString() }, // Past event
-      description: 'Campus B, Building 2'
-    }
-  ]);
-
-  rerender(<NextClassButton eventObserver={mockObserver} />);
-  expect(queryByText('Go to My Next Class')).toBeNull(); // Button should not render
-});
-
-it('does not render the button if the only upcoming events are for a different day', () => {
-  const mockObserver = createMockObserver();
-  const { queryByText } = render(<NextClassButton eventObserver={mockObserver} />);
-
-  const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-
-  // Trigger the observer callback with an event that starts tomorrow (not today)
-  const callback = mockObserver.subscribe.mock.calls[0][0];
-  callback([
-    {
+  it('does not render the button if the only upcoming events are for a different day', () => {
+    const mockObserver = createMockObserver();
+    const { queryByText } = render(<NextClassButton eventObserver={mockObserver} />);
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const callback = mockObserver.subscribe.mock.calls[0][0];
+    callback([{
       start: { dateTime: tomorrow.toISOString() },
       description: 'Campus X, Building X'
-    }
-  ]);
+    }]);
+    expect(queryByText('Go to My Next Class')).toBeNull();
+  });
 
-  // Since the event is not on the current day, the button should not render
-  expect(queryByText('Go to My Next Class')).toBeNull();
+  it('filters out past events on the current day and selects the next event today', async () => {
+    const mockObserver = createMockObserver();
+    const { findByText } = render(<NextClassButton eventObserver={mockObserver} />);
+
+    const now = new Date();
+    const todayEarlier = new Date(now.getTime() - 10000); // 10 seconds ago
+    const todayLater = new Date(now.getTime() + 10000);  // 10 seconds from now
+
+    const callback = mockObserver.subscribe.mock.calls[0][0];
+    callback([
+      {
+        start: { dateTime: todayEarlier.toISOString() }, // Past event today
+        description: 'Campus A, Building 1'
+      },
+      {
+        start: { dateTime: todayLater.toISOString() }, // Future event today
+        description: 'Campus B, Building 2'
+      }
+    ]);
+
+    const buttonText = await findByText('Go to My Next Class');
+    expect(buttonText).toBeTruthy();
+
+    fireEvent.press(buttonText);
+    await waitFor(() => {
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(
+        'Navigation',
+        expect.objectContaining({
+          campus: 'campus b',
+          buildingName: 'Building 2'
+        })
+      );
+    });
+  });
 });
