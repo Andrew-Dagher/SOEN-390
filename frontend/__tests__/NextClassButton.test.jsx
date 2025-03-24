@@ -210,3 +210,24 @@ it('sets location to null when all events are in the past', () => {
   rerender(<NextClassButton eventObserver={mockObserver} />);
   expect(queryByText('Go to My Next Class')).toBeNull(); // Button should not render
 });
+
+it('does not render the button if the only upcoming events are for a different day', () => {
+  const mockObserver = createMockObserver();
+  const { queryByText } = render(<NextClassButton eventObserver={mockObserver} />);
+
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  // Trigger the observer callback with an event that starts tomorrow (not today)
+  const callback = mockObserver.subscribe.mock.calls[0][0];
+  callback([
+    {
+      start: { dateTime: tomorrow.toISOString() },
+      description: 'Campus X, Building X'
+    }
+  ]);
+
+  // Since the event is not on the current day, the button should not render
+  expect(queryByText('Go to My Next Class')).toBeNull();
+});
