@@ -25,7 +25,7 @@ export const building = {
         {
             "name":"SP Building",
             "url":"https://app.mappedin.com/map/67d88e2581104a000b6df10e/directions?embedded=true&outdoors=false&kiosk=false",
-            "floor_id":"",
+            "floor_id":"m_00a45bb03dc793b9",
             "entrance":"45.4583718018728%2C-73.64074551435993%2Cm_00a45bb03dc793b9",
             "rooms": {
               "CC124": "s_411f8b3269cea1be",
