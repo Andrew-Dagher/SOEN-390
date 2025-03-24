@@ -1,8 +1,9 @@
-import { building } from "./inDoorConfig";
+import { buildings } from "./inDoorConfig";
 
 export const toPickerList = () => {
-    let pickerList = [];
-  
+  let pickerList = [];
+
+  buildings.forEach(building => {
     building.floors.forEach(floor => {
       Object.keys(floor.rooms).forEach(room => {
         pickerList.push({
@@ -11,52 +12,77 @@ export const toPickerList = () => {
         });
       });
     });
-  
-    return pickerList;
+  });
+
+  return pickerList;
 };
 
 export const areRoomsOnSameFloor = (roomId1, roomId2) => {
-    return building.floors.some(floor => 
-        Object.values(floor.rooms).includes(roomId1) && Object.values(floor.rooms).includes(roomId2)    );
+  for (const building of buildings) {
+    for (const floor of building.floors) {
+      const roomIds = Object.values(floor.rooms);
+      if (roomIds.includes(roomId1) && roomIds.includes(roomId2)) {
+        return true; // Both rooms are on the same floor
+      }
+    }
+  }
+  return false; // Rooms are not on the same floor
 };
 
 export const areRoomsOnSameBuilding = (roomId1, roomId2) => {
-    return building.floors.some(floor => {
-      const rooms = Object.values(floor.rooms);
-      return rooms.includes(roomId1) && rooms.includes(roomId2);
-    });
+  for (const building of buildings) {
+    const roomIdsInBuilding = building.floors.flatMap(floor => Object.values(floor.rooms));
+    if (roomIdsInBuilding.includes(roomId1) && roomIdsInBuilding.includes(roomId2)) {
+      return true; // Both rooms are in the same building
+    }
+  }
+  return false; // Rooms are not in the same building
 };
 
 export const getFloorIdByRoomId = (roomValue) => {
-    for (let floor of building.floors) {
+  for (const building of buildings) {
+    for (const floor of building.floors) {
       if (Object.values(floor.rooms).includes(roomValue)) {
-        return floor.floor_id;
+        return floor.floor_id; // Return the floor ID if room is found
       }
     }
-    return null;
+  }
+  return null; // Return null if the room ID is not found
 };
 
 export const getEntranceByRoomId = (roomId) => {
-    for (let floor of building.floors) {
-      if (Object.values(floor.rooms).includes(roomId)) {
-        return floor.entrance;
-      }
-    }
-    return null; // Return null if the room ID is not found
-};
-
-export const getUrlFromRoomId = (roomId) => {
-    // Iterate through each floor in the building
+  for (const building of buildings) {
     for (const floor of building.floors) {
-      // Check if the roomId exists in the current floor's rooms
       if (Object.values(floor.rooms).includes(roomId)) {
-        // Return the URL for the floor if the room is found
-        return floor.url;
+        return floor.entrance; // Return entrance for the floor if room is found
       }
     }
-    // Return null if the roomId is not found in any floor
-    return null;
+  }
+  return null; // Return null if the room ID is not found
 };
-  
 
+export const getUrlByRoomId = (roomId) => {
+  for (const building of buildings) {
+    for (const floor of building.floors) {
+      if (Object.values(floor.rooms).includes(roomId)) {
+        return floor.url; // Return URL for the floor if room is found
+      }
+    }
+  }
+  return null; // Return null if the room ID is not found
+};
+
+export const getUrlByFloorId = (floorId) => {
+  for (const building of buildings) {
+    for (const floor of building.floors) {
+      console.log(floor.floor_id,floorId)
+      console.log(floor.floor_id === floorId)
+      if (floor.floor_id === floorId) {
+        return floor.url; // Return URL for the floor if room is found
+      }
+    }
+  }
+  return null; // Return null if the room ID is not found
+};
+// Pre-generate picker list
 export const pickerList = toPickerList();

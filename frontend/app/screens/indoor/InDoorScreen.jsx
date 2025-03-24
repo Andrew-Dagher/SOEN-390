@@ -19,7 +19,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { WebView } from 'react-native-webview';
 import getThemeColors from "../../ColorBindTheme";
 import { useAppSettings } from "../../AppSettingsContext";
-import { pickerList, areRoomsOnSameFloor, areRoomsOnSameBuilding, getFloorIdByRoomId, getEntranceByRoomId, getUrlFromRoomId } from "./inDoorUtil";
+import { pickerList, areRoomsOnSameFloor, areRoomsOnSameBuilding, getUrlByFloorId, getFloorIdByRoomId, getEntranceByRoomId, getUrlByRoomId } from "./inDoorUtil";
 import DropDownPicker from 'react-native-dropdown-picker';
 
 const InDoorScreen = () => {
@@ -35,7 +35,7 @@ const InDoorScreen = () => {
   const [floorPlanURL, setFloorPlanURL] = useState(building.floorPlans);
   const [nextFloorPlanURL, setNextFloorPlanURL] = useState(building.floorPlans);
   const [isSameFloor, setIsSameFloor] = useState(true);
-  const [isNextFloor, setIsNextFloor] = useState(false);
+  const [isSameBuilding, setIsSameBuilding] = useState(false);
   const [open, setOpen] = useState(false);
   const [open1, setOpen1] = useState(false);
   const [value, setValue] = useState(step1?.value || null);
@@ -48,53 +48,51 @@ const InDoorScreen = () => {
   // currentStep: 0 = Search, 1 = Departure Indoor, 2 = Outdoor Directions, 3 = Destination Indoor
   const [currentStep, setCurrentStep] = useState(0);
 
-  const handleNextFloor = () => {
-    if (isNextFloor) setIsNextFloor(false);
-    else setIsNextFloor(true);
-  };
-
   const handleToCampus = () => {
     if (value == null || value1 == null) return;
 
     let floorId = getFloorIdByRoomId(value);
+    let startUrl = getUrlByFloorId(floorId);
     let nextFloorId = getFloorIdByRoomId(value1);
     let entranceLoc = getEntranceByRoomId(value);
     let nextEntranceLoc = getEntranceByRoomId(value1);
 
+    console.log("start url", startUrl, floorId)
+
     if (areRoomsOnSameFloor(value, value1)) {
       // If rooms are on the same floor, directly show the indoor map
-      setFloorPlanURL(building.floorPlans + "&floor=" + floorId + "&location=" + value + "&departure=" + value1);
+      setFloorPlanURL(startUrl + "&floor=" + floorId + "&location=" + value + "&departure=" + value1);
       setCurrentStep(1);
-    } else {
-      // Multi-floor or multi-building navigation
+      return;
+    } 
+    if (areRoomsOnSameBuilding(value, value1)) {
+      // rooms are on different floors but same building
+
+      setIsSameBuilding(true);
       setIsSameFloor(false);
-      // Step 1: Departure indoor map with departure information
-      setFloorPlanURL(building.floorPlans + "&floor=" + floorId + "&departure=" + value + "&location=" + entranceLoc);
+      setFloorPlanURL(startUrl+ "&floor=" + floorId + "&departure=" + value + "&location=" + entranceLoc);
 
-      let buildingURL = areRoomsOnSameBuilding(value, value1) ? building.floorPlans : getUrlFromRoomId(value1);
-      // Prepare destination indoor map URL (for step 3)
-      setNextFloorPlanURL(buildingURL + "&floor=" + nextFloorId + "&location=" + value1 + "&departure=" + nextEntranceLoc);
-      
-      // Begin at step 1 (departure indoor). User can then proceed to outdoor directions.
+      setNextFloorPlanURL(startUrl + "&floor=" + nextFloorId + "&location=" + value1 + "&departure=" + nextEntranceLoc);
       setCurrentStep(1);
+
+      return;
     }
-  };
+    // If rooms are on different buildings, get outdoor navigations
+    // Multi-floor or multi-building navigation
+    setIsSameFloor(false);
 
-  const goToOutdoorDirections = () => {
-    setCurrentStep(2);
-  };
+    // Step 1: Departure indoor map with departure information
+    setFloorPlanURL(startUrl + "&floor=" + floorId + "&departure=" + value + "&location=" + entranceLoc);
 
-  const goToDestinationIndoor = () => {
-    setCurrentStep(3);
-  };
+    // Prepare destination indoor map URL (for step 3)
+    let buildingURL = getUrlByRoomId(value1);
+    setNextFloorPlanURL(buildingURL + "&floor=" + nextFloorId + "&location=" + value1 + "&departure=" + nextEntranceLoc);
 
-  const goBackStep = () => {
-    setCurrentStep(prev => (prev > 1 ? prev - 1 : prev));
+    // Begin at step 1 (departure indoor). User can then proceed to outdoor directions.
+    setCurrentStep(1);
   };
 
   useEffect(() => {
-    console.log("Departure URL:", floorPlanURL);
-    console.log("Destination URL:", nextFloorPlanURL);
   }, [floorPlanURL, nextFloorPlanURL]);
 
   useEffect(() => {
@@ -166,19 +164,59 @@ const InDoorScreen = () => {
           />
         </View>
         
-        
+        <View className={'flex flex-row justify-center items-center'}>
           <TouchableHighlight
             style={[styles.shadow, { backgroundColor: theme.backgroundColor, borderRadius: 8, padding: 12, margin: 8 }]}
             onPress={handleToCampus}
           >
             <Text style={{ fontSize: textSize, color: "white", fontWeight: "bold" }}>Search</Text>
           </TouchableHighlight>
+          {currentStep === 1 && !isSameFloor && !isSameBuilding && <View style={{ flexDirection: "row", justifyContent: "center", margin: 16 }}>
+              <TouchableHighlight
+                style={[styles.shadow, { backgroundColor: theme.backgroundColor, padding: 12, borderRadius: 8 }]}
+                onPress={() => setCurrentStep(2)}
+              >
+                <Text style={{ fontSize: textSize, color: "white", fontWeight: "bold" }}>Outdoor Directions</Text>
+              </TouchableHighlight>
+          </View>}
+          {currentStep === 1 && !isSameFloor && isSameBuilding && <View style={{ flexDirection: "row", justifyContent: "center", margin: 16 }}>
+              <TouchableHighlight
+                style={[styles.shadow, { backgroundColor: theme.backgroundColor, padding: 12, borderRadius: 8 }]}
+                onPress={() => setCurrentStep(3)}
+              >
+                <Text style={{ fontSize: textSize, color: "white", fontWeight: "bold" }}>Next Directions</Text>
+              </TouchableHighlight>
+          </View>}
+            
+          {currentStep === 3 && !isSameBuilding &&
+            <View style={{ flexDirection: "row", justifyContent: "center", margin: 16 }}>
+            <TouchableHighlight
+              style={[styles.shadow, { backgroundColor: theme.backgroundColor, padding: 12, borderRadius: 8 }]}
+              onPress={() => setCurrentStep(prev => (prev > 1 ? prev - 1 : prev))}
+            >
+              <Text style={{ fontSize: textSize, color: "white", fontWeight: "bold" }}>Outdoor Directions</Text>
+            </TouchableHighlight>
+          </View>
+          }
+
+          {currentStep === 3 && isSameBuilding &&
+            <View style={{ flexDirection: "row", justifyContent: "center", margin: 16 }}>
+            <TouchableHighlight
+              style={[styles.shadow, { backgroundColor: theme.backgroundColor, padding: 12, borderRadius: 8 }]}
+              onPress={() => setCurrentStep(1)}
+            >
+              <Text style={{ fontSize: textSize, color: "white", fontWeight: "bold" }}>Prev Directions</Text>
+            </TouchableHighlight>
+          </View>
+          }
+
+        </View>
   
       </View>
 
       {/* Render views based on current step */}
       {currentStep === 1 && (
-        <View style={{ flex: 1 }}>
+        <View  style={{ flex: 1 }}>
           <WebView
             style={{
               flex: 1,
@@ -189,16 +227,6 @@ const InDoorScreen = () => {
             }}
             source={{ uri: floorPlanURL }}
           />
-          {!isSameFloor && (
-            <View style={{ flexDirection: "row", justifyContent: "center", margin: 16 }}>
-              <TouchableHighlight
-                style={[styles.shadow, { backgroundColor: theme.backgroundColor, padding: 12, borderRadius: 8 }]}
-                onPress={goToOutdoorDirections}
-              >
-                <Text style={{ fontSize: textSize, color: "white", fontWeight: "bold" }}>Outdoor Directions</Text>
-              </TouchableHighlight>
-            </View>
-          )}
         </View>
       )}
 
@@ -208,13 +236,13 @@ const InDoorScreen = () => {
           <View style={{ flexDirection: "row", justifyContent: "space-around", margin: 16 }}>
             <TouchableHighlight
               style={[styles.shadow, { backgroundColor: theme.backgroundColor, padding: 12, borderRadius: 8 }]}
-              onPress={goBackStep}
+              onPress={() => setCurrentStep(prev => (prev > 1 ? prev - 1 : prev))}
             >
               <Text style={{ fontSize: textSize, color: "white", fontWeight: "bold" }}>Back</Text>
             </TouchableHighlight>
             <TouchableHighlight
               style={[styles.shadow, { backgroundColor: theme.backgroundColor, padding: 12, borderRadius: 8 }]}
-              onPress={goToDestinationIndoor}
+              onPress={() => setCurrentStep(3)}
             >
               <Text style={{ fontSize: textSize, color: "white", fontWeight: "bold" }}>Next</Text>
             </TouchableHighlight>
@@ -235,14 +263,7 @@ const InDoorScreen = () => {
           source={{ uri: nextFloorPlanURL }}
         />
         
-          <View style={{ flexDirection: "row", justifyContent: "center", margin: 16 }}>
-            <TouchableHighlight
-              style={[styles.shadow, { backgroundColor: theme.backgroundColor, padding: 12, borderRadius: 8 }]}
-              onPress={goToOutdoorDirections}
-            >
-              <Text style={{ fontSize: textSize, color: "white", fontWeight: "bold" }}>Back</Text>
-            </TouchableHighlight>
-          </View>
+          
  
       </View>
       )}
