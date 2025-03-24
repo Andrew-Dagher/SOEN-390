@@ -17,10 +17,20 @@ export default function NextClassButton({ eventObserver }) {
         return;
       }
 
-      const now = new Date();
-      const upcomingEvent = events
-        .filter((evt) => new Date(evt.start.dateTime) > now)
-        .sort((a, b) => new Date(a.start.dateTime) - new Date(b.start.dateTime))[0];
+const now = new Date();
+const upcomingEvent = events
+  .filter((evt) => {
+    const eventStart = new Date(evt.start.dateTime);
+    return (
+      // Must be on today's date...
+      eventStart.getFullYear() === now.getFullYear() &&
+      eventStart.getMonth() === now.getMonth() &&
+      eventStart.getDate() === now.getDate() &&
+      // ...and later than "now"
+      eventStart > now
+    );
+  })
+  .sort((a, b) => new Date(a.start.dateTime) - new Date(b.start.dateTime))[0];
 
       if (upcomingEvent) {
         setNextEventLocation(upcomingEvent.description);

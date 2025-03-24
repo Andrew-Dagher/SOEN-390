@@ -185,4 +185,61 @@ describe("CalendarScreen", () => {
       );
     });
   });
+
+  it('displays the coachmark if user is in guest mode and has not seen it before', async () => {
+    useAuth.mockReturnValue({ isSignedIn: false });
+    AsyncStorage.getItem.mockResolvedValueOnce(null); // 'hasSeenCalendarCoachmark' not set
+
+    const { getByText } = render(<CalendarScreen />);
+
+    await waitFor(() => {
+      // The coachmark message should appear
+      expect(getByText('Sign in to access your calendar events!')).toBeTruthy();
+    });
+
+    // Confirm we set the 'hasSeenCalendarCoachmark' flag
+    expect(AsyncStorage.setItem).toHaveBeenCalledWith(
+      'hasSeenCalendarCoachmark',
+      'true'
+    );
+  });
+
+  it('does not display the coachmark if user is in guest mode and has already seen it', async () => {
+    useAuth.mockReturnValue({ isSignedIn: false });
+    AsyncStorage.getItem.mockResolvedValueOnce('true'); // Already seen coachmark
+
+    const { queryByText } = render(<CalendarScreen />);
+
+    // The coachmark message should never appear
+    await waitFor(() => {
+      expect(queryByText('Sign in to access your calendar events!')).toBeNull();
+    });
+
+    // 'hasSeenCalendarCoachmark' is not set again
+    expect(AsyncStorage.setItem).not.toHaveBeenCalledWith(
+      'hasSeenCalendarCoachmark',
+      'true'
+    );
+  });
+
+  it('logs an error if reading the coachmark status from AsyncStorage fails', async () => {
+    useAuth.mockReturnValue({ isSignedIn: false });
+    const errorMessage = 'Storage error';
+    AsyncStorage.getItem.mockRejectedValueOnce(new Error(errorMessage));
+
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    render(<CalendarScreen />);
+
+    await waitFor(() => {
+      // Expect a console error about the coachmark
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Coachmark Storage Error:',
+        expect.any(Error)
+      );
+    });
+
+    consoleErrorSpy.mockRestore();
+  });
+
 });
