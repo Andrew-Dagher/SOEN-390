@@ -21,6 +21,8 @@ import NavigationActive from "./NavigationIcons/NavigationActive";
 import NavigationInactive from "./NavigationIcons/NavigationInactive";
 import SettingsActive from "./SettingsIcons/SettingsActive";
 import SettingsInactive from "./SettingsIcons/SettingsInactive";
+import BuildingActive from "./IndoorIcons/IndoorActive";
+import BuildingInactive from "./IndoorIcons/IndoorInactive";
 
 /**
  * BottomNavBar component renders a fixed bottom navigation bar with four navigation options.
@@ -80,6 +82,19 @@ export default function BottomNavBar({ navigation = null, route = null }) {
             <CalendarInactive />
           )}
         </Pressable>
+
+        {/* Indoor navigation Button: Navigate to indoor navigation screen */}
+        <Pressable
+          onPress={() => navigateTo("InDoorScreen")}
+          style={styles.navButton}
+        >
+          {currentScreen === "InDoorScreen" ? (
+            <BuildingActive />
+          ) : (
+            <BuildingInactive />
+          )}
+        </Pressable>
+
 
         {/* Settings Button: Navigate to Settings screen */}
         <Pressable

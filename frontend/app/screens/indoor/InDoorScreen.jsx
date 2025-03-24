@@ -32,8 +32,8 @@ const InDoorScreen = () => {
   const { building, step1 } = route.params || { selectedFloorplan: "Unknown" };
 
   const headerPadding = Platform.OS === "ios" ? 48 : 32;
-  const [floorPlanURL, setFloorPlanURL] = useState(building.floorPlans);
-  const [nextFloorPlanURL, setNextFloorPlanURL] = useState(building.floorPlans);
+  const [floorPlanURL, setFloorPlanURL] = useState(building?.floorPlans);
+  const [nextFloorPlanURL, setNextFloorPlanURL] = useState(building?.floorPlans);
   const [isSameFloor, setIsSameFloor] = useState(true);
   const [isSameBuilding, setIsSameBuilding] = useState(false);
   const [open, setOpen] = useState(false);
@@ -101,10 +101,8 @@ const InDoorScreen = () => {
     if (currentStep === 2) {
       console.log("Route in step 2:", route);
   
-      if (route.params?.isSGW) {
-        route.params.campus = "sgw";
-      } else {
-        route.params.campus = "loyola";
+      if (route.params) {
+        route.params.campus = route.params.isSGW ? "sgw" : "loyola";
       }
   
       // Ensure longName exists and then set buildingName to its lowercase version.
@@ -123,7 +121,7 @@ const InDoorScreen = () => {
         <Pressable onPress={() => navigation.goBack()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Text style={{ fontSize: 24, fontWeight: "300" }}>←</Text>
         </Pressable>
-        <Text style={{ fontSize: 24, fontWeight: "700" }}>Map of {building.name}</Text>
+        <Text style={{ fontSize: 24, fontWeight: "700" }}>Indoor Directions</Text>
       </View>
 
       {/* Dropdown selectors */}
