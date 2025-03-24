@@ -394,9 +394,16 @@ export default function CampusMap({ navigationParams }) {
         if (params.start[0] === 'H') {
           startLocation = { latitude: 45.49781725012627, longitude: -73.57950979221253 };
         }
+        else if (params.start[0]==='M'){
+          startLocation= {latitude:45.49550722087804, longitude:-73.57917572331318}
+        }
   
         if (params.end[0] === 'H') {
           endLocation = { latitude: 45.49781725012627, longitude: -73.57950979221253 };
+        }
+
+        else if (params.end[0]==='M'){
+          endLocation = {latitude:45.49550722087804, longitude:-73.57917572331318}
         }
         
         setIsSearch(true);

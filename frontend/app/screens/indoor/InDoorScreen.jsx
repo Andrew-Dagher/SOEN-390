@@ -98,6 +98,8 @@ const InDoorScreen = () => {
   }, [floorPlanURL, nextFloorPlanURL]);
 
   useEffect(() => {
+    console.log("floor plan 2", floorPlanURL)
+    console.log("next floor 2", nextFloorPlanURL)
     if (currentStep === 2) {
       console.log("Route in step 2:", route);
   

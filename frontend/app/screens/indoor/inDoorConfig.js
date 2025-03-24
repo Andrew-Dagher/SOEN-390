@@ -36,6 +36,37 @@ export const building = {
               "CC112": "s_929b5d3a8638066b",
               "CC106": "s_fb7e57cfad19eb3d"
             }
+        },
+        {
+            "name":"MB Building",
+            "url":"https://app.mappedin.com/map/67d891f2f63286000bb80faa/directions?outdoors=false&kiosk=false",
+            "floor_id":"m_de096849e2569e48",
+            "entrance":"45.49550722087804%2C--73.57917572331318%2Cm_de096849e2569e48",
+            "rooms": {
+              "MB1.101": "s_1272ecb3d499fea1",
+              "MB1.210": "s_5348bdea866d2279",
+              "MB1.132": "s_91a21603ca8d9e5c",
+              "MB1.103": "s_674c1b5f966bf464",
+              "MB1.110": "s_a888db2ac44c0dce",
+              "MB1.106": "s_34cc77e913f1a934",
+              "MB1.125": "s_8d14d98fa64d8d88"
+            }
+        },
+        {
+            "name":"MB Building S2",
+            "url":"https://app.mappedin.com/map/67d891f2f63286000bb80faa/directions?embedded=true&outdoors=false&kiosk=false",
+            "floor_id":"m_4dd8d7523b50f27a",
+            "entrance":"45.49550722087804%2C--73.57917572331318%2Cm_de096849e2569e48",
+            "rooms": {
+              "MBS2.210": "s_c0d60f94f2a5c69e",
+              "MBS2.225": "s_636eadb4ea0be9cf",
+              "MBS2.235": "s_dd980e94bf3b836c",
+              "MBS2.230": "s_911ae8f281dc315d",
+              "MBS2.170": "s_dc5193bc7e83b6bd",
+              "MBS2.140": "s_e3f4fd3a15de757a",
+              "MBS2.130": "s_4b9db910a637656b"
+            }
+        
         }
     ]
 }
