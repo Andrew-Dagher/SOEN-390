@@ -23,6 +23,7 @@ import { pickerList, areRoomsOnSameFloor, areRoomsOnSameBuilding, getUrlByFloorI
 import DropDownPicker from 'react-native-dropdown-picker';
 
 const InDoorScreen = () => {
+  const { wheelchairAccess } = useAppSettings();
   const navigation = useNavigation();
   const route = useRoute();
   const theme = getThemeColors();
@@ -111,6 +112,7 @@ const InDoorScreen = () => {
       }
     }
   }, [currentStep, route]);
+  console.log("Wheelk ", wheelchairAccess)
   
   
 

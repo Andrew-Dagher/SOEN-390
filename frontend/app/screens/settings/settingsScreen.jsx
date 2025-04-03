@@ -26,14 +26,16 @@ export default function SettingsScreen() {
   const {
     textSize, setTextSize,
     colorBlindMode, setColorBlindMode,
-    profileImage, setProfileImage
+    profileImage, setProfileImage,
+      setWheelchairAccess,
+      wheelchairAccess, 
   } = useAppSettings();
 
   const theme = getThemeColors();
   const navigation = useNavigation();
   const { signOut, isSignedIn } = useAuth();
 
-  const [isWheelchairAccessEnabled, setWheelchairAccessEnabled] = useState(false);
+  const [isWheelchairAccessEnabled, setWheelchairAccessEnabled] = useState(wheelchairAccess);
   const [tempProfileImage, setTempProfileImage] = useState(profileImage);
   const [userName, setUserName] = useState("Guest");
   const [isColorBlindModeEnabled, setColorBlindModeEnabled] = useState(!!colorBlindMode);
@@ -44,6 +46,7 @@ export default function SettingsScreen() {
   const applyChanges = () => {
     setTextSize(tempSize);
     setProfileImage(tempProfileImage);
+    setWheelchairAccess(isWheelchairAccessEnabled)
   };
 
   return (

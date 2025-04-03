@@ -7,6 +7,7 @@ export const AppSettingsProvider = ({ children }) => {
   const [textSize, setTextSize] = useState(16);
   const [colorBlindMode, setColorBlindMode] = useState(null);
   const [profileImage, setProfileImage] = useState(null);
+  const [wheelchairAccess, setWheelchairAccess] = useState(false);
 
   // Load settings from AsyncStorage on mount
   useEffect(() => {
@@ -26,6 +27,10 @@ export const AppSettingsProvider = ({ children }) => {
         if (storedProfileImage !== null) {
           setProfileImage(storedProfileImage);
         }
+        const storedWheelchairAccess = await AsyncStorage.getItem("wheelchairAccess");
+        if (storedWheelchairAccess !== null) {
+          setWheelchairAccess(storedWheelchairAccess === "true"); // Convert string to boolean
+        }
       } catch (error) {
         console.error("Error loading app settings:", error);
       }
@@ -41,19 +46,22 @@ export const AppSettingsProvider = ({ children }) => {
         await AsyncStorage.setItem("textSize", textSize.toString());
         await AsyncStorage.setItem("colorBlindMode", colorBlindMode || ""); // Store null as empty string
         await AsyncStorage.setItem("profileImage", profileImage || ""); // Store null as empty string
+        await AsyncStorage.setItem("wheelchairAccess", wheelchairAccess.toString());
       } catch (error) {
         console.error("Error saving app settings:", error);
       }
     };
 
     saveSettings();
-  }, [textSize, colorBlindMode, profileImage]);
+  }, [textSize, colorBlindMode, profileImage, wheelchairAccess]);
 
   return (
     <AppSettingsContext.Provider value={{
       textSize, setTextSize,
       colorBlindMode, setColorBlindMode,
-      profileImage, setProfileImage
+      profileImage, setProfileImage,
+      wheelchairAccess,        
+      setWheelchairAccess,
     }}>
       {children}
     </AppSettingsContext.Provider>
