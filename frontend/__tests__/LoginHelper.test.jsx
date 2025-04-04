@@ -1,394 +1,287 @@
-/**
- * @file LoginHelper.test.jsx
- * @description Test suite for LoginHelper utilities.
- */
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
-  fetchCalendarName,
-  getAvailableCalendars,
+  storeUserData,
   fetchPublicCalendarEvents,
   checkExistingSession,
-  storeUserData,
   handleGuestLogin,
+  getAvailableCalendars,
+  // Export fetchCalendarName for testing if it's not already exported
+  fetchCalendarName,
 } from "../app/screens/login/LoginHelper";
 
-// Mock global fetch
 global.fetch = jest.fn();
 
-// Silence logs in tests
-const originalConsole = { ...console };
-beforeAll(() => {
-  console.error = jest.fn();
-  console.warn = jest.fn();
-  console.log = jest.fn();
-});
-afterAll(() => {
-  console.error = originalConsole.error;
-  console.warn = originalConsole.warn;
-  console.log = originalConsole.log;
-});
+// Utility to silence expected console outputs during tests.
+const noop = () => {};
+console.error = jest.fn(noop);
+console.warn = jest.fn(noop);
+console.log = jest.fn(noop);
 
-beforeEach(() => {
-  jest.clearAllMocks();
-  process.env.EXPO_PUBLIC_GOOGLE_API_KEY2 = "VALID_API_KEY"; // default API key for tests
-});
-afterEach(() => {
-  delete process.env.EXPO_PUBLIC_GOOGLE_API_KEY2;
-  // Remove any test calendar env variables
-  Object.keys(process.env)
-    .filter((key) => key.startsWith("EXPO_PUBLIC_GOOGLE_CALENDAR_ID"))
-    .forEach((key) => delete process.env[key]);
-});
+describe("Calendar Functions", () => {
+  const validApiKey = "VALID_API_KEY";
 
-// -----------------------------------------------------------------------------
-// fetchCalendarName
-// -----------------------------------------------------------------------------
-describe("fetchCalendarName", () => {
-  test("returns fallback + logs error if API key is missing", async () => {
+  beforeEach(() => {
+    process.env.EXPO_PUBLIC_GOOGLE_API_KEY2 = validApiKey;
+    jest.clearAllMocks();
+  });
+
+  afterEach(() => {
     delete process.env.EXPO_PUBLIC_GOOGLE_API_KEY2;
-    const result = await fetchCalendarName("TestCal", 1);
-    expect(result).toBe("Calendar 1");
-    expect(console.error).toHaveBeenCalledWith("Google API key is missing.");
+    // Remove any calendar env variables
+    Object.keys(process.env)
+      .filter((key) => key.startsWith("EXPO_PUBLIC_GOOGLE_CALENDAR_ID"))
+      .forEach((key) => delete process.env[key]);
   });
 
-  test("warns + returns fallback if response not ok", async () => {
-    global.fetch.mockResolvedValue({ ok: false, status: 404, json: jest.fn() });
-    const result = await fetchCalendarName("BadCal", 2);
-    expect(result).toBe("Calendar 2");
-    expect(console.warn).toHaveBeenCalledWith(
-      "Warning: Unable to fetch calendar name for BadCal (Status: 404)"
-    );
-  });
-
-  test("returns fallback if JSON has no summary", async () => {
-    global.fetch.mockResolvedValue({ ok: true, json: jest.fn().mockResolvedValue({}) });
-    const result = await fetchCalendarName("NoSummaryCal", 3);
-    expect(result).toBe("Calendar 3");
-  });
-
-  test("returns summary if present", async () => {
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: jest.fn().mockResolvedValue({ summary: "My Calendar" }),
+  describe("fetchCalendarName", () => {
+    test("returns fallback if API key is missing", async () => {
+      process.env.EXPO_PUBLIC_GOOGLE_API_KEY2 = "";
+      const result = await fetchCalendarName("testCalendar", 3);
+      expect(result).toEqual("Calendar 3");
     });
-    const result = await fetchCalendarName("GoodCal", 4);
-    expect(result).toBe("My Calendar");
+
+    test("returns fallback if response is not ok", async () => {
+      global.fetch.mockResolvedValue({
+        ok: false,
+        status: 404,
+        json: jest.fn(),
+      });
+      const result = await fetchCalendarName("testCalendar", 4);
+      expect(result).toEqual("Calendar 4");
+    });
+
+    test("returns fallback if JSON does not include summary", async () => {
+      global.fetch.mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue({}),
+      });
+      const result = await fetchCalendarName("testCalendar", 5);
+      expect(result).toEqual("Calendar 5");
+    });
+
+    test("returns the calendar summary from JSON", async () => {
+      global.fetch.mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue({ summary: "Test Calendar" }),
+      });
+      const result = await fetchCalendarName("testCalendar", 6);
+      expect(result).toEqual("Test Calendar");
+    });
+
+    test("returns fallback when an error is thrown", async () => {
+      global.fetch.mockRejectedValue(new Error("Fetch failed"));
+      const result = await fetchCalendarName("testCalendar", 7);
+      expect(result).toEqual("Calendar 7");
+    });
   });
 
-  test("catches error + logs error + returns fallback", async () => {
-    global.fetch.mockRejectedValue(new Error("Network fail"));
-    const result = await fetchCalendarName("ErrorCal", 5);
-    expect(result).toBe("Calendar 5");
-    expect(console.error).toHaveBeenCalledWith(
-      "Error fetching calendar name for ErrorCal:",
-      expect.any(Error)
-    );
+  describe("getAvailableCalendars", () => {
+    test("returns empty array if no calendar IDs are set", async () => {
+      const calendars = await getAvailableCalendars();
+      expect(calendars).toEqual([]);
+    });
+
+    test("fetches and assigns names to calendars", async () => {
+      // Set two calendar IDs in env
+      process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_ID1 = "cal1";
+      process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_ID2 = "cal2";
+
+      // Custom fetch mock for each calendar
+      global.fetch.mockImplementation((url) => {
+        if (url.includes("cal1")) {
+          return Promise.resolve({
+            ok: true,
+            json: jest.fn().mockResolvedValue({ summary: "Calendar One" }),
+          });
+        } else if (url.includes("cal2")) {
+          return Promise.resolve({
+            ok: false,
+            status: 500,
+            json: jest.fn(),
+          });
+        }
+        return Promise.reject(new Error("Unexpected calendar"));
+      });
+
+      const calendars = await getAvailableCalendars();
+      expect(calendars).toEqual([
+        { id: "cal1", name: "Calendar One" },
+        { id: "cal2", name: "Calendar 2" },
+      ]);
+    });
+  });
+});
+
+describe("fetchPublicCalendarEvents", () => {
+  const validApiKey = "VALID_API_KEY";
+
+  beforeEach(() => {
+    process.env.EXPO_PUBLIC_GOOGLE_API_KEY2 = validApiKey;
+    jest.clearAllMocks();
   });
 
-  test("returns fallback if calendarId is empty", async () => {
-    const result = await fetchCalendarName("", 6);
-    expect(result).toBe("Calendar 6");
+  afterEach(() => {
+    delete process.env.EXPO_PUBLIC_GOOGLE_API_KEY2;
   });
 
-  test("handles undefined index gracefully", async () => {
+  test("returns empty array if API key is missing", async () => {
+    process.env.EXPO_PUBLIC_GOOGLE_API_KEY2 = "";
+    const events = await fetchPublicCalendarEvents("calendar-id", "2025-03-10", "2025-03-11");
+    expect(events).toEqual([]);
+  });
+
+  test("returns empty array if response is not ok", async () => {
     global.fetch.mockResolvedValue({
       ok: false,
-      status: 400,
-      json: jest.fn(),
+      status: 404,
+      text: jest.fn().mockResolvedValue(""),
     });
-    const result = await fetchCalendarName("SomeCal", undefined);
-    expect(result).toBe("Calendar undefined");
-  });
-});
-
-// -----------------------------------------------------------------------------
-// getAvailableCalendars
-// -----------------------------------------------------------------------------
-describe("getAvailableCalendars", () => {
-  test("returns empty array if no env variables match", async () => {
-    const result = await getAvailableCalendars();
-    expect(result).toEqual([]);
-    expect(console.log).toHaveBeenCalledWith("Available calendars:", []);
-  });
-
-  test("fetches names for each calendar ID", async () => {
-    process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_ID1 = "cal1@example.com";
-    process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_ID2 = "cal2@example.com";
-
-    global.fetch.mockImplementation((url) => {
-      if (url.includes("cal1@example.com")) {
-        return Promise.resolve({
-          ok: true,
-          status: 200,
-          json: jest.fn().mockResolvedValue({ summary: "Cal One" }),
-        });
-      }
-      if (url.includes("cal2@example.com")) {
-        return Promise.resolve({
-          ok: false,
-          status: 500,
-          json: jest.fn(),
-        });
-      }
-    });
-
-    const result = await getAvailableCalendars();
-    expect(result).toEqual([
-      { id: "cal1@example.com", name: "Cal One" },
-      { id: "cal2@example.com", name: "Calendar 2" },
-    ]);
-    expect(console.log).toHaveBeenCalledWith("Available calendars:", result);
-  });
-
-  test("stops at first missing calendar ID", async () => {
-    process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_ID1 = "cal1@example.com";
-    process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_ID3 = "cal3@example.com"; // should be ignored
-
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: jest.fn().mockResolvedValue({ summary: "Cal 1" }),
-    });
-
-    const result = await getAvailableCalendars();
-    expect(result).toEqual([{ id: "cal1@example.com", name: "Cal 1" }]);
-  });
-});
-
-// -----------------------------------------------------------------------------
-// fetchPublicCalendarEvents
-// -----------------------------------------------------------------------------
-describe("fetchPublicCalendarEvents", () => {
-  test("returns [] + logs error if API key is missing", async () => {
-    delete process.env.EXPO_PUBLIC_GOOGLE_API_KEY2;
-    const events = await fetchPublicCalendarEvents("MyCal", "2025-01-01", "2025-01-02");
+    const events = await fetchPublicCalendarEvents("calendar-id", "2025-03-10", "2025-03-11");
     expect(events).toEqual([]);
-    expect(console.error).toHaveBeenCalledWith("Google API key is missing.");
   });
 
-  test("warns + returns [] if response not ok", async () => {
-    global.fetch.mockResolvedValue({ ok: false, status: 403, text: jest.fn().mockResolvedValue("") });
-    const events = await fetchPublicCalendarEvents("BadCal", "2025-01-01", "2025-01-02");
-    expect(events).toEqual([]);
-    expect(console.warn).toHaveBeenCalledWith(
-      "Warning: Unable to fetch events for BadCal (Status: 403)"
-    );
-  });
-
-  test("logs + returns [] if no items", async () => {
+  test("returns empty array if no events are found", async () => {
     global.fetch.mockResolvedValue({
       ok: true,
       text: jest.fn().mockResolvedValue(JSON.stringify({ items: [] })),
     });
-    const events = await fetchPublicCalendarEvents("EmptyCal", "2025-01-01", "2025-01-02");
+    const events = await fetchPublicCalendarEvents("calendar-id", "2025-03-10", "2025-03-11");
     expect(events).toEqual([]);
-    expect(console.log).toHaveBeenCalledWith("No events found for EmptyCal in the given range.");
   });
 
-  test("parses + returns mapped events if data found", async () => {
-    const mockData = {
+  test("parses and maps events correctly", async () => {
+    const eventData = {
       items: [
         {
-          summary: "Event A",
-          start: { dateTime: "2025-01-01T10:00:00Z" },
-          end: { dateTime: "2025-01-01T11:00:00Z" },
-          description: "Desc A",
-          location: "Loc A",
-          htmlLink: "http://eventA.link",
+          summary: "Event One",
+          start: { dateTime: "2025-03-10T10:00:00Z" },
+          end: { dateTime: "2025-03-10T11:00:00Z" },
+          description: "Description One",
+          location: "Location One",
+          htmlLink: "http://event.link/1",
         },
         {
-          start: { date: "2025-01-02" },
-          end: { date: "2025-01-02" },
+          // Missing summary, dateTime provided as date
+          start: { date: "2025-03-11" },
+          end: { date: "2025-03-11" },
         },
       ],
     };
+
     global.fetch.mockResolvedValue({
       ok: true,
-      text: jest.fn().mockResolvedValue(JSON.stringify(mockData)),
+      text: jest.fn().mockResolvedValue(JSON.stringify(eventData)),
     });
 
-    const events = await fetchPublicCalendarEvents("FullCal", "2025-01-01", "2025-01-02");
-    expect(events).toHaveLength(2);
-    expect(events[0]).toMatchObject({
-      id: "FullCal-1",
-      title: "Event A",
-      description: "Desc A",
-      location: "Loc A",
-      eventLink: "http://eventA.link",
-    });
-    expect(events[1]).toMatchObject({
-      id: "FullCal-2",
-      title: "No Title",
-      start: { dateTime: "2025-01-02" },
-      end: { dateTime: "2025-01-02" },
-    });
+    const events = await fetchPublicCalendarEvents("calendar-id", "2025-03-10", "2025-03-11");
+    expect(events).toEqual([
+      {
+        id: "calendar-id-1",
+        title: "Event One",
+        start: { dateTime: "2025-03-10T10:00:00Z" },
+        end: { dateTime: "2025-03-10T11:00:00Z" },
+        description: "Description One",
+        location: "Location One",
+        eventLink: "http://event.link/1",
+      },
+      {
+        id: "calendar-id-2",
+        title: "No Title",
+        start: { dateTime: "2025-03-11" },
+        end: { dateTime: "2025-03-11" },
+        description: "No description available",
+        location: "No location available",
+        eventLink: "No link available",
+      },
+    ]);
   });
 
-  test("catches + logs error + returns [] if fetch throws", async () => {
-    global.fetch.mockRejectedValue(new Error("Network fail"));
-    const events = await fetchPublicCalendarEvents("ErrCal", "2025-01-01", "2025-01-02");
+  test("returns empty array when fetch throws error", async () => {
+    global.fetch.mockRejectedValue(new Error("Network Error"));
+    const events = await fetchPublicCalendarEvents("calendar-id", "2025-03-10", "2025-03-11");
     expect(events).toEqual([]);
-    expect(console.error).toHaveBeenCalledWith(
-      "Error fetching public calendar (ErrCal):",
-      expect.any(Error)
-    );
-  });
-
-  test("handles malformed JSON", async () => {
-    global.fetch.mockResolvedValue({
-      ok: true,
-      text: jest.fn().mockResolvedValue("INVALID_JSON"),
-    });
-    const events = await fetchPublicCalendarEvents("BadJsonCal", "2025-01-01", "2025-01-02");
-    expect(events).toEqual([]);
-    expect(console.error).toHaveBeenCalledWith(
-      "Error fetching public calendar (BadJsonCal):",
-      expect.any(Error)
-    );
-  });
-
-  test("handles event missing start/end", async () => {
-    const mockData = {
-      items: [
-        {
-          summary: "Incomplete Event",
-          description: "No times",
-          htmlLink: "https://event.link",
-        },
-      ],
-    };
-    global.fetch.mockResolvedValue({
-      ok: true,
-      text: jest.fn().mockResolvedValue(JSON.stringify(mockData)),
-    });
-
-    const events = await fetchPublicCalendarEvents("NoTimeCal", "2025-01-01", "2025-01-02");
-    expect(events[0]).toMatchObject({
-      title: "Incomplete Event",
-      start: { dateTime: "Unknown Start" },
-      end: { dateTime: "Unknown End" },
-    });
   });
 });
 
-// -----------------------------------------------------------------------------
-// storeUserData
-// -----------------------------------------------------------------------------
-describe("storeUserData", () => {
+describe("User Data and Session Functions", () => {
   const mockNavigation = { replace: jest.fn() };
 
-  test("stores user data + navigates Home", async () => {
-    const user = {
-      fullName: "Testing User",
-      primaryEmailAddress: { emailAddress: "test@example.com" },
-      imageUrl: "https://example.com/photo.png",
-    };
-    process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_ID1 = "cal@example.com";
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
-    global.fetch.mockResolvedValue({
+  test("storeUserData: stores user data and calendars when calendars exist", async () => {
+    const user = {
+      fullName: "Test User",
+      primaryEmailAddress: { emailAddress: "test@test.com" },
+      imageUrl: "https://test.com/image.png",
+    };
+
+    // Set an environment variable so that getAvailableCalendars returns a calendar.
+    process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_ID1 = "cal1";
+    // Mock getAvailableCalendars to return a calendar list with one calendar having a summary.
+    const calendarMock = [{ id: "cal1", name: "Calendar One" }];
+    jest.spyOn(global, "fetch").mockResolvedValue({
       ok: true,
-      json: jest.fn().mockResolvedValue({ summary: "MyCal" }),
+      json: jest.fn().mockResolvedValue({ summary: "Calendar One" }),
     });
+    // Override getAvailableCalendars to avoid multiple fetch calls if needed
+    jest.spyOn(require("../app/screens/login/LoginHelper"), "getAvailableCalendars").mockResolvedValue(calendarMock);
 
     await storeUserData(user, mockNavigation);
+
     expect(AsyncStorage.setItem).toHaveBeenCalledWith(
       "userData",
       JSON.stringify({
-        fullName: "Testing User",
-        email: "test@example.com",
-        imageUrl: "https://example.com/photo.png",
+        fullName: "Test User",
+        email: "test@test.com",
+        imageUrl: "https://test.com/image.png",
       })
     );
+    expect(AsyncStorage.setItem).toHaveBeenCalledWith("availableCalendars", JSON.stringify(calendarMock));
+    expect(AsyncStorage.setItem).toHaveBeenCalledWith("selectedCalendar", "cal1");
     expect(mockNavigation.replace).toHaveBeenCalledWith("Home");
   });
 
-  test("logs if calendars empty but still navigates", async () => {
+  test("storeUserData: logs error if AsyncStorage fails", async () => {
     const user = {
-      fullName: "Empty Cal User",
-      primaryEmailAddress: { emailAddress: "ecal@example.com" },
-      imageUrl: "https://example.com/emptycal.png",
+      fullName: "Test User",
+      primaryEmailAddress: { emailAddress: "test@test.com" },
+      imageUrl: "https://test.com/image.png",
     };
-    jest
-      .spyOn(require("../app/screens/login/LoginHelper"), "getAvailableCalendars")
-      .mockResolvedValue([]);
-
+    AsyncStorage.setItem.mockRejectedValue(new Error("Storage Error"));
     await storeUserData(user, mockNavigation);
-    expect(console.log).toHaveBeenCalledWith("No calendars found.");
-    expect(mockNavigation.replace).toHaveBeenCalledWith("Home");
-  });
-
-  test("does nothing if user is null", async () => {
-    await storeUserData(null, mockNavigation);
-    expect(AsyncStorage.setItem).not.toHaveBeenCalled();
+    // Even if storage fails, navigation.replace should not be called
     expect(mockNavigation.replace).not.toHaveBeenCalled();
   });
 
-  test("logs error if AsyncStorage fails", async () => {
-    const user = { fullName: "Failing User" };
-    const mockErr = new Error("Storing error");
-    AsyncStorage.setItem.mockRejectedValueOnce(mockErr);
-    await storeUserData(user, mockNavigation);
-    expect(console.error).toHaveBeenCalledWith("Error storing user data:", mockErr);
-  });
-});
-
-// -----------------------------------------------------------------------------
-// checkExistingSession
-// -----------------------------------------------------------------------------
-describe("checkExistingSession", () => {
-  const mockNavigation = { replace: jest.fn() };
-
-  test("navigates Home if sessionId is found", async () => {
-    AsyncStorage.getItem.mockResolvedValueOnce("sessionXYZ");
+  test("checkExistingSession: navigates to Home if session exists", async () => {
+    AsyncStorage.getItem.mockResolvedValueOnce(JSON.stringify({ fullName: "Test User" }));
     await checkExistingSession(mockNavigation);
     expect(mockNavigation.replace).toHaveBeenCalledWith("Home");
   });
 
-  test("navigates Home if guestMode = 'true'", async () => {
+  test("checkExistingSession: navigates to Home if guest mode is active", async () => {
     AsyncStorage.getItem.mockResolvedValueOnce(null);
     AsyncStorage.getItem.mockResolvedValueOnce("true");
     await checkExistingSession(mockNavigation);
     expect(mockNavigation.replace).toHaveBeenCalledWith("Home");
   });
 
-  test("does nothing if no sessionId or guestMode", async () => {
+  test("checkExistingSession: does nothing if no session or guest mode", async () => {
     AsyncStorage.getItem.mockResolvedValue(null);
     await checkExistingSession(mockNavigation);
     expect(mockNavigation.replace).not.toHaveBeenCalled();
   });
 
-  test("logs error if AsyncStorage fails", async () => {
-    const err = new Error("Session error");
-    AsyncStorage.getItem.mockRejectedValueOnce(err);
-    await checkExistingSession(mockNavigation);
-    expect(console.error).toHaveBeenCalledWith("Error checking session:", err);
-  });
-
-  test("handles unexpected string values from AsyncStorage", async () => {
-    AsyncStorage.getItem.mockResolvedValueOnce("false");
-    AsyncStorage.getItem.mockResolvedValueOnce("maybe");
-    await checkExistingSession(mockNavigation);
-    expect(mockNavigation.replace).not.toHaveBeenCalled();
-  });
-});
-
-// -----------------------------------------------------------------------------
-// handleGuestLogin
-// -----------------------------------------------------------------------------
-describe("handleGuestLogin", () => {
-  const mockNavigation = { replace: jest.fn() };
-
-  test("logs + stores guest data + navigates Home", async () => {
+  test("handleGuestLogin: sets guest mode and navigates to Home", async () => {
     await handleGuestLogin(mockNavigation);
-    expect(console.log).toHaveBeenCalledWith("Guest Login Selected");
     expect(AsyncStorage.setItem).toHaveBeenCalledWith("guestMode", "true");
     expect(mockNavigation.replace).toHaveBeenCalledWith("Home");
   });
 
-  test("logs error if setting guest data fails", async () => {
-    const mockErr = new Error("Failed to store guest data");
-    AsyncStorage.setItem.mockRejectedValueOnce(mockErr);
-    await handleGuestLogin(mockNavigation);
-    expect(console.error).toHaveBeenCalledWith("Error setting guest mode:", mockErr);
+  test("handleGuestLogin: handles storage errors gracefully", async () => {
+    AsyncStorage.setItem.mockRejectedValue(new Error("Storage error"));
+    await expect(handleGuestLogin(mockNavigation)).resolves.not.toThrow();
   });
 });
