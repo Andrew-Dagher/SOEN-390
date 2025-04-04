@@ -52,7 +52,9 @@ export const buildings = [
                 "name":"MB 1",
                 "url":"https://app.mappedin.com/map/67d891f2f63286000bb80faa/directions?outdoors=false&kiosk=false",
                 "floor_id":"m_de096849e2569e48",
-                "entrance":"45.495518682131724%2C-73.57924820743247%2Cm_de096849e2569e48",
+                "outdoor_entrance":"45.495518682131724%2C-73.57924820743247%2Cm_de096849e2569e48",
+                "entrance": "45.495432170293526%2C-73.5790763159181%2Cm_de096849e2569e48",
+                "disabled_entrance": "45.495273936904326%2C-73.5790277693561%2Cm_de096849e2569e48",
                 "rooms": {
                 "MB1.101": "s_1272ecb3d499fea1",
                 "MB1.210": "s_5348bdea866d2279",
@@ -67,7 +69,7 @@ export const buildings = [
                 "name":"MB S2",
                 "url":"https://app.mappedin.com/map/67d891f2f63286000bb80faa/directions?embedded=true&outdoors=false&kiosk=false",
                 "floor_id":"m_4dd8d7523b50f27a",
-                "entrance":"45.49550722087804%2C--73.57917572331318%2Cm_de096849e2569e48",
+                "entrance":"45.49536851186009%2C-73.57879909931985%2Cm_4dd8d7523b50f27a",
                 "rooms": {
                 "MBS2.210": "s_c0d60f94f2a5c69e",
                 "MBS2.225": "s_636eadb4ea0be9cf",

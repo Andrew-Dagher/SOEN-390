@@ -65,7 +65,12 @@ export const getUrlByRoomId = (roomId) => {
   for (const building of buildings) {
     for (const floor of building.floors) {
       if (Object.values(floor.rooms).includes(roomId)) {
-        return floor.url; // Return URL for the floor if room is found
+
+        let url = floor.url
+        if (accessible) {
+          url += "&accessible=true";
+        }
+        return url;
       }
     }
   }
