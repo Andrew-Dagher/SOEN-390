@@ -43,6 +43,7 @@ import PropTypes from "prop-types";
 export default function CampusMap({ navigationParams }) {
   const route = useRoute();
   const params = navigationParams || route.params; // Ensure params are retrieved
+  console.log("CampusMap params:", params); // Debugging line to check params
   const { textSize } = useAppSettings();
   const theme = getThemeColors();
   const navigation = useNavigation();
@@ -476,8 +477,8 @@ export default function CampusMap({ navigationParams }) {
           );
         })}
         <View ref={polygonRef}>{renderPolygons}</View>
-        {navigationParams?.path &&
-          navigationParams?.path.map((point, index) => {
+        {params?.path &&
+          params?.path.map((point, index) => {
             if (!point.latitude || !point.longitude) {
               console.error("Invalid point coordinates:", point);
               return null; // Skip rendering if coordinates are invalid
@@ -489,13 +490,13 @@ export default function CampusMap({ navigationParams }) {
                   latitude: point.latitude,
                   longitude: point.longitude,
                 }}
-                title={point.task}
+                title={point.name}
               />
             );
           })}
-        {navigationParams?.path && (
+        {params?.path && (
           <Polyline
-            coordinates={navigationParams.path.map((point) => ({
+            coordinates={params.path.map((point) => ({
               latitude: point.latitude,
               longitude: point.longitude,
             }))}
