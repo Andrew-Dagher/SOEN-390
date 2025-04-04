@@ -73,7 +73,7 @@ export default function SettingsScreen() {
           label="Mobility disability"
           description="Enable features optimized for wheelchair users."
           value={isWheelchairAccessEnabled}
-          onChange={setIsWheelchairAccessEnabled}
+          onChange={setWheelchairAccessEnabled}
           textSize={textSize} 
         />
 

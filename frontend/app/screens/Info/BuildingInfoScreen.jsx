@@ -16,8 +16,6 @@ import {
   Linking,
   Platform,
   StatusBar,
-  Image,
-  Modal,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import MapPinIcon from "../../components/navigation/Icons/MapPinIcon";

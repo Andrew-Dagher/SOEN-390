@@ -140,7 +140,7 @@ const InDoorScreen = () => {
       {/* Dropdown selectors */}
       <View style={{ alignItems: "center", marginBottom: 10 }}>
         {/* Start Dropdown */}
-        <View style={{ zIndex: open ? 3000 : 3000, width: "75%", marginBottom: 8 }}>
+        <View style={{ zIndex: 3000, width: "75%", marginBottom: 8 }}>
           <Text style={{ margin: 8, fontWeight: "bold" }}>Start</Text>
           <DropDownPicker
             style={{ zIndex: 3000, elevation: 3000 }}
@@ -158,7 +158,7 @@ const InDoorScreen = () => {
         </View>
 
         {/* Destination Dropdown */}
-        <View style={{ zIndex: open1 ? 2000 : 2000, width: "75%", marginBottom: 8 }}>
+        <View style={{ zIndex: 2000, width: "75%", marginBottom: 8 }}>
           <Text style={{ margin: 8, fontWeight: "bold" }}>Destination</Text>
           <DropDownPicker
             style={{ zIndex: 2000, elevation: 2000 }}

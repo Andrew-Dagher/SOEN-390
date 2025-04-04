@@ -61,17 +61,12 @@ export const AppSettingsProvider = ({ children }) => {
     textSize, setTextSize,
     colorBlindMode, setColorBlindMode,
     profileImage, setProfileImage,
-  }), [textSize, colorBlindMode, profileImage]);
+    wheelchairAccess, setWheelchairAccess
+  }), [textSize, colorBlindMode, profileImage, wheelchairAccess]);
 
   return (
 
-    <AppSettingsContext.Provider value={{
-      textSize, setTextSize,
-      colorBlindMode, setColorBlindMode,
-      profileImage, setProfileImage,
-      wheelchairAccess,        
-      setWheelchairAccess,
-    }}>
+    <AppSettingsContext.Provider value={contextValue}>
       {children}
     </AppSettingsContext.Provider>
   );
