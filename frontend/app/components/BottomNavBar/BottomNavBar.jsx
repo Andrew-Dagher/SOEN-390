@@ -55,7 +55,7 @@ export default function BottomNavBar({ navigation = null, route = null }) {
     <SafeAreaView style={styles.container}>
       <View testID="bottom-nav" style={styles.navbarContent}>
         {/* Home Button: Navigate to Home screen */}
-        <Pressable onPress={() => navigateTo("Home")} style={styles.navButton}>
+        <Pressable onPress={() => navigateTo("Home")} style={styles.navButton} testID="nav-home">
           {currentScreen === "Home" ? <HomeActive /> : <HomeInactive />}
         </Pressable>
 
@@ -63,6 +63,7 @@ export default function BottomNavBar({ navigation = null, route = null }) {
         <Pressable
           onPress={() => navigateTo("Navigation")}
           style={styles.navButton}
+          testID="nav-navigation"
         >
           {currentScreen === "Navigation" ? (
             <NavigationActive />
@@ -75,6 +76,7 @@ export default function BottomNavBar({ navigation = null, route = null }) {
         <Pressable
           onPress={() => navigateTo("Calendar")}
           style={styles.navButton}
+          testID="nav-calendar"
         >
           {currentScreen === "Calendar" ? (
             <CalendarActive />
@@ -87,6 +89,7 @@ export default function BottomNavBar({ navigation = null, route = null }) {
         <Pressable
           onPress={() => navigateTo("InDoorScreen")}
           style={styles.navButton}
+          testID="nav-indoor"
         >
           {currentScreen === "InDoorScreen" ? (
             <BuildingActive />
@@ -100,6 +103,7 @@ export default function BottomNavBar({ navigation = null, route = null }) {
         <Pressable
           onPress={() => navigateTo("Settings")}
           style={styles.navButton}
+          testID="nav-settings"
         >
           {currentScreen === "Settings" ? (
             <SettingsActive />
