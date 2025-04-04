@@ -1,0 +1,50 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`StartIcon component matches the snapshot 1`] = `
+<RNSVGSvgView
+  bbHeight={18}
+  bbWidth={14}
+  fill="none"
+  focusable={false}
+  height={18}
+  style={
+    [
+      {
+        "backgroundColor": "transparent",
+        "borderWidth": 0,
+      },
+      {
+        "flex": 0,
+        "height": 18,
+        "width": 14,
+      },
+    ]
+  }
+  width={14}
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <RNSVGGroup
+    fill={null}
+    propList={
+      [
+        "fill",
+      ]
+    }
+  >
+    <RNSVGPath
+      d="M1.283 17.705c.419 0 .686-.15 1.097-.552l4.503-4.462c.042-.042.075-.075.117-.075.042 0 .075.034.117.075l4.504 4.462c.41.402.678.552 1.096.552.561 0 .912-.435.912-1.004 0-.318-.133-.695-.259-1.038L8.138 1.366C7.871.629 7.478.295 7 .295c-.477 0-.87.334-1.138 1.071L.63 15.663c-.125.343-.26.72-.26 1.038 0 .569.352 1.004.913 1.004Z"
+      fill={
+        {
+          "payload": 4294956244,
+          "type": 0,
+        }
+      }
+      propList={
+        [
+          "fill",
+        ]
+      }
+    />
+  </RNSVGGroup>
+</RNSVGSvgView>
+`;

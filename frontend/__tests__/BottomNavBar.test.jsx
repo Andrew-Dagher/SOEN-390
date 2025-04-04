@@ -14,39 +14,58 @@ import { AppSettingsProvider } from "../app/AppSettingsContext";
 // Create a native stack navigator for test navigation.
 const Stack = createNativeStackNavigator();
 
-// Mock all the icon components
-jest.mock(
-  "../app/components/BottomNavBar/HomeIcons/HomeActive",
-  () => "HomeActive"
-);
-jest.mock(
-  "../app/components/BottomNavBar/HomeIcons/HomeInactive",
-  () => "HomeInactive"
-);
-jest.mock(
-  "../app/components/BottomNavBar/CalendarIcons/CalendarActive",
-  () => "CalendarActive"
-);
-jest.mock(
-  "../app/components/BottomNavBar/CalendarIcons/CalendarInactive",
-  () => "CalendarInactive"
-);
-jest.mock(
-  "../app/components/BottomNavBar/NavigationIcons/NavigationActive",
-  () => "NavigationActive"
-);
-jest.mock(
-  "../app/components/BottomNavBar/NavigationIcons/NavigationInactive",
-  () => "NavigationInactive"
-);
-jest.mock(
-  "../app/components/BottomNavBar/SettingsIcons/SettingsActive",
-  () => "SettingsActive"
-);
-jest.mock(
-  "../app/components/BottomNavBar/SettingsIcons/SettingsInactive",
-  () => "SettingsInactive"
-);
+/**
+ * Instead of referencing Text at the top level, we import it within each jest.mock factory.
+ * This prevents the "out-of-scope variables" error in Jest.
+ */
+jest.mock("../app/components/BottomNavBar/HomeIcons/HomeActive", () => {
+  return () => {
+    const { Text } = require("react-native");
+    return <Text>HomeActive</Text>;
+  };
+});
+jest.mock("../app/components/BottomNavBar/HomeIcons/HomeInactive", () => {
+  return () => {
+    const { Text } = require("react-native");
+    return <Text>HomeInactive</Text>;
+  };
+});
+jest.mock("../app/components/BottomNavBar/CalendarIcons/CalendarActive", () => {
+  return () => {
+    const { Text } = require("react-native");
+    return <Text>CalendarActive</Text>;
+  };
+});
+jest.mock("../app/components/BottomNavBar/CalendarIcons/CalendarInactive", () => {
+  return () => {
+    const { Text } = require("react-native");
+    return <Text>CalendarInactive</Text>;
+  };
+});
+jest.mock("../app/components/BottomNavBar/NavigationIcons/NavigationActive", () => {
+  return () => {
+    const { Text } = require("react-native");
+    return <Text>NavigationActive</Text>;
+  };
+});
+jest.mock("../app/components/BottomNavBar/NavigationIcons/NavigationInactive", () => {
+  return () => {
+    const { Text } = require("react-native");
+    return <Text>NavigationInactive</Text>;
+  };
+});
+jest.mock("../app/components/BottomNavBar/SettingsIcons/SettingsActive", () => {
+  return () => {
+    const { Text } = require("react-native");
+    return <Text>SettingsActive</Text>;
+  };
+});
+jest.mock("../app/components/BottomNavBar/SettingsIcons/SettingsInactive", () => {
+  return () => {
+    const { Text } = require("react-native");
+    return <Text>SettingsInactive</Text>;
+  };
+});
 
 // Mock navigation
 const mockNavigate = jest.fn();
@@ -87,7 +106,6 @@ describe("<BottomNavBar />", () => {
 
     // Retrieve the BottomNavBar component using its testID.
     const viewComponent = getByTestId("bottom-nav");
-
     // Assert that the component exists in the rendered output.
     expect(viewComponent).toBeTruthy();
   });
@@ -196,5 +214,54 @@ describe("<BottomNavBar />", () => {
     expect(getByText("HomeInactive")).toBeTruthy();
     expect(getByText("NavigationInactive")).toBeTruthy();
     expect(getByText("SettingsInactive")).toBeTruthy();
+  });
+
+  /**
+   * EXTRA TEST #1:
+   * Covers the "if (navigation) { ... } else { console.warn(...) }" branch
+   * by not passing a navigation prop, so it will fallback to console.warn.
+   */
+  test("warns when navigation is not available in this context", () => {
+    const consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+
+    // Provide NO navigation or route props:
+    // This triggers the else clause in 'navigateTo'.
+    const { getByText } = render(
+      <AppSettingsProvider>
+        <BottomNavBar />
+      </AppSettingsProvider>
+    );
+
+    fireEvent.press(getByText("HomeInactive"));
+
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      "Navigation is not available in this context"
+    );
+
+    consoleWarnSpy.mockRestore();
+  });
+
+  /**
+   * EXTRA TEST #2:
+   * Covers the "Only navigate if we're not already on that screen" condition.
+   * i.e., currentScreen === screenName, so it doesn't call navigate().
+   */
+  test("does not call navigation if current screen is the same as pressed screen", () => {
+    const localNav = { navigate: jest.fn() };
+    const localRoute = { name: "Home" }; // The current screen is "Home"
+
+    const { getByText } = render(
+      <AppSettingsProvider>
+        {/* Provide the component with explicit navigation and route */}
+        <BottomNavBar navigation={localNav} route={localRoute} />
+      </AppSettingsProvider>
+    );
+
+    // Because the route is "Home", we get "HomeActive" for that button
+    const homeButton = getByText("HomeActive");
+    fireEvent.press(homeButton);
+
+    // We expect NOT to call navigation, because we're already on Home
+    expect(localNav.navigate).not.toHaveBeenCalled();
   });
 });

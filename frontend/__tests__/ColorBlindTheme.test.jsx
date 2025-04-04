@@ -2,8 +2,8 @@
  * @file ThemeColors.test.js
  */
 
-import getThemeColors from "./getThemeColors";
-import { useAppSettings } from "./AppSettingsContext";
+import getThemeColors from "../app/ColorBindTheme";
+import { useAppSettings } from "../app/AppSettingsContext";
 
 // Mock the color-blind library so we can verify which method was called
 jest.mock("color-blind", () => ({
@@ -12,7 +12,7 @@ jest.mock("color-blind", () => ({
 }));
 
 // Mock the AppSettingsContext to control the colorBlindMode value
-jest.mock("./AppSettingsContext", () => ({
+jest.mock("../app/AppSettingsContext", () => ({
   useAppSettings: jest.fn(),
 }));
 
