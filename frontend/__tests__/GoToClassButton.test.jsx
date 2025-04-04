@@ -1,12 +1,21 @@
-import React from "react";
-import { render, fireEvent } from "@testing-library/react-native";
-import GoToClassButton from "../app/components/calendar/GoToClassButton";
-import { useNavigation } from "@react-navigation/native";
-import * as Location from "expo-location";
+/**
+ * @file GoToClassButton.test.jsx
+ * @description Tests the NextClassButton component for rendering, event updates, and navigation behavior.
+ */
 
-// Mock the navigation object
+import React from "react";
+import { render, fireEvent, waitFor } from "@testing-library/react-native";
+import NextClassButton from "../app/components/Calendar/GoToClassButton";
+import * as Location from "expo-location";
+import { trackEvent } from "@aptabase/react-native";
+import { useNavigation } from "@react-navigation/native";
+
+// Mock navigation
+const mockNavigate = jest.fn();
 jest.mock("@react-navigation/native", () => ({
-  useNavigation: jest.fn(),
+  useNavigation: () => ({
+    navigate: mockNavigate,
+  }),
 }));
 
 // Mock expo-location
@@ -14,89 +23,128 @@ jest.mock("expo-location", () => ({
   getCurrentPositionAsync: jest.fn(),
 }));
 
-describe("GoToClassButton", () => {
-  const mockNavigate = jest.fn();
+// Mock aptabase
+jest.mock("@aptabase/react-native", () => ({
+  trackEvent: jest.fn(),
+}));
 
-  beforeAll(() => {
-    // Make sure useNavigation returns our mocked navigate function
-    useNavigation.mockReturnValue({
-      navigate: mockNavigate,
-    });
-  });
+describe("NextClassButton", () => {
+  let observer;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    observer = {
+      callbacks: [],
+      subscribe: function (cb) {
+        this.callbacks.push(cb);
+      },
+      unsubscribe: function (cb) {
+        this.callbacks = this.callbacks.filter((c) => c !== cb);
+      },
+      emit: function (events) {
+        this.callbacks.forEach((cb) => cb(events));
+      },
+    };
   });
 
-  it("renders the button with correct text", () => {
-    const { getByText } = render(<GoToClassButton locationString="FooCampus, BarBuilding, B123" />);
-    expect(getByText("Go to Class")).toBeTruthy();
+  it("does not render when there is no upcoming event", () => {
+    const { queryByText } = render(<NextClassButton eventObserver={observer} />);
+    observer.emit([]);
+    expect(queryByText("Go to My Next Class")).toBeNull();
   });
 
-  it("calls navigate with correct params when pressed and locationString is fully provided", async () => {
-    // Mock current device location
+  it("renders when there is an upcoming event", async () => {
+    const futureTime = new Date(Date.now() + 100000).toISOString();
+    const event = {
+      start: { dateTime: futureTime },
+      description: "SGW, H-110",
+    };
+
+    const { getByText } = render(<NextClassButton eventObserver={observer} />);
+    observer.emit([event]);
+
+    await waitFor(() => {
+      expect(getByText("Go to My Next Class")).toBeTruthy();
+    });
+  });
+
+  it("navigates to Navigation screen with correct params on press", async () => {
+    const futureTime = new Date(Date.now() + 100000).toISOString();
+    const event = {
+      start: { dateTime: futureTime },
+      description: "SGW, H-110",
+    };
+
     Location.getCurrentPositionAsync.mockResolvedValue({
-      coords: { latitude: 12.345, longitude: 67.89 },
+      coords: { latitude: 45.5, longitude: -73.6 },
     });
 
-    const { getByText } = render(<GoToClassButton locationString="FooCampus, BarBuilding, B123" />);
-    const button = getByText("Go to Class");
+    const { getByText } = render(<NextClassButton eventObserver={observer} />);
+    observer.emit([event]);
 
+    const button = await waitFor(() => getByText("Go to My Next Class"));
     fireEvent.press(button);
 
-    // Wait for any async calls to finish
-    // (In testing-library/react-native, we can wait for all React updates)
-    // But typically a waitFor might not even be needed if using a test environment with the flushPromises trick.
-    // Just do so to ensure navigate is called.
-    await new Promise(setImmediate);
-
-    expect(mockNavigate).toHaveBeenCalledTimes(1);
-    expect(mockNavigate).toHaveBeenCalledWith("Navigation", {
-      campus: "foocampus",
-      buildingName: "BarBuilding",
-      currentLocation: {
-        latitude: 12.345,
-        longitude: 67.89,
-      },
+    await waitFor(() => {
+      expect(Location.getCurrentPositionAsync).toHaveBeenCalled();
+      expect(trackEvent).toHaveBeenCalledWith("Next Class Button Clicked", {
+        campus: "sgw",
+        buildingName: "H-110",
+        latitude: 45.5,
+        longitude: -73.6,
+      });
+      expect(mockNavigate).toHaveBeenCalledWith("Navigation", {
+        campus: "sgw",
+        buildingName: "H-110",
+        currentLocation: {
+          latitude: 45.5,
+          longitude: -73.6,
+        },
+      });
     });
   });
 
-  it("falls back to empty strings if locationString is missing parts", async () => {
-    Location.getCurrentPositionAsync.mockResolvedValue({
-      coords: { latitude: 10, longitude: 20 },
+  it("handles errors during location fetch gracefully", async () => {
+    const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+    const futureTime = new Date(Date.now() + 100000).toISOString();
+
+    const event = {
+      start: { dateTime: futureTime },
+      description: "SGW, H-110",
+    };
+
+    Location.getCurrentPositionAsync.mockRejectedValue(new Error("Location error"));
+
+    const { getByText } = render(<NextClassButton eventObserver={observer} />);
+    observer.emit([event]);
+
+    const button = await waitFor(() => getByText("Go to My Next Class"));
+    fireEvent.press(button);
+
+    await waitFor(() => {
+      expect(consoleError).toHaveBeenCalledWith(
+        "Error navigating to next class:",
+        expect.any(Error)
+      );
     });
 
-    const { getByText } = render(<GoToClassButton locationString="OnlyCampus" />);
-    fireEvent.press(getByText("Go to Class"));
-    await new Promise(setImmediate);
-
-    // "OnlyCampus" => parts[0] = 'OnlyCampus', parts[1] -> '', parts[2] -> ''
-    expect(mockNavigate).toHaveBeenCalledWith("Navigation", {
-      campus: "onlycampus",
-      buildingName: "",
-      currentLocation: {
-        latitude: 10,
-        longitude: 20,
-      },
-    });
+    consoleError.mockRestore();
   });
 
-  it("handles errors in try/catch block gracefully", async () => {
-    // Spy on console.error to check if it's called
-    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
-
-    // Force getCurrentPositionAsync to throw
-    Location.getCurrentPositionAsync.mockRejectedValue(new Error("Location Error"));
-
-    const { getByText } = render(<GoToClassButton locationString="FooCampus, BarBuilding" />);
-    fireEvent.press(getByText("Go to Class"));
-    await new Promise(setImmediate);
-
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "Error fetching location or parsing location string:",
-      expect.any(Error)
-    );
-
-    consoleErrorSpy.mockRestore();
+  it("does not render if events are null", () => {
+    const { queryByText } = render(<NextClassButton eventObserver={observer} />);
+    observer.emit(null);
+    expect(queryByText("Go to My Next Class")).toBeNull();
   });
+  
+  it("does not render if all events are in the past", () => {
+    const pastTime = new Date(Date.now() - 100000).toISOString();
+    const { queryByText } = render(<NextClassButton eventObserver={observer} />);
+    observer.emit([
+      { start: { dateTime: pastTime }, description: "SGW, H-110" },
+      { start: { dateTime: pastTime }, description: "SGW, H-120" },
+    ]);
+    expect(queryByText("Go to My Next Class")).toBeNull();
+  });
+  
 });
