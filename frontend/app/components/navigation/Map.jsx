@@ -39,6 +39,11 @@ import getThemeColors from "../../ColorBindTheme";
 import busService from "../../services/BusService";
 import PropTypes from "prop-types";
 
+// Conditionally import global CSS if not testing.
+if (process.env.NODE_ENV !== "test") {
+  require("../../../global.css");
+}
+
 export default function CampusMap({ navigationParams }) {
   const route = useRoute();
   const params = navigationParams || route.params; // Ensure params are retrieved
@@ -47,12 +52,7 @@ export default function CampusMap({ navigationParams }) {
   const navigation = useNavigation();
 
   const [searchResult, setSearchResult] = useState([]);
-  // Removed unused isSelected state
-  // const [isSelected, setIsSelected] = useState(false);
-  // Replace state with a constant because locationData is never updated
   const locationData = SGWLocation;
-  // Removed unused errorMsg state
-  // const [errorMsg, setErrorMsg] = useState(null);
   const [isSearch, setIsSearch] = useState(false);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [start, setStart] = useState(); // start lat lng of traceroute
@@ -62,39 +62,27 @@ export default function CampusMap({ navigationParams }) {
   const [closeTraceroute, setCloseTraceroute] = useState(false); // bool to hide traceroute
   const [startPosition, setStartPosition] = useState(""); // name of start position for traceroute
   const [destinationPosition, setDestinationPosition] = useState(""); // name of destination position for traceroute
-  // Removed unused waypoints state and its setter
-  // const [waypoints, setWaypoints] = useState([]); // array of waypoints traceroutes that should be rendered by the GoogleAPI
   const [campus, setCampus] = useState("sgw");
   const [mode, setMode] = useState("WALKING"); // Mode of transportation
   const [isRoute, setIsRoute] = useState(false);
-  const [carTravelTime, setCarTravelTime] = useState(null); // Estimated travel time by car
-  const [bikeTravelTime, setBikeTravelTime] = useState(null); // Estimated travel time by bicycle
-  const [metroTravelTime, setMetroTravelTime] = useState(null); // Estimated travel time by public transit
-  const [walkTravelTime, setWalkTravelTime] = useState(null); // Estimated travel time on foot
-  const [walkToBus, setWalkToBus] = useState({
-    start: null,
-    end: null,
-  });
-  const [walkFromBus, setWalkFromBus] = useState({
-    start: null,
-    end: null,
-  });
+  const [carTravelTime, setCarTravelTime] = useState(null);
+  const [bikeTravelTime, setBikeTravelTime] = useState(null);
+  const [metroTravelTime, setMetroTravelTime] = useState(null);
+  const [walkTravelTime, setWalkTravelTime] = useState(null);
+  const [walkToBus, setWalkToBus] = useState({ start: null, end: null });
+  const [walkFromBus, setWalkFromBus] = useState({ start: null, end: null });
   const [isShuttle, setIsShuttle] = useState(false);
   const ref = useRef(null);
   const polygonRef = useRef(null);
   const hasRoute = start && end;
-  //Aptabase.init("A-US-0837971026")
-
-  // Add to busService observer list
   const [busMarkers, setBusMarkers] = useState([]);
-
   const observerRef = useRef(null);
 
   useEffect(() => {
-    // Create observer
+    let isMounted = true;
     observerRef.current = {
       update: (data) => {
-        let points = data["d"]["Points"]
+        const points = data["d"]["Points"]
           .map((bus) => {
             if (bus["ID"].includes("BUS")) {
               return {
@@ -105,16 +93,16 @@ export default function CampusMap({ navigationParams }) {
             }
           })
           .filter(Boolean);
-
         console.log("Points:", points);
-        setBusMarkers(points);
+        if (isMounted) {
+          setBusMarkers(points);
+        }
       },
     };
 
-    // Add observer when the screen is focused
     busService.addObserver(observerRef.current);
     busService.update();
-    // Listen for when the screen loses focus (e.g., navigating away)
+    // Ensure addListener returns a function by inlining a no‑op.
     const unsubscribeBlur = navigation.addListener("blur", () => {
       if (observerRef.current) {
         busService.removeObserver(observerRef.current);
@@ -122,10 +110,13 @@ export default function CampusMap({ navigationParams }) {
     });
 
     return () => {
-      unsubscribeBlur();
+      if (typeof unsubscribeBlur === "function") {
+        unsubscribeBlur();
+      }
       if (observerRef.current) {
         busService.removeObserver(observerRef.current);
       }
+      isMounted = false;
     };
   }, [navigation, route]);
 
@@ -139,19 +130,14 @@ export default function CampusMap({ navigationParams }) {
       WALKING: setWalkTravelTime,
     };
 
-    // Check if start and end locations are the same
     if (start.latitude === end.latitude && start.longitude === end.longitude) {
-      console.log(
-        `Start and end locations are the same. Setting travel time to 0 min.`
-      );
+      console.log(`Start and end locations are the same. Setting travel time to 0 min.`);
       setTravelTime[mode]?.("0 min");
       return;
     }
 
-    // Base URL defined as a global constant
     const GOOGLE_DIRECTIONS_API_BASE_URL =
       "https://maps.googleapis.com/maps/api/directions/json";
-
     const travelMode = mode.toLowerCase();
 
     let url =
@@ -160,7 +146,6 @@ export default function CampusMap({ navigationParams }) {
       `&mode=${travelMode}` +
       `&key=${process.env.EXPO_PUBLIC_GOOGLE_API_KEY}`;
 
-    // specific parameters for transit mode
     if (travelMode === "transit") {
       url += "&transit_mode=bus|subway|train";
     }
@@ -170,18 +155,12 @@ export default function CampusMap({ navigationParams }) {
       const data = await response.json();
 
       if (data.status !== "OK") {
-        console.error(
-          `Error fetching ${mode} directions:`,
-          data.status,
-          data.error_message
-        );
-        // Set appropriate state to indicate no route found
+        console.error(`Error fetching ${mode} directions:`, data.status, data.error_message);
         setTravelTime[mode]?.("No route");
         return;
       }
 
       const route = data.routes[0];
-      // Use optional chaining for a more concise check
       if (!route?.legs?.[0]) {
         console.error("No valid route found");
         return;
@@ -210,12 +189,10 @@ export default function CampusMap({ navigationParams }) {
       if (selectedBuilding) {
         setStart(params.currentLocation);
         setStartPosition("Your Location");
-
         setEnd(selectedBuilding.point);
         setDestinationPosition(selectedBuilding.name);
         setSelectedBuilding(selectedBuilding);
-
-        setIsRoute(true); // Automatically start route
+        setIsRoute(true);
         setIsSearch(true);
       } else {
         console.warn("Building not found:", params.buildingName);
@@ -229,8 +206,6 @@ export default function CampusMap({ navigationParams }) {
       setIsSearch(true);
       setDestinationPosition(selectedBuilding.name);
       setEnd(selectedBuilding.point);
-
-      // Reset travel times
       setCarTravelTime(null);
       setBikeTravelTime(null);
       setMetroTravelTime(null);
@@ -263,7 +238,6 @@ export default function CampusMap({ navigationParams }) {
         setStart(location.coords);
       }
       setStartPosition("Your Location");
-
       setCarTravelTime(null);
       setBikeTravelTime(null);
       setMetroTravelTime(null);
@@ -296,12 +270,10 @@ export default function CampusMap({ navigationParams }) {
     ref.current?.animateToRegion(SGWLocation);
   };
 
-  // Called when user presses on a building marker
   const handleMarkerPress = (building) => {
     setIsSearch(false);
     setSelectedBuilding(building);
     trackEvent("Selected building", { building: building.name });
-    // Removed unused setIsSelected(true) call
   };
 
   const panToMyLocation = () => {
@@ -358,23 +330,27 @@ export default function CampusMap({ navigationParams }) {
 
   useEffect(() => {
     console.log("is route: " + isRoute);
-  }, [isRoute, mode, isShuttle, end]); // removed waypoints from dependency
+  }, [isRoute, mode, isShuttle, end]);
 
   useEffect(() => {
+    let isMounted = true;
     if (location != null && start != location?.coords) return;
     async function getCurrentLocation() {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        // Removed errorMsg state assignment; you can add logging if needed.
         console.error("Permission to access location was denied");
         return;
       }
-
-      let location = await Location.getCurrentPositionAsync({});
-      trackEvent("Check current Location", { Location: location });
-      setLocation(location);
+      let loc = await Location.getCurrentPositionAsync({});
+      trackEvent("Check current Location", { Location: loc });
+      if (isMounted) {
+        setLocation(loc);
+      }
     }
     getCurrentLocation();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (
@@ -449,7 +425,7 @@ export default function CampusMap({ navigationParams }) {
             apikey={process.env.EXPO_PUBLIC_GOOGLE_API_KEY}
             strokeColor="#862532"
             strokeWidth={6}
-            waypoints={[]} // replaced state with an empty array literal
+            waypoints={[]}
             mode={mode}
             onReady={traceRouteOnReady}
           />
@@ -551,15 +527,8 @@ export default function CampusMap({ navigationParams }) {
 
       {!isSearch && (
         <View className="absolute h-full justify-end items-center">
-          <View
-            style={styles.shadow}
-            className="mb-40 rounded-xl bg-white p-4 ml-8"
-          >
-            <TouchableHighlight
-              underlayColor={"white"}
-              onPress={handleLoyola}
-              className="mb-4"
-            >
+          <View style={styles.shadow} className="mb-40 rounded-xl bg-white p-4 ml-8">
+            <TouchableHighlight underlayColor={"white"} onPress={handleLoyola} className="mb-4">
               <LoyolaIcon campus={campus} />
             </TouchableHighlight>
             <TouchableHighlight underlayColor={"white"} onPress={handleSGW}>
@@ -570,10 +539,7 @@ export default function CampusMap({ navigationParams }) {
       )}
 
       {!isSearch && (
-        <MapLocation
-          panToMyLocation={panToMyLocation}
-          setLocation={setLocation}
-        />
+        <MapLocation panToMyLocation={panToMyLocation} setLocation={setLocation} />
       )}
 
       {selectedBuilding && !isSearch && (
@@ -581,26 +547,17 @@ export default function CampusMap({ navigationParams }) {
           <View className="flex flex-row justify-center items-center">
             <TouchableHighlight
               testID="set-start-end"
-              style={[
-                styles.shadow,
-                { backgroundColor: theme.backgroundColor },
-              ]}
+              style={[styles.shadow, { backgroundColor: theme.backgroundColor }]}
               className="mr-4 rounded-xl p-4 bg-primary-red"
               onPress={handleSetStart}
             >
               <View className="flex flex-row justify-around items-center">
                 {start != null && start != location?.coords ? (
-                  <Text
-                    style={[{ fontSize: textSize }]}
-                    className="color-white mr-4 font-bold"
-                  >
+                  <Text style={[{ fontSize: textSize }]} className="color-white mr-4 font-bold">
                     Set Destination
                   </Text>
                 ) : (
-                  <Text
-                    style={[{ fontSize: textSize }]}
-                    className="color-white mr-4 font-bold"
-                  >
+                  <Text style={[{ fontSize: textSize }]} className="color-white mr-4 font-bold">
                     Set Start
                   </Text>
                 )}
@@ -609,18 +566,12 @@ export default function CampusMap({ navigationParams }) {
             </TouchableHighlight>
             <TouchableHighlight
               testID="get-directions"
-              style={[
-                styles.shadow,
-                { backgroundColor: theme.backgroundColor },
-              ]}
+              style={[styles.shadow, { backgroundColor: theme.backgroundColor }]}
               className="rounded-xl p-4 bg-primary-red"
               onPress={handleGetDirections}
             >
               <View className="flex flex-row justify-around items-center">
-                <Text
-                  style={[{ fontSize: textSize }]}
-                  className="color-white mr-4 font-bold"
-                >
+                <Text style={[{ fontSize: textSize }]} className="color-white mr-4 font-bold">
                   Get Directions
                 </Text>
                 <DirectionsIcon />
