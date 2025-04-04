@@ -1,4 +1,3 @@
-import moment from "moment";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 /**

@@ -3,8 +3,9 @@
  * @description A screen component that displays a map for navigation purposes.
  */
 
+import PropTypes from "prop-types"; // Import PropTypes
 import React from 'react';
-import { View, Text, Button } from 'react-native';
+import { View } from 'react-native';
 import Map from '../../components/navigation/Map';
 import { trackEvent } from "@aptabase/react-native";
 import { useRoute } from "@react-navigation/native";
@@ -31,3 +32,6 @@ export default function NavigationScreen({ navigation }) {
     </View>
   );
 }
+NavigationScreen.propTypes = {
+  navigation: PropTypes.object.isRequired,
+};

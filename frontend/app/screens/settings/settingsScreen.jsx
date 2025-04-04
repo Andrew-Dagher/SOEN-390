@@ -35,10 +35,11 @@ export default function SettingsScreen() {
   const navigation = useNavigation();
   const { signOut, isSignedIn } = useAuth();
 
+
   const [isWheelchairAccessEnabled, setWheelchairAccessEnabled] = useState(wheelchairAccess);
   const [tempProfileImage, setTempProfileImage] = useState(profileImage);
   const [userName, setUserName] = useState("Guest");
-  const [isColorBlindModeEnabled, setColorBlindModeEnabled] = useState(!!colorBlindMode);
+  const [isColorBlindModeEnabled, setIsColorBlindModeEnabled] = useState(!!colorBlindMode);
   const [tempSize, setTempSize] = useState(textSize);
 
   useEffect(() => { loadUserData(setUserName, setProfileImage); }, []);
@@ -72,7 +73,7 @@ export default function SettingsScreen() {
           label="Mobility disability"
           description="Enable features optimized for wheelchair users."
           value={isWheelchairAccessEnabled}
-          onChange={setWheelchairAccessEnabled}
+          onChange={setIsWheelchairAccessEnabled}
           textSize={textSize} 
         />
 
@@ -82,7 +83,7 @@ export default function SettingsScreen() {
             label="Color vision deficient"
             value={isColorBlindModeEnabled}
             onChange={(value) => {
-              setColorBlindModeEnabled(value);
+              setIsColorBlindModeEnabled(value);
               if (!value) setColorBlindMode(null);
             }}
             textSize={textSize}

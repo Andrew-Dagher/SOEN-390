@@ -4,6 +4,7 @@
  */
 
 import * as React from "react";
+import PropTypes from "prop-types"; // Import PropTypes
 import Svg, { Path } from "react-native-svg";
 
 /**
@@ -32,5 +33,12 @@ const LocationIcon = ({ width = 20, height = 20, fill = "#862532", ...props }) =
     />
   </Svg>
 );
+
+// PropTypes validation
+LocationIcon.propTypes = {
+  width: PropTypes.number,
+  height: PropTypes.number,
+  fill: PropTypes.string,
+};
 
 export default LocationIcon;

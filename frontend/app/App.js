@@ -7,7 +7,6 @@
 import React, { useRef, useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import Constants from "expo-constants";
 import { NavigationContainer } from "@react-navigation/native";
 import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
 

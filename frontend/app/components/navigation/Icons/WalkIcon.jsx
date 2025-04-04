@@ -4,6 +4,7 @@
  */
 
 import * as React from "react";
+import PropTypes from "prop-types"; // Import PropTypes
 import Svg, { Path } from "react-native-svg";
 
 /**
@@ -46,5 +47,10 @@ const WalkIcon = ({ isSelected }) => (
     />
   </Svg>
 );
+
+// Define PropTypes for WalkIcon component
+WalkIcon.propTypes = {
+  isSelected: PropTypes.bool.isRequired,
+};
 
 export default WalkIcon;

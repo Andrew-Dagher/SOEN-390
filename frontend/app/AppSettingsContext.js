@@ -1,5 +1,6 @@
-import React, { createContext, useState, useContext, useEffect } from "react";
+import React, { createContext, useState, useContext, useEffect, useMemo } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import PropTypes from "prop-types";
 
 const AppSettingsContext = createContext();
 
@@ -55,7 +56,15 @@ export const AppSettingsProvider = ({ children }) => {
     saveSettings();
   }, [textSize, colorBlindMode, profileImage, wheelchairAccess]);
 
+  // Use useMemo to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
+    textSize, setTextSize,
+    colorBlindMode, setColorBlindMode,
+    profileImage, setProfileImage,
+  }), [textSize, colorBlindMode, profileImage]);
+
   return (
+
     <AppSettingsContext.Provider value={{
       textSize, setTextSize,
       colorBlindMode, setColorBlindMode,
@@ -66,6 +75,11 @@ export const AppSettingsProvider = ({ children }) => {
       {children}
     </AppSettingsContext.Provider>
   );
+};
+
+// PropTypes validation
+AppSettingsProvider.propTypes = {
+  children: PropTypes.node.isRequired,
 };
 
 export const useAppSettings = () => useContext(AppSettingsContext);
