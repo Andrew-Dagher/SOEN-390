@@ -32,7 +32,7 @@ class BusService {
           "User-Agent": "Mozilla/5.0", // Mimic a browser
         },
       });
-      console.log("Headers: ", response.headers);
+      // console.log("Headers: ", response.headers);
       return response.headers["set-cookie"];
     } catch (error) {
       console.error("Error getting cookie: ", error);

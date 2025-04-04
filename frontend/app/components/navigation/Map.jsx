@@ -11,6 +11,7 @@ import MapView, {
   PROVIDER_DEFAULT,
   Polygon,
   Callout,
+  Polyline,
 } from "react-native-maps";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import MapViewDirections from "react-native-maps-directions";
@@ -106,7 +107,7 @@ export default function CampusMap({ navigationParams }) {
           })
           .filter(Boolean);
 
-        console.log("Points:", points);
+        // console.log("Points:", points);
         setBusMarkers(points);
       },
     };
@@ -253,7 +254,9 @@ export default function CampusMap({ navigationParams }) {
 
   const handleGetDirections = () => {
     try {
-      trackEvent("Get Directions", { "selected building": selectedBuilding.name });
+      trackEvent("Get Directions", {
+        "selected building": selectedBuilding.name,
+      });
       console.log("Event tracked");
       setIsRoute(true);
       setIsSearch(true);
@@ -272,7 +275,11 @@ export default function CampusMap({ navigationParams }) {
       const fetchAllTravelTimes = async () => {
         await Promise.all([
           fetchTravelTime(location?.coords, selectedBuilding.point, "DRIVING"),
-          fetchTravelTime(location?.coords, selectedBuilding.point, "BICYCLING"),
+          fetchTravelTime(
+            location?.coords,
+            selectedBuilding.point,
+            "BICYCLING"
+          ),
           fetchTravelTime(location?.coords, selectedBuilding.point, "TRANSIT"),
           fetchTravelTime(location?.coords, selectedBuilding.point, "WALKING"),
         ]);
@@ -455,7 +462,7 @@ export default function CampusMap({ navigationParams }) {
           />
         ) : null}
         {busMarkers.map((bus) => {
-          console.log("rendering bus marker", bus);
+          // console.log("rendering bus marker", bus);
           return (
             <Marker
               testID="bus-marker"
@@ -469,6 +476,33 @@ export default function CampusMap({ navigationParams }) {
           );
         })}
         <View ref={polygonRef}>{renderPolygons}</View>
+        {navigationParams?.path &&
+          navigationParams?.path.map((point, index) => {
+            if (!point.latitude || !point.longitude) {
+              console.error("Invalid point coordinates:", point);
+              return null; // Skip rendering if coordinates are invalid
+            }
+            return (
+              <Marker
+                key={index}
+                coordinate={{
+                  latitude: point.latitude,
+                  longitude: point.longitude,
+                }}
+                title={point.task}
+              />
+            );
+          })}
+        {navigationParams?.path && (
+          <Polyline
+            coordinates={navigationParams.path.map((point) => ({
+              latitude: point.latitude,
+              longitude: point.longitude,
+            }))}
+            strokeWidth={3}
+            strokeColor="blue"
+          />
+        )}
       </MapView>
 
       {isRoute ? (
