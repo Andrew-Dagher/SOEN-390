@@ -13,7 +13,6 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
-import Slider from "@react-native-community/slider";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "@clerk/clerk-expo";
 import { useAppSettings } from "../../AppSettingsContext";
