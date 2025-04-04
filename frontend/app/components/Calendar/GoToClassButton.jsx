@@ -1,125 +1,59 @@
-import React, { useState, useEffect } from "react";
-import { TouchableOpacity, Text, StyleSheet, Animated, View } from "react-native";
+import React from "react";
+import { TouchableOpacity, Text, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import * as Location from "expo-location";
-import PropTypes from "prop-types";
-import CalendarDirectionsIcon from "./CalendarIcons/CalendarDirectionsIcon"; // Import the icon
-import { trackEvent } from "@aptabase/react-native";  // Import trackEvent
+import PropTypes from 'prop-types';  // Import PropTypes
 
-export default function NextClassButton({ eventObserver }) {
+export default function GoToClassButton({ locationString }) {
   const navigation = useNavigation();
-  const [nextEventLocation, setNextEventLocation] = useState(null);
-  const [fadeAnim] = useState(new Animated.Value(0)); // Fade animation
 
-  useEffect(() => {
-    const observerCallback = (events) => {
-      if (!events || events.length === 0) {
-        setNextEventLocation(null);
-        return;
-      }
-
-      const now = new Date();
-      const upcomingEvent = events
-        .filter((evt) => new Date(evt.start.dateTime) > now)
-        .sort((a, b) => new Date(a.start.dateTime) - new Date(b.start.dateTime))[0];
-
-      if (upcomingEvent) {
-        setNextEventLocation(upcomingEvent.description);
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }).start();
-      } else {
-        setNextEventLocation(null);
-      }
-    };
-
-    eventObserver.subscribe(observerCallback);
-
-    return () => {
-      eventObserver.unsubscribe(observerCallback);
-    };
-  }, [eventObserver, fadeAnim]);
-
-  const handleGoToNextClass = async () => {
-    if (!nextEventLocation) return;
-
+  const handleGoToClass = async () => {
     try {
-      const parts = nextEventLocation.split(",").map((p) => p.trim());
-      const campus = (parts[0] || "").toLowerCase().replace(/<\/?pre>/g, "").trim();
-      const buildingName = (parts[1] || "").replace(/<\/?pre>/g, "").trim();
+      // Safely split the string
+      const parts = locationString.split(",").map((str) => str.trim());
 
+      // Fallback to empty strings if there's not enough data
+      const c = parts[0] || "";
+      const b = parts[1] || "";
+
+      // Get current device location
       const currentLocation = await Location.getCurrentPositionAsync({});
 
-      // Track the event using Aptabase
-      trackEvent("Next Class Button Clicked", {
-        campus: campus,
-        buildingName: buildingName,
-        latitude: currentLocation.coords.latitude,
-        longitude: currentLocation.coords.longitude
-      });
-
+      // Navigate even if some parts are empty
       navigation.navigate("Navigation", {
-        campus,
-        buildingName,
+        campus: c.toLowerCase().replace("<pre>", "").replace("</pre>", "").trim(),
+        buildingName: b.replace("<pre>", "").replace("</pre>", "").trim(),
         currentLocation: {
           latitude: currentLocation.coords.latitude,
           longitude: currentLocation.coords.longitude,
         },
       });
     } catch (error) {
-      console.error("Error navigating to next class:", error);
+      console.error("Error fetching location or parsing location string:", error);
     }
   };
 
-  if (!nextEventLocation) return null;
-
   return (
-    <Animated.View style={[styles.floatingContainer, { opacity: fadeAnim }]}>
-      <TouchableOpacity style={styles.floatingButton} onPress={handleGoToNextClass}>
-        <Text style={styles.floatingButtonText}>Go to My Next Class</Text>
-        <CalendarDirectionsIcon style={styles.icon} />
-      </TouchableOpacity>
-    </Animated.View>
+    <TouchableOpacity style={styles.nextClassButton} onPress={handleGoToClass}>
+      <Text style={styles.nextClassButtonText}>Go to Class</Text>
+    </TouchableOpacity>
   );
 }
 
-NextClassButton.propTypes = {
-  eventObserver: PropTypes.object.isRequired,
+GoToClassButton.propTypes = {
+  locationString: PropTypes.string.isRequired,  // Validate locationString
 };
 
 const styles = StyleSheet.create({
-  floatingContainer: {
-    position: "absolute",
-    bottom: 70,
-    left: 0,
-    right: 0,
-    alignItems: "center",
-    zIndex: 1000,
-  },
-  floatingButton: {
-    flexDirection: "row",
-    alignItems: "center",
+  nextClassButton: {
     backgroundColor: "#862532",
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
+    padding: 10,
+    borderRadius: 10,
+    marginTop: 10,
+    alignItems: "center",
   },
-  floatingButtonText: {
+  nextClassButtonText: {
     color: "#FFFFFF",
-    fontSize: 14,
     fontWeight: "bold",
-    textAlign: "center",
-    marginRight: 10,
-  },
-  icon: {
-    width: 24,
-    height: 24,
   },
 });
