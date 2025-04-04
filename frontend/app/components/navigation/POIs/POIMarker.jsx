@@ -11,8 +11,38 @@ const PoiMarker = ({ poi, selectedPoiType, onPress, textSize }) => {
     return foundType?.icon || "place";
   };
 
-  // For "all" display, use the POI's own type if available
-  const iconName = getIconName(poi.poiType || selectedPoiType);
+  // Get marker color based on POI type
+  const getMarkerColor = (type) => {
+    switch (type) {
+      case "restaurant":
+        return "#FF5252"; // Red
+      case "cafe":
+        return "#9C27B0"; // Purple
+      case "library":
+        return "#3F51B5"; // Indigo
+      case "parking":
+        return "#2196F3"; // Blue
+      case "atm":
+        return "#009688"; // Teal
+      case "pharmacy":
+        return "#4CAF50"; // Green
+      case "bus_station":
+        return "#FFC107"; // Amber
+      case "subway_station":
+        return "#FF9800"; // Orange
+      case "grocery_or_supermarket":
+        return "#795548"; // Brown
+      case "lodging":
+        return "#607D8B"; // Blue Grey
+      default:
+        return "#862532"; // Concordia red (default)
+    }
+  };
+
+  // Always use the POI's own type if available
+  const poiType = poi.poiType || selectedPoiType;
+  const iconName = getIconName(poiType);
+  const markerColor = getMarkerColor(poiType);
 
   // Get POI type label for display
   const getPoiTypeLabel = (type) => {
@@ -22,7 +52,6 @@ const PoiMarker = ({ poi, selectedPoiType, onPress, textSize }) => {
 
   return (
     <Marker
-      key={poi.place_id}
       coordinate={{
         latitude: poi.geometry.location.lat,
         longitude: poi.geometry.location.lng,
@@ -34,11 +63,16 @@ const PoiMarker = ({ poi, selectedPoiType, onPress, textSize }) => {
           backgroundColor: "white",
           padding: 5,
           borderRadius: 15,
-          borderWidth: 1,
-          borderColor: "#ccc",
+          borderWidth: 2,
+          borderColor: markerColor,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.22,
+          shadowRadius: 2.22,
+          elevation: 3,
         }}
       >
-        <MaterialIcons name={iconName} size={20} color="#862532" />
+        <MaterialIcons name={iconName} size={20} color={markerColor} />
       </View>
       <Callout tooltip={true}>
         <View
@@ -47,6 +81,8 @@ const PoiMarker = ({ poi, selectedPoiType, onPress, textSize }) => {
             padding: 10,
             backgroundColor: "white",
             borderRadius: 10,
+            borderLeftWidth: 4,
+            borderLeftColor: markerColor,
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.25,
@@ -57,14 +93,24 @@ const PoiMarker = ({ poi, selectedPoiType, onPress, textSize }) => {
           <Text style={{ fontWeight: "bold", fontSize: textSize }}>
             {poi.name}
           </Text>
-          {/* Show POI type when in "all" mode */}
-          {selectedPoiType === "all" && poi.poiType && (
-            <Text
-              style={{ fontSize: textSize - 2, color: "#666", marginTop: 2 }}
-            >
-              {getPoiTypeLabel(poi.poiType)}
+          {/* Always show POI type with color indicator */}
+          <View
+            style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}
+          >
+            <View
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: 4,
+                backgroundColor: markerColor,
+                marginRight: 5,
+              }}
+            />
+            <Text style={{ fontSize: textSize - 2, color: "#666" }}>
+              {getPoiTypeLabel(poiType)}
             </Text>
-          )}
+          </View>
+
           {poi.vicinity && (
             <Text style={{ fontSize: textSize - 2, marginTop: 3 }}>
               {poi.vicinity}

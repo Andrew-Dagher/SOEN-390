@@ -375,7 +375,8 @@ export default function CampusMap({ navigationParams }) {
   const renderPolygons = polygons.map((building) => {
     return (
       <View key={building.name}>
-        {end == null ? (
+        {/* Modified condition: Show building markers unless in route mode */}
+        {!isRoute && (
           <Marker
             testID={"building-" + building.name}
             coordinate={building.point}
@@ -389,7 +390,7 @@ export default function CampusMap({ navigationParams }) {
               <MapCard building={building} isCallout={true} />
             </Callout>
           </Marker>
-        ) : null}
+        )}
         <Polygon
           coordinates={building.boundaries}
           strokeWidth={2}
@@ -450,7 +451,7 @@ export default function CampusMap({ navigationParams }) {
     <View style={styles.container}>
       <MapView
         ref={ref}
-        style={styles.map}
+        style={[styles.map, { zIndex: 0 }]}
         initialRegion={{
           latitude: locationData.latitude,
           longitude: locationData.longitude,

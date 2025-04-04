@@ -1,7 +1,9 @@
 // File: components/Map/POI/PoiService.js
-// Updated to properly handle .env API keys
+// Updated to properly handle .env API keys and search radius
 
 export const poiTypes = [
+  { label: "No Filters", value: "none", icon: "layers-clear" },
+  { label: "All Types", value: "all", icon: "layers" },
   { label: "Restaurants", value: "restaurant", icon: "restaurant" },
   { label: "Cafes", value: "cafe", icon: "local-cafe" },
   { label: "Libraries", value: "library", icon: "local-library" },
@@ -22,11 +24,19 @@ export const poiTypes = [
  * Fetches nearby Points of Interest from Google Places API
  * @param {Object} location - Location object with latitude and longitude
  * @param {string} type - Type of POI to fetch
+ * @param {string} apiKey - Google API key
+ * @param {number} radius - Search radius in meters (default: 1000)
  * @returns {Promise<Array>} - Array of POI objects
  */
-export async function fetchNearbyPOIs(location, type) {
+export async function fetchNearbyPOIs(location, type, apiKey, radius = 1000) {
   if (!location) {
     console.error("No location provided to fetchNearbyPOIs");
+    return [];
+  }
+
+  // Return empty array for "none" type (no filters)
+  if (type === "none") {
+    console.log("No filters selected, returning empty POI array");
     return [];
   }
 
@@ -40,17 +50,17 @@ export async function fetchNearbyPOIs(location, type) {
       return [];
     }
 
-    // Get API key from environment variables
-    const apiKey = process.env.EXPO_PUBLIC_GOOGLE_API_KEY;
+    // Get API key from parameters or environment variables
+    const googleApiKey = apiKey || process.env.EXPO_PUBLIC_GOOGLE_API_KEY;
 
-    if (!apiKey) {
+    if (!googleApiKey) {
       console.error("Google API key is missing. Check your .env file.");
       return [];
     }
 
-    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=1000&type=${type}&key=${apiKey}`;
+    const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=${radius}&type=${type}&key=${googleApiKey}`;
 
-    console.log(`Fetching POIs for type: ${type}`);
+    console.log(`Fetching POIs for type: ${type} within ${radius}m`);
 
     const response = await fetch(url);
 
