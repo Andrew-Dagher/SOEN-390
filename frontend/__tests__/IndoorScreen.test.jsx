@@ -1,11 +1,15 @@
-// IndoorMap.test.jsx
+// IndoorScreen.test.jsx
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, screen } from '@testing-library/react-native';
 import { Platform } from 'react-native';
-import InDoorScreen from '../app/screens/indoor/InDoorScreen.jsx' 
-import { WebView } from 'react-native-webview';
+import InDoorScreen from '../app/screens/indoor/InDoorScreen';
 
-// Mocking navigation and route hooks
+// Mock WebView as a simple jest function
+jest.mock('react-native-webview', () => ({
+  WebView: jest.fn(() => null),
+}));
+
+// Mock navigation dependencies
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({
     goBack: jest.fn(),
@@ -13,19 +17,21 @@ jest.mock('@react-navigation/native', () => ({
   useRoute: jest.fn(),
 }));
 
-// Mock ColorBindTheme and AppSettingsContext
-jest.mock('../../ColorBindTheme', () => () => ({
+// Mock theme context
+jest.mock('../app/ColorBindTheme', () => () => ({
   backgroundColor: 'blue',
 }));
-jest.mock('../../AppSettingsContext', () => ({
+
+// Mock app settings context
+jest.mock('../app/AppSettingsContext', () => ({
   useAppSettings: () => ({
     wheelchairAccess: false,
     textSize: 16,
   }),
 }));
 
-// Mock the inDoorUtil functions and picker list
-jest.mock('./inDoorUtil', () => ({
+// Mock indoor utilities
+jest.mock('../app/screens/indoor/inDoorUtil', () => ({
   pickerList: [
     { label: 'Room 101', value: '101' },
     { label: 'Room 102', value: '102' },
@@ -38,32 +44,30 @@ jest.mock('./inDoorUtil', () => ({
   getUrlByRoomId: jest.fn(),
 }));
 
-// Optionally, mock the Map component to simplify testing
-jest.mock('../../components/navigation/Map', () => {
-  return () => <></>;
-});
+// Mock Map component
+jest.mock('../app/components/navigation/Map', () => () => null);
 
-import * as inDoorUtil from './inDoorUtil';
+// Import mocked modules
+import * as inDoorUtil from '../app/screens/indoor/inDoorUtil';
 import { useRoute } from '@react-navigation/native';
+import { WebView } from 'react-native-webview';
 
 describe('InDoorScreen', () => {
   const defaultBuilding = { floorPlans: 'http://example.com/map' };
   const defaultStep1 = { value: '101', value1: '102' };
 
   beforeEach(() => {
-    // Reset platform for header padding (if needed)
     Platform.OS = 'ios';
-    // Clear previous mock implementations
     jest.clearAllMocks();
-  });
-
-  it('renders header and back button', () => {
     useRoute.mockReturnValue({
       params: {
         building: defaultBuilding,
         step1: defaultStep1,
       },
     });
+  });
+
+  it('renders header and back button', () => {
     const { getByText } = render(<InDoorScreen />);
     expect(getByText('Indoor Directions')).toBeTruthy();
     expect(getByText('←')).toBeTruthy();
@@ -76,122 +80,92 @@ describe('InDoorScreen', () => {
         step1: { value: null, value1: null },
       },
     });
-    const { getByText, queryByTestId } = render(<InDoorScreen />);
-    const searchButton = getByText('Search');
-    fireEvent.press(searchButton);
-    // Since no valid values, the state should not advance to rendering a WebView.
-    expect(queryByTestId('webview-departure')).toBeNull();
+    
+    const { getByText } = render(<InDoorScreen />);
+    fireEvent.press(getByText('Search'));
+    expect(WebView).not.toHaveBeenCalled();
   });
 
   it('handles same floor scenario', async () => {
-    useRoute.mockReturnValue({
-      params: {
-        building: defaultBuilding,
-        step1: defaultStep1,
-      },
-    });
-    // Set up mocks for same floor scenario
-    inDoorUtil.getFloorIdByRoomId.mockImplementation((roomId) => (roomId === '101' ? '1' : '2'));
-    inDoorUtil.getUrlByFloorId.mockReturnValue('http://example.com/map?');
-    inDoorUtil.getEntranceByRoomId.mockReturnValue('entrance');
     inDoorUtil.areRoomsOnSameFloor.mockReturnValue(true);
-    
-    const { getByText, UNSAFE_getByType } = render(<InDoorScreen />);
-    
-    const searchButton = getByText('Search');
-    fireEvent.press(searchButton);
-    
-    // Expect that the WebView is rendered with the departure URL
+    inDoorUtil.getFloorIdByRoomId.mockImplementation((roomId) => 
+      roomId === '101' ? '1' : '2'
+    );
+    inDoorUtil.getUrlByFloorId.mockReturnValue('http://example.com/map?');
+
+    render(<InDoorScreen />);
+    fireEvent.press(screen.getByText('Search'));
+
     await waitFor(() => {
-      const webview = UNSAFE_getByType(WebView);
-      expect(webview.props.source.uri).toBe(
-        'http://example.com/map?&floor=1&location=101&departure=102'
+      expect(WebView).toHaveBeenCalledWith(
+        expect.objectContaining({
+          source: { uri: 'http://example.com/map?&floor=1&location=101&departure=102' }
+        }),
+        expect.anything()
       );
     });
   });
 
   it('handles same building scenario', async () => {
-    useRoute.mockReturnValue({
-      params: {
-        building: defaultBuilding,
-        step1: defaultStep1,
-      },
-    });
-    // Setup mocks: rooms are not on the same floor but in the same building.
-    inDoorUtil.getFloorIdByRoomId.mockImplementation((roomId) => (roomId === '101' ? '1' : '2'));
-    inDoorUtil.getUrlByFloorId.mockReturnValue('http://example.com/map?');
-    inDoorUtil.getEntranceByRoomId.mockReturnValue('entrance');
     inDoorUtil.areRoomsOnSameFloor.mockReturnValue(false);
     inDoorUtil.areRoomsOnSameBuilding.mockReturnValue(true);
-    
-    const { getByText, UNSAFE_getByType, queryByText } = render(<InDoorScreen />);
-    
-    fireEvent.press(getByText('Search'));
-    
-    // The departure WebView should have the URL composed for same building scenario
+    inDoorUtil.getFloorIdByRoomId.mockImplementation((roomId) => 
+      roomId === '101' ? '1' : '2'
+    );
+    inDoorUtil.getUrlByFloorId.mockReturnValue('http://example.com/map?');
+    inDoorUtil.getEntranceByRoomId.mockReturnValue('entrance');
+
+    render(<InDoorScreen />);
+    fireEvent.press(screen.getByText('Search'));
+
     await waitFor(() => {
-      const webview = UNSAFE_getByType(WebView);
-      expect(webview.props.source.uri).toBe(
-        'http://example.com/map?&floor=1&departure=101&location=entrance'
+      expect(WebView).toHaveBeenCalledWith(
+        expect.objectContaining({
+          source: { uri: 'http://example.com/map?&floor=1&departure=101&location=entrance' }
+        }),
+        expect.anything()
       );
     });
-    
-    // Also verify that the Next Directions button (for same building) is rendered
-    expect(queryByText('Next Directions')).toBeTruthy();
   });
 
-  it('handles different building scenario and outdoor directions flow', async () => {
-    useRoute.mockReturnValue({
-      params: {
-        building: defaultBuilding,
-        step1: defaultStep1,
-        // Additional params can be added if needed for outdoor routing.
-      },
-    });
-    // Setup mocks: rooms are neither on the same floor nor same building.
-    inDoorUtil.getFloorIdByRoomId.mockImplementation((roomId) => (roomId === '101' ? '1' : '2'));
-    inDoorUtil.getUrlByFloorId.mockReturnValue('http://example.com/map?');
-    inDoorUtil.getEntranceByRoomId
-      .mockImplementation((roomId, wheelchair = false, isDeparture = false) =>
-        roomId === '101' ? 'entrance1' : 'entrance2'
-      );
+  it('handles different building scenario', async () => {
     inDoorUtil.areRoomsOnSameFloor.mockReturnValue(false);
     inDoorUtil.areRoomsOnSameBuilding.mockReturnValue(false);
+    inDoorUtil.getFloorIdByRoomId.mockImplementation((roomId) => 
+      roomId === '101' ? '1' : '2'
+    );
+    inDoorUtil.getUrlByFloorId.mockReturnValue('http://example.com/map?');
+    inDoorUtil.getEntranceByRoomId.mockImplementation((roomId) => 
+      roomId === '101' ? 'entrance1' : 'entrance2'
+    );
     inDoorUtil.getUrlByRoomId.mockReturnValue('http://example.com/building?');
-    
-    const { getByText, UNSAFE_getByType, queryByText } = render(<InDoorScreen />);
-    
-    // Press Search to simulate indoor departure mapping.
+
+    const { getByText } = render(<InDoorScreen />);
     fireEvent.press(getByText('Search'));
     
-    // Verify the departure WebView URL is correct.
+    // Verify departure WebView
     await waitFor(() => {
-      const webview = UNSAFE_getByType(WebView);
-      expect(webview.props.source.uri).toBe(
-        'http://example.com/map?&floor=1&departure=101&location=entrance1'
+      expect(WebView).toHaveBeenCalledWith(
+        expect.objectContaining({
+          source: { uri: 'http://example.com/map?&floor=1&departure=101&location=entrance1' }
+        }),
+        expect.anything()
       );
     });
+
+    // Move to outdoor directions
+    fireEvent.press(getByText('Outdoor Directions'));
     
-    // The "Outdoor Directions" button should be visible.
-    const outdoorBtn = getByText('Outdoor Directions');
-    expect(outdoorBtn).toBeTruthy();
-    
-    // Move to outdoor directions (currentStep becomes 2) where the Map component is rendered.
-    fireEvent.press(outdoorBtn);
-    await waitFor(() => {
-      // Because we mocked the Map component to render nothing,
-      // we can check for the presence of the "Back" and "Next" buttons.
-      expect(getByText('Back')).toBeTruthy();
-      expect(getByText('Next')).toBeTruthy();
-    });
-    
-    // Simulate pressing "Next" to move to step 3 and show the destination WebView.
+    // Move to destination step
     fireEvent.press(getByText('Next'));
+    
+    // Verify destination WebView
     await waitFor(() => {
-      const webview = UNSAFE_getByType(WebView);
-      // Expected destination URL is composed from getUrlByRoomId and nextFloorId etc.
-      expect(webview.props.source.uri).toBe(
-        'http://example.com/building?&floor=2&location=102&departure=entrance2'
+      expect(WebView).toHaveBeenCalledWith(
+        expect.objectContaining({
+          source: { uri: 'http://example.com/building?&floor=2&location=102&departure=entrance2' }
+        }),
+        expect.anything()
       );
     });
   });

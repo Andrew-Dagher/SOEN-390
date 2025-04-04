@@ -1,5 +1,5 @@
 /**
- * @file IndoorMap.jsx
+ * @file IndoorScreen.jsx
  * @description Displays a map placeholder along with a back button and fields for setting start and destination.
  */
 
