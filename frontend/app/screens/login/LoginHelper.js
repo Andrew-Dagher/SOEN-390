@@ -14,15 +14,11 @@ export async function fetchCalendarName(calendarId, index) {
       return `Calendar ${index}`;
     }
 
-    const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(
-      calendarId
-    )}?key=${GOOGLE_API_KEY}`;
+    const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}?key=${GOOGLE_API_KEY}`;
 
     const response = await fetch(url);
     if (!response.ok) {
-      console.warn(
-        `Warning: Unable to fetch calendar name for ${calendarId} (Status: ${response.status})`
-      );
+      console.warn(`Warning: Unable to fetch calendar name for ${calendarId} (Status: ${response.status})`);
       return `Calendar ${index}`;
     }
 

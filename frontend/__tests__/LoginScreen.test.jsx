@@ -21,7 +21,7 @@ import {
   getAvailableCalendars,
   // If fetchCalendarName is not exported, remove the import below or export it for direct testing
   fetchCalendarName,
-} from "../../app/screens/login/LoginHelper";
+} from "../app/screens/login/LoginHelper";
 
 // --- MOCKS ---
 

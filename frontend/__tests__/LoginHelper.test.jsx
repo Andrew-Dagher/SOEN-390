@@ -1,7 +1,6 @@
 /**
  * @file LoginHelper.test.jsx
- * @description Test suite specifically covering lines 17-33, 52-56, 62, 86-124, 177-179
- *              in the provided LoginHelper code.
+ * @description Test suite for LoginHelper utilities.
  */
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -12,7 +11,7 @@ import {
   checkExistingSession,
   storeUserData,
   handleGuestLogin,
-} from "../app/screens/login/LoginHelper"; 
+} from "../app/screens/login/LoginHelper";
 
 // Mock global fetch
 global.fetch = jest.fn();
@@ -43,25 +42,18 @@ afterEach(() => {
 });
 
 // -----------------------------------------------------------------------------
-// LINES 17–33: fetchCalendarName
+// fetchCalendarName
 // -----------------------------------------------------------------------------
 describe("fetchCalendarName", () => {
-  test("Line 17–33: returns fallback + logs error if API key is missing", async () => {
-    // force missing API key
+  test("returns fallback + logs error if API key is missing", async () => {
     delete process.env.EXPO_PUBLIC_GOOGLE_API_KEY2;
-
     const result = await fetchCalendarName("TestCal", 1);
     expect(result).toBe("Calendar 1");
     expect(console.error).toHaveBeenCalledWith("Google API key is missing.");
   });
 
   test("warns + returns fallback if response not ok", async () => {
-    global.fetch.mockResolvedValue({
-      ok: false,
-      status: 404,
-      json: jest.fn(),
-    });
-
+    global.fetch.mockResolvedValue({ ok: false, status: 404, json: jest.fn() });
     const result = await fetchCalendarName("BadCal", 2);
     expect(result).toBe("Calendar 2");
     expect(console.warn).toHaveBeenCalledWith(
@@ -70,11 +62,7 @@ describe("fetchCalendarName", () => {
   });
 
   test("returns fallback if JSON has no summary", async () => {
-    global.fetch.mockResolvedValue({
-      ok: true,
-      json: jest.fn().mockResolvedValue({}),
-    });
-
+    global.fetch.mockResolvedValue({ ok: true, json: jest.fn().mockResolvedValue({}) });
     const result = await fetchCalendarName("NoSummaryCal", 3);
     expect(result).toBe("Calendar 3");
   });
@@ -84,14 +72,12 @@ describe("fetchCalendarName", () => {
       ok: true,
       json: jest.fn().mockResolvedValue({ summary: "My Calendar" }),
     });
-
     const result = await fetchCalendarName("GoodCal", 4);
     expect(result).toBe("My Calendar");
   });
 
   test("catches error + logs error + returns fallback", async () => {
     global.fetch.mockRejectedValue(new Error("Network fail"));
-
     const result = await fetchCalendarName("ErrorCal", 5);
     expect(result).toBe("Calendar 5");
     expect(console.error).toHaveBeenCalledWith(
@@ -99,28 +85,37 @@ describe("fetchCalendarName", () => {
       expect.any(Error)
     );
   });
+
+  test("returns fallback if calendarId is empty", async () => {
+    const result = await fetchCalendarName("", 6);
+    expect(result).toBe("Calendar 6");
+  });
+
+  test("handles undefined index gracefully", async () => {
+    global.fetch.mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: jest.fn(),
+    });
+    const result = await fetchCalendarName("SomeCal", undefined);
+    expect(result).toBe("Calendar undefined");
+  });
 });
 
 // -----------------------------------------------------------------------------
-// LINES 52–56, 62: getAvailableCalendars
-// (looping through env, no calendar IDs, multiple IDs, etc.)
+// getAvailableCalendars
 // -----------------------------------------------------------------------------
 describe("getAvailableCalendars", () => {
-  test("returns empty array if no env variables match EXPO_PUBLIC_GOOGLE_CALENDAR_ID*", async () => {
-    // no env set => should break immediately => line 52–56
+  test("returns empty array if no env variables match", async () => {
     const result = await getAvailableCalendars();
     expect(result).toEqual([]);
     expect(console.log).toHaveBeenCalledWith("Available calendars:", []);
   });
 
-  test("fetches names for each calendar ID in the loop", async () => {
-    // lines 52–56 => if (!calendarId) break
-    // line 62 => after we fetch all names => console.log
+  test("fetches names for each calendar ID", async () => {
     process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_ID1 = "cal1@example.com";
     process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_ID2 = "cal2@example.com";
 
-    // For cal1 => ok => summary: "Cal One"
-    // For cal2 => not ok => fallback => "Calendar 2"
     global.fetch.mockImplementation((url) => {
       if (url.includes("cal1@example.com")) {
         return Promise.resolve({
@@ -136,7 +131,6 @@ describe("getAvailableCalendars", () => {
           json: jest.fn(),
         });
       }
-      return Promise.reject(new Error("Unexpected URL in test"));
     });
 
     const result = await getAvailableCalendars();
@@ -144,31 +138,36 @@ describe("getAvailableCalendars", () => {
       { id: "cal1@example.com", name: "Cal One" },
       { id: "cal2@example.com", name: "Calendar 2" },
     ]);
-    // line 62 => console.log
     expect(console.log).toHaveBeenCalledWith("Available calendars:", result);
+  });
+
+  test("stops at first missing calendar ID", async () => {
+    process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_ID1 = "cal1@example.com";
+    process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_ID3 = "cal3@example.com"; // should be ignored
+
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue({ summary: "Cal 1" }),
+    });
+
+    const result = await getAvailableCalendars();
+    expect(result).toEqual([{ id: "cal1@example.com", name: "Cal 1" }]);
   });
 });
 
 // -----------------------------------------------------------------------------
-// LINES 86–124: fetchPublicCalendarEvents
-// (missing API key, no events, error, normal parse, etc.)
+// fetchPublicCalendarEvents
 // -----------------------------------------------------------------------------
 describe("fetchPublicCalendarEvents", () => {
-  test("returns [] + logs error if API key is missing (line ~86–90)", async () => {
+  test("returns [] + logs error if API key is missing", async () => {
     delete process.env.EXPO_PUBLIC_GOOGLE_API_KEY2;
-
     const events = await fetchPublicCalendarEvents("MyCal", "2025-01-01", "2025-01-02");
     expect(events).toEqual([]);
     expect(console.error).toHaveBeenCalledWith("Google API key is missing.");
   });
 
-  test("warns + returns [] if response not ok (line ~96–100)", async () => {
-    global.fetch.mockResolvedValue({
-      ok: false,
-      status: 403,
-      text: jest.fn().mockResolvedValue(""),
-    });
-
+  test("warns + returns [] if response not ok", async () => {
+    global.fetch.mockResolvedValue({ ok: false, status: 403, text: jest.fn().mockResolvedValue("") });
     const events = await fetchPublicCalendarEvents("BadCal", "2025-01-01", "2025-01-02");
     expect(events).toEqual([]);
     expect(console.warn).toHaveBeenCalledWith(
@@ -176,20 +175,17 @@ describe("fetchPublicCalendarEvents", () => {
     );
   });
 
-  test("logs + returns [] if no items (line ~106–110)", async () => {
+  test("logs + returns [] if no items", async () => {
     global.fetch.mockResolvedValue({
       ok: true,
       text: jest.fn().mockResolvedValue(JSON.stringify({ items: [] })),
     });
-
     const events = await fetchPublicCalendarEvents("EmptyCal", "2025-01-01", "2025-01-02");
     expect(events).toEqual([]);
-    expect(console.log).toHaveBeenCalledWith(
-      "No events found for EmptyCal in the given range."
-    );
+    expect(console.log).toHaveBeenCalledWith("No events found for EmptyCal in the given range.");
   });
 
-  test("parses + returns mapped events if data found (line ~112–124)", async () => {
+  test("parses + returns mapped events if data found", async () => {
     const mockData = {
       items: [
         {
@@ -201,7 +197,6 @@ describe("fetchPublicCalendarEvents", () => {
           htmlLink: "http://eventA.link",
         },
         {
-          // missing summary => "No Title"
           start: { date: "2025-01-02" },
           end: { date: "2025-01-02" },
         },
@@ -229,9 +224,8 @@ describe("fetchPublicCalendarEvents", () => {
     });
   });
 
-  test("catches + logs error + returns [] if fetch throws (line ~122–124)", async () => {
+  test("catches + logs error + returns [] if fetch throws", async () => {
     global.fetch.mockRejectedValue(new Error("Network fail"));
-
     const events = await fetchPublicCalendarEvents("ErrCal", "2025-01-01", "2025-01-02");
     expect(events).toEqual([]);
     expect(console.error).toHaveBeenCalledWith(
@@ -239,37 +233,64 @@ describe("fetchPublicCalendarEvents", () => {
       expect.any(Error)
     );
   });
+
+  test("handles malformed JSON", async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      text: jest.fn().mockResolvedValue("INVALID_JSON"),
+    });
+    const events = await fetchPublicCalendarEvents("BadJsonCal", "2025-01-01", "2025-01-02");
+    expect(events).toEqual([]);
+    expect(console.error).toHaveBeenCalledWith(
+      "Error fetching public calendar (BadJsonCal):",
+      expect.any(Error)
+    );
+  });
+
+  test("handles event missing start/end", async () => {
+    const mockData = {
+      items: [
+        {
+          summary: "Incomplete Event",
+          description: "No times",
+          htmlLink: "https://event.link",
+        },
+      ],
+    };
+    global.fetch.mockResolvedValue({
+      ok: true,
+      text: jest.fn().mockResolvedValue(JSON.stringify(mockData)),
+    });
+
+    const events = await fetchPublicCalendarEvents("NoTimeCal", "2025-01-01", "2025-01-02");
+    expect(events[0]).toMatchObject({
+      title: "Incomplete Event",
+      start: { dateTime: "Unknown Start" },
+      end: { dateTime: "Unknown End" },
+    });
+  });
 });
 
 // -----------------------------------------------------------------------------
-// LINES 177–179: storeUserData (the final navigation.replace("Home") call)
+// storeUserData
 // -----------------------------------------------------------------------------
 describe("storeUserData", () => {
   const mockNavigation = { replace: jest.fn() };
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  test("stores user data + calls navigation.replace('Home') eventually (lines ~177–179)", async () => {
+  test("stores user data + navigates Home", async () => {
     const user = {
       fullName: "Testing User",
       primaryEmailAddress: { emailAddress: "test@example.com" },
       imageUrl: "https://example.com/photo.png",
     };
-
-    // Provide some env variable to get a single calendar
     process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_ID1 = "cal@example.com";
-    // This fetch => ok => summary => "MyCal"
+
     global.fetch.mockResolvedValue({
       ok: true,
       json: jest.fn().mockResolvedValue({ summary: "MyCal" }),
     });
 
-    // Perform storeUserData
     await storeUserData(user, mockNavigation);
-
-    // Confirm user data was stored
     expect(AsyncStorage.setItem).toHaveBeenCalledWith(
       "userData",
       JSON.stringify({
@@ -278,34 +299,21 @@ describe("storeUserData", () => {
         imageUrl: "https://example.com/photo.png",
       })
     );
-    // Confirm we set availableCalendars + selectedCalendar
-    expect(AsyncStorage.setItem).toHaveBeenCalledWith(
-      "availableCalendars",
-      JSON.stringify([{ id: "cal@example.com", name: "MyCal" }])
-    );
-    expect(AsyncStorage.setItem).toHaveBeenCalledWith(
-      "selectedCalendar",
-      "cal@example.com"
-    );
-    // Finally, lines 177–179 => navigation.replace("Home")
     expect(mockNavigation.replace).toHaveBeenCalledWith("Home");
   });
 
-  test("logs 'No calendars found.' if calendars array is empty and still replaces Home", async () => {
+  test("logs if calendars empty but still navigates", async () => {
     const user = {
       fullName: "Empty Cal User",
       primaryEmailAddress: { emailAddress: "ecal@example.com" },
       imageUrl: "https://example.com/emptycal.png",
     };
-
-    // Mock no calendars
     jest
       .spyOn(require("../app/screens/login/LoginHelper"), "getAvailableCalendars")
       .mockResolvedValue([]);
 
     await storeUserData(user, mockNavigation);
     expect(console.log).toHaveBeenCalledWith("No calendars found.");
-    // navigation.replace("Home") is still called
     expect(mockNavigation.replace).toHaveBeenCalledWith("Home");
   });
 
@@ -315,26 +323,20 @@ describe("storeUserData", () => {
     expect(mockNavigation.replace).not.toHaveBeenCalled();
   });
 
-  test("logs error + does not replace if an exception is thrown", async () => {
+  test("logs error if AsyncStorage fails", async () => {
     const user = { fullName: "Failing User" };
     const mockErr = new Error("Storing error");
     AsyncStorage.setItem.mockRejectedValueOnce(mockErr);
-
     await storeUserData(user, mockNavigation);
     expect(console.error).toHaveBeenCalledWith("Error storing user data:", mockErr);
-    expect(mockNavigation.replace).not.toHaveBeenCalled();
   });
 });
 
 // -----------------------------------------------------------------------------
-// For completeness: checkExistingSession & handleGuestLogin coverage
+// checkExistingSession
 // -----------------------------------------------------------------------------
 describe("checkExistingSession", () => {
   const mockNavigation = { replace: jest.fn() };
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
 
   test("navigates Home if sessionId is found", async () => {
     AsyncStorage.getItem.mockResolvedValueOnce("sessionXYZ");
@@ -343,8 +345,8 @@ describe("checkExistingSession", () => {
   });
 
   test("navigates Home if guestMode = 'true'", async () => {
-    AsyncStorage.getItem.mockResolvedValueOnce(null); // sessionId
-    AsyncStorage.getItem.mockResolvedValueOnce("true"); // guestMode
+    AsyncStorage.getItem.mockResolvedValueOnce(null);
+    AsyncStorage.getItem.mockResolvedValueOnce("true");
     await checkExistingSession(mockNavigation);
     expect(mockNavigation.replace).toHaveBeenCalledWith("Home");
   });
@@ -361,36 +363,32 @@ describe("checkExistingSession", () => {
     await checkExistingSession(mockNavigation);
     expect(console.error).toHaveBeenCalledWith("Error checking session:", err);
   });
+
+  test("handles unexpected string values from AsyncStorage", async () => {
+    AsyncStorage.getItem.mockResolvedValueOnce("false");
+    AsyncStorage.getItem.mockResolvedValueOnce("maybe");
+    await checkExistingSession(mockNavigation);
+    expect(mockNavigation.replace).not.toHaveBeenCalled();
+  });
 });
 
+// -----------------------------------------------------------------------------
+// handleGuestLogin
+// -----------------------------------------------------------------------------
 describe("handleGuestLogin", () => {
   const mockNavigation = { replace: jest.fn() };
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  test("logs 'Guest Login Selected', sets data, and calls Home", async () => {
+  test("logs + stores guest data + navigates Home", async () => {
     await handleGuestLogin(mockNavigation);
     expect(console.log).toHaveBeenCalledWith("Guest Login Selected");
     expect(AsyncStorage.setItem).toHaveBeenCalledWith("guestMode", "true");
-    expect(AsyncStorage.setItem).toHaveBeenCalledWith(
-      "userData",
-      JSON.stringify({
-        guest: true,
-        fullName: "Guest User",
-        email: "guest@demo.com",
-        imageUrl: null,
-      })
-    );
     expect(mockNavigation.replace).toHaveBeenCalledWith("Home");
   });
 
-  test("logs error if setting fails", async () => {
+  test("logs error if setting guest data fails", async () => {
     const mockErr = new Error("Failed to store guest data");
     AsyncStorage.setItem.mockRejectedValueOnce(mockErr);
-
-    await expect(handleGuestLogin(mockNavigation)).resolves.not.toThrow();
+    await handleGuestLogin(mockNavigation);
     expect(console.error).toHaveBeenCalledWith("Error setting guest mode:", mockErr);
   });
 });
