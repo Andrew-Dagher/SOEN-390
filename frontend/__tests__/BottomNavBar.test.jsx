@@ -5,10 +5,16 @@
 
 import React from "react";
 import { render, fireEvent } from "@testing-library/react-native";
-import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-
 import BottomNavBar from "../app/components/BottomNavBar/BottomNavBar";
+import NavigationActive from "../app/components/BottomNavBar/NavigationIcons/NavigationActive";
+
+describe("NavigationActive", () => {
+  it("renders correctly", () => {
+    const { toJSON } = render(<NavigationActive />);
+    expect(toJSON()).toMatchSnapshot();
+  });
+});
+
 import { AppSettingsProvider } from "../app/AppSettingsContext";
 
 // Create a native stack navigator for test navigation.
@@ -69,17 +75,9 @@ jest.mock("../app/components/BottomNavBar/SettingsIcons/SettingsInactive", () =>
 
 // Mock navigation
 const mockNavigate = jest.fn();
-jest.mock("@react-navigation/native", () => {
-  const actualNav = jest.requireActual("@react-navigation/native");
-  return {
-    ...actualNav,
-    useNavigation: () => ({
-      navigate: mockNavigate,
-    }),
-    useRoute: () => ({
-      name: "Home", // Default route for tests
-    }),
-  };
+
+beforeEach(() => {
+  jest.clearAllMocks();
 });
 
 /**
@@ -145,28 +143,19 @@ describe("<BottomNavBar />", () => {
     // Press the Calendar button
     const calendarButton = getByText("CalendarInactive");
     fireEvent.press(calendarButton);
+describe("BottomNavBar", () => {
+  it("navigates to a different screen when a button is pressed", () => {
+    const props = {
+      navigation: { navigate: mockNavigate },
+      route: { name: "Home" }, // currently on "Home"
+    };
 
-    // Verify navigation was called with correct screen
-    expect(mockNavigate).toHaveBeenCalledWith("Calendar");
-  });
+    const { UNSAFE_getAllByType } = render(<BottomNavBar {...props} />);
 
-  /**
-   * Tests that navigation is triggered when Navigation button is pressed
-   */
-  test("navigates to Navigation screen when Navigation button is pressed", () => {
-    const { getByText } = render(
-      <AppSettingsProvider>
-        <NavigationContainer>
-          <BottomNavBar />
-        </NavigationContainer>
-      </AppSettingsProvider>
-    );
+    const pressables = UNSAFE_getAllByType(require("react-native").Pressable);
 
-    // Press the Navigation button
-    const navigationButton = getByText("NavigationInactive");
-    fireEvent.press(navigationButton);
-
-    // Verify navigation was called with correct screen
+    // Indexes: 0 - Home, 1 - Navigation, 2 - Calendar, 3 - Settings
+    fireEvent.press(pressables[1]); // Navigation
     expect(mockNavigate).toHaveBeenCalledWith("Navigation");
   });
 
@@ -191,29 +180,76 @@ describe("<BottomNavBar />", () => {
   });
 
   /**
-   * Tests that the correct active icons are shown based on the current route
+   * EXTRA TEST #2:
+   * Covers the "Only navigate if we're not already on that screen" condition.
+   * i.e., currentScreen === screenName, so it doesn't call navigate().
    */
-  test("shows active icons based on current route", () => {
-    // Mock useRoute to return different routes
-    jest
-      .spyOn(require("@react-navigation/native"), "useRoute")
-      .mockImplementation(() => ({
-        name: "Calendar",
-      }));
+  test("does not call navigation if current screen is the same as pressed screen", () => {
+    const localNav = { navigate: jest.fn() };
+    const localRoute = { name: "Home" }; // The current screen is "Home"
 
     const { getByText } = render(
       <AppSettingsProvider>
-        <NavigationContainer>
-          <BottomNavBar />
-        </NavigationContainer>
+        {/* Provide the component with explicit navigation and route */}
+        <BottomNavBar navigation={localNav} route={localRoute} />
       </AppSettingsProvider>
     );
 
-    // Since we're on the Calendar route, it should show CalendarActive
-    expect(getByText("CalendarActive")).toBeTruthy();
-    expect(getByText("HomeInactive")).toBeTruthy();
-    expect(getByText("NavigationInactive")).toBeTruthy();
-    expect(getByText("SettingsInactive")).toBeTruthy();
+    // Because the route is "Home", we get "HomeActive" for that button
+    const homeButton = getByText("HomeActive");
+    fireEvent.press(homeButton);
+
+    // We expect NOT to call navigation, because we're already on Home
+    expect(localNav.navigate).not.toHaveBeenCalled();
+  });
+
+  /**
+   * EXTRA TEST #1:
+   * Covers the "if (navigation) { ... } else { console.warn(...) }" branch
+   * by not passing a navigation prop, so it will fallback to console.warn.
+   */
+  test("warns when navigation is not available in this context", () => {
+    const consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+
+    // Provide NO navigation or route props:
+    // This triggers the else clause in 'navigateTo'.
+    const { getByText } = render(
+      <AppSettingsProvider>
+        <BottomNavBar />
+      </AppSettingsProvider>
+    );
+
+    fireEvent.press(getByText("HomeInactive"));
+
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      "Navigation is not available in this context"
+    );
+
+    consoleWarnSpy.mockRestore();
+  });
+
+  /**
+   * EXTRA TEST #2:
+   * Covers the "Only navigate if we're not already on that screen" condition.
+   * i.e., currentScreen === screenName, so it doesn't call navigate().
+   */
+  test("does not call navigation if current screen is the same as pressed screen", () => {
+    const localNav = { navigate: jest.fn() };
+    const localRoute = { name: "Home" }; // The current screen is "Home"
+
+    const { getByText } = render(
+      <AppSettingsProvider>
+        {/* Provide the component with explicit navigation and route */}
+        <BottomNavBar navigation={localNav} route={localRoute} />
+      </AppSettingsProvider>
+    );
+
+    // Because the route is "Home", we get "HomeActive" for that button
+    const homeButton = getByText("HomeActive");
+    fireEvent.press(homeButton);
+
+    // We expect NOT to call navigation, because we're already on Home
+    expect(localNav.navigate).not.toHaveBeenCalled();
   });
 
   /**

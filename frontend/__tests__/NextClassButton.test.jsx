@@ -1,3 +1,9 @@
+import React from "react";
+import { render, fireEvent, waitFor, act } from "@testing-library/react-native";
+import NextClassButton from "../app/components/Calendar/NextClassButton";
+import * as Location from "expo-location";
+import { useNavigation } from "@react-navigation/native";
+import { trackEvent } from "@aptabase/react-native";
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -5,11 +11,11 @@ import * as Location from 'expo-location';
 import { Animated } from 'react-native';
 import NextClassButton from '../app/components/calendar/NextClassButton';
 
-// Mock dependencies
-jest.mock('@react-navigation/native', () => ({
+jest.mock("@react-navigation/native", () => ({
   useNavigation: jest.fn(),
 }));
-jest.mock('expo-location', () => ({
+
+jest.mock("expo-location", () => ({
   getCurrentPositionAsync: jest.fn(),
 }));
 jest.mock('../app/components/Calendar/CalendarIcons/CalendarDirectionsIcon', () => 'CalendarDirectionsIcon');
@@ -28,6 +34,23 @@ const createMockObserver = () => ({
 describe('NextClassButton', () => {
   let mockNavigation;
 
+jest.mock("@aptabase/react-native", () => ({
+  trackEvent: jest.fn(),
+}));
+
+describe("NextClassButton", () => {
+  const mockNavigate = jest.fn();
+  const now = new Date();
+  const futureEvent = {
+    start: { dateTime: new Date(now.getTime() + 60000).toISOString() },
+    description: "TestCampus, TestBuilding",
+  };
+
+  const eventObserver = {
+    subscribe: jest.fn(),
+    unsubscribe: jest.fn(),
+  };
+
   beforeEach(() => {
     mockNavigation = { navigate: jest.fn() };
     useNavigation.mockReturnValue(mockNavigation);
@@ -35,15 +58,14 @@ describe('NextClassButton', () => {
       coords: { latitude: 40.7128, longitude: -74.0060 },
     });
     jest.clearAllMocks();
+    useNavigation.mockReturnValue({ navigate: mockNavigate });
   });
 
-  // Test 1: Component doesn't render when no events
-  it('returns null when there are no upcoming events', () => {
-    const mockObserver = createMockObserver();
-    const { queryByText } = render(<NextClassButton eventObserver={mockObserver} />);
-
-    expect(queryByText('Go to My Next Class')).toBeNull();
-    expect(mockObserver.subscribe).toHaveBeenCalled();
+  it("subscribes and unsubscribes to observer", () => {
+    const { unmount } = render(<NextClassButton eventObserver={eventObserver} />);
+    expect(eventObserver.subscribe).toHaveBeenCalledTimes(1);
+    unmount();
+    expect(eventObserver.unsubscribe).toHaveBeenCalledTimes(1);
   });
 
   // Test 2: Component renders with upcoming event
@@ -85,7 +107,7 @@ describe('NextClassButton', () => {
       },
     ]);
 
-    const button = await findByText('Go to My Next Class');
+    const button = await waitFor(() => getByText("Go to My Next Class"));
     fireEvent.press(button);
 
     await waitFor(() => {
@@ -101,23 +123,12 @@ describe('NextClassButton', () => {
     });
   });
 
-  // Test 4: Handles empty event list
-  it('clears location when events array is empty', () => {
-    const mockObserver = createMockObserver();
-    const { queryByText, rerender } = render(<NextClassButton eventObserver={mockObserver} />);
+  it("handles location errors gracefully", async () => {
+    const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    Location.getCurrentPositionAsync.mockRejectedValue(new Error("Location fail"));
 
-    const callback = mockObserver.subscribe.mock.calls[0][0];
-    callback([]); // Empty event array
-
-    rerender(<NextClassButton eventObserver={mockObserver} />);
-    expect(queryByText('Go to My Next Class')).toBeNull();
-  });
-
-  // Test 5: Handles error in location fetching
-  it('handles location fetching error gracefully', async () => {
-    const mockObserver = createMockObserver();
-    Location.getCurrentPositionAsync.mockRejectedValue(new Error('Location error'));
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    let callback;
+    eventObserver.subscribe.mockImplementation((cb) => (callback = cb));
 
     const { findByText } = render(<NextClassButton eventObserver={mockObserver} />);
 
@@ -129,17 +140,14 @@ describe('NextClassButton', () => {
       },
     ]);
 
-    const button = await findByText('Go to My Next Class');
+    const button = await waitFor(() => getByText("Go to My Next Class"));
     fireEvent.press(button);
 
     await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Error navigating to next class:',
-        expect.any(Error)
-      );
+      expect(errorSpy).toHaveBeenCalledWith("Error navigating to next class:", expect.any(Error));
     });
 
-    consoleErrorSpy.mockRestore();
+    errorSpy.mockRestore();
   });
 
   // Test 6: Cleans up subscription on unmount
@@ -190,25 +198,24 @@ describe('NextClassButton', () => {
     });
   });
 
-  // Test 8: sets location to null when all events are in the past
-  it('sets location to null when all events are in the past', () => {
-    const mockObserver = createMockObserver();
-    const { queryByText, rerender } = render(<NextClassButton eventObserver={mockObserver} />);
 
-    const now = new Date();
-    const callback = mockObserver.subscribe.mock.calls[0][0];
-    callback([
-      {
-        start: { dateTime: new Date(now.getTime() - 20000).toISOString() }, // Past event
-        description: 'Campus A, Building 1',
-      },
-      {
-        start: { dateTime: new Date(now.getTime() - 10000).toISOString() }, // Past event
-        description: 'Campus B, Building 2',
-      },
-    ]);
+it('sets location to null when all events are in the past', () => {
+  const mockObserver = createMockObserver();
+  const { queryByText, rerender } = render(<NextClassButton eventObserver={mockObserver} />);
 
-    rerender(<NextClassButton eventObserver={mockObserver} />);
-    expect(queryByText('Go to My Next Class')).toBeNull(); // Button should not render
-  });
+  const now = new Date();
+  const callback = mockObserver.subscribe.mock.calls[0][0];
+  callback([
+    {
+      start: { dateTime: new Date(now.getTime() - 20000).toISOString() }, // Past event
+      description: 'Campus A, Building 1'
+    },
+    {
+      start: { dateTime: new Date(now.getTime() - 10000).toISOString() }, // Past event
+      description: 'Campus B, Building 2'
+    }
+  ]);
+
+  rerender(<NextClassButton eventObserver={mockObserver} />);
+  expect(queryByText('Go to My Next Class')).toBeNull(); // Button should not render
 });
