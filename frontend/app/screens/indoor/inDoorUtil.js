@@ -50,11 +50,18 @@ export const getFloorIdByRoomId = (roomValue) => {
   return null; // Return null if the room ID is not found
 };
 
-export const getEntranceByRoomId = (roomId) => {
+export const getEntranceByRoomId = (roomId, accessible=false, outdoor=false) => {
   for (const building of buildings) {
     for (const floor of building.floors) {
       if (Object.values(floor.rooms).includes(roomId)) {
-        return floor.entrance; // Return entrance for the floor if room is found
+        let fl= floor.entrance
+        if (accessible && floor.disabled_entrance){
+          fl=floor.disabled_entrance
+        }
+        if(outdoor&& floor.disabled_entrance){
+          fl=floor.outdoor_entrance
+        }
+        return fl; // Return entrance for the floor if room is found
       }
     }
   }
@@ -67,9 +74,7 @@ export const getUrlByRoomId = (roomId) => {
       if (Object.values(floor.rooms).includes(roomId)) {
 
         let url = floor.url
-        if (accessible) {
-          url += "&accessible=true";
-        }
+        
         return url;
       }
     }

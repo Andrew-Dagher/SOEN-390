@@ -58,6 +58,11 @@ const InDoorScreen = () => {
     let entranceLoc = getEntranceByRoomId(value);
     let nextEntranceLoc = getEntranceByRoomId(value1);
 
+    if (wheelchairAccess){
+      entranceLoc=getEntranceByRoomId(value, true)
+      nextEntranceLoc= getEntranceByRoomId(value1, true)
+    }
+
     console.log("start url", startUrl, floorId)
 
     if (areRoomsOnSameFloor(value, value1)) {
@@ -85,6 +90,12 @@ const InDoorScreen = () => {
     // Step 1: Departure indoor map with departure information
     setFloorPlanURL(startUrl + "&floor=" + floorId + "&departure=" + value + "&location=" + entranceLoc);
 
+    if (wheelchairAccess){
+      nextEntranceLoc=getEntranceByRoomId(value1, true,true)
+    }
+    else{
+    nextEntranceLoc=getEntranceByRoomId(value1, false, true)
+    }
     // Prepare destination indoor map URL (for step 3)
     let buildingURL = getUrlByRoomId(value1);
     setNextFloorPlanURL(buildingURL + "&floor=" + nextFloorId + "&location=" + value1 + "&departure=" + nextEntranceLoc);
