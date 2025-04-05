@@ -35,7 +35,7 @@ describe("PoiMarker Component", () => {
   const mockPoi = {
     name: "Test Location",
     poiType: "restaurant",
-    place_id: "test_place_id_123", // Add required place_id
+    place_id: "test_place_id_123",
     geometry: {
       location: {
         lat: 37.7749,
@@ -146,7 +146,7 @@ describe("PoiMarker Component", () => {
     // Create a minimal POI without optional fields but with required place_id
     const minimalPoi = {
       name: "Minimal Location",
-      place_id: "minimal_place_123", // Add required place_id
+      place_id: "minimal_place_123",
       geometry: {
         location: {
           lat: 37.7749,
@@ -188,6 +188,211 @@ describe("PoiMarker Component", () => {
   it("renders the correct icon based on POI type", () => {
     const { getByTestId } = render(<PoiMarker {...defaultProps} />);
     const markerIcon = getByTestId("marker-icon-container").props.children;
-    expect(markerIcon.props.name).toBe("restaurant"); // Update expected icon name to match actual value
+    expect(markerIcon.props.name).toBe("restaurant");
+  });
+
+  // New tests for additional coverage
+
+  it("renders with cafe POI type and correct colors", () => {
+    const cafePoi = {
+      ...mockPoi,
+      poiType: "cafe",
+    };
+
+    const { getByTestId } = render(
+      <PoiMarker {...defaultProps} poi={cafePoi} />
+    );
+    const markerIconContainer = getByTestId("marker-icon-container");
+    expect(markerIconContainer.props.style.borderColor).toBe("#9C27B0"); // Purple for cafe
+  });
+
+  it("renders with library POI type and correct colors", () => {
+    const libraryPoi = {
+      ...mockPoi,
+      poiType: "library",
+    };
+
+    const { getByTestId } = render(
+      <PoiMarker {...defaultProps} poi={libraryPoi} />
+    );
+    const markerIconContainer = getByTestId("marker-icon-container");
+    expect(markerIconContainer.props.style.borderColor).toBe("#3F51B5"); // Indigo for library
+  });
+
+  it("renders with parking POI type and correct colors", () => {
+    const parkingPoi = {
+      ...mockPoi,
+      poiType: "parking",
+    };
+
+    const { getByTestId } = render(
+      <PoiMarker {...defaultProps} poi={parkingPoi} />
+    );
+    const markerIconContainer = getByTestId("marker-icon-container");
+    expect(markerIconContainer.props.style.borderColor).toBe("#2196F3"); // Blue for parking
+  });
+
+  it("renders with atm POI type and correct colors", () => {
+    const atmPoi = {
+      ...mockPoi,
+      poiType: "atm",
+    };
+
+    const { getByTestId } = render(
+      <PoiMarker {...defaultProps} poi={atmPoi} />
+    );
+    const markerIconContainer = getByTestId("marker-icon-container");
+    expect(markerIconContainer.props.style.borderColor).toBe("#009688"); // Teal for atm
+  });
+
+  it("renders with pharmacy POI type and correct colors", () => {
+    const pharmacyPoi = {
+      ...mockPoi,
+      poiType: "pharmacy",
+    };
+
+    const { getByTestId } = render(
+      <PoiMarker {...defaultProps} poi={pharmacyPoi} />
+    );
+    const markerIconContainer = getByTestId("marker-icon-container");
+    expect(markerIconContainer.props.style.borderColor).toBe("#4CAF50"); // Green for pharmacy
+  });
+
+  it("renders with bus_station POI type and correct colors", () => {
+    const busPoi = {
+      ...mockPoi,
+      poiType: "bus_station",
+    };
+
+    const { getByTestId } = render(
+      <PoiMarker {...defaultProps} poi={busPoi} />
+    );
+    const markerIconContainer = getByTestId("marker-icon-container");
+    expect(markerIconContainer.props.style.borderColor).toBe("#FFC107"); // Amber for bus_station
+  });
+
+  it("renders with subway_station POI type and correct colors", () => {
+    const subwayPoi = {
+      ...mockPoi,
+      poiType: "subway_station",
+    };
+
+    const { getByTestId } = render(
+      <PoiMarker {...defaultProps} poi={subwayPoi} />
+    );
+    const markerIconContainer = getByTestId("marker-icon-container");
+    expect(markerIconContainer.props.style.borderColor).toBe("#FF9800"); // Orange for subway_station
+  });
+
+  it("renders with lodging POI type and correct colors", () => {
+    const lodgingPoi = {
+      ...mockPoi,
+      poiType: "lodging",
+    };
+
+    const { getByTestId } = render(
+      <PoiMarker {...defaultProps} poi={lodgingPoi} />
+    );
+    const markerIconContainer = getByTestId("marker-icon-container");
+    expect(markerIconContainer.props.style.borderColor).toBe("#607D8B"); // Blue Grey for lodging
+  });
+
+  it("renders with default color for unknown POI type", () => {
+    const unknownPoi = {
+      ...mockPoi,
+      poiType: "unknown_type_not_in_switch",
+    };
+
+    const { getByTestId } = render(
+      <PoiMarker {...defaultProps} poi={unknownPoi} />
+    );
+    const markerIconContainer = getByTestId("marker-icon-container");
+    expect(markerIconContainer.props.style.borderColor).toBe("#862532"); // Concordia red (default)
+  });
+
+  it("falls back to default icon when POI type is unknown", () => {
+    const unknownPoi = {
+      ...mockPoi,
+      poiType: "unknown_type",
+    };
+
+    const { getByTestId } = render(
+      <PoiMarker {...defaultProps} poi={unknownPoi} />
+    );
+    const markerIcon = getByTestId("marker-icon-container").props.children;
+    expect(markerIcon.props.name).toBe("place"); // Default icon
+  });
+
+  it("renders with custom text size", () => {
+    const largerTextSize = 18;
+    const { getByTestId } = render(
+      <PoiMarker {...defaultProps} textSize={largerTextSize} />
+    );
+    const nameElement = getByTestId("poi-name");
+    expect(nameElement.props.style.fontSize).toBe(largerTextSize);
+  });
+
+  it("displays rating count correctly", () => {
+    const { getByTestId } = render(<PoiMarker {...defaultProps} />);
+    const ratingCount = getByTestId("poi-rating-count");
+    expect(ratingCount.props.children).toEqual(["(", 100, ")"]);
+  });
+
+  it("handles POIs with zero ratings count", () => {
+    const poiWithZeroRatings = {
+      ...mockPoi,
+      rating: 4.5,
+      user_ratings_total: 0,
+    };
+
+    const { getByTestId } = render(
+      <PoiMarker {...defaultProps} poi={poiWithZeroRatings} />
+    );
+    const ratingCount = getByTestId("poi-rating-count");
+    expect(ratingCount.props.children).toEqual(["(", 0, ")"]);
+  });
+
+  it("handles POIs with rating but no rating count", () => {
+    const poiWithNoRatingCount = {
+      ...mockPoi,
+      rating: 4.5,
+      user_ratings_total: undefined,
+    };
+
+    const { getByTestId } = render(
+      <PoiMarker {...defaultProps} poi={poiWithNoRatingCount} />
+    );
+    const ratingCount = getByTestId("poi-rating-count");
+    expect(ratingCount.props.children).toEqual(["(", 0, ")"]);
+  });
+
+  it("uses proper POI type label from poiTypes", () => {
+    // Test for each POI type to ensure the label is correctly displayed
+    poiTypes.forEach((type) => {
+      if (type.value === "none" || type.value === "all") return; // Skip non-POI types
+
+      const typedPoi = {
+        ...mockPoi,
+        poiType: type.value,
+      };
+
+      const { getByTestId } = render(
+        <PoiMarker {...defaultProps} poi={typedPoi} />
+      );
+      const typeLabel = getByTestId("poi-type-label");
+      expect(typeLabel.props.children).toBe(type.label);
+    });
+  });
+
+  it("applies the default text size when not provided", () => {
+    // Omitting textSize from props should use the default value (14)
+    const propsWithoutTextSize = {
+      ...defaultProps,
+      textSize: undefined,
+    };
+
+    const { getByTestId } = render(<PoiMarker {...propsWithoutTextSize} />);
+    const nameElement = getByTestId("poi-name");
+    expect(nameElement.props.style.fontSize).toBe(14); // Default text size
   });
 });
