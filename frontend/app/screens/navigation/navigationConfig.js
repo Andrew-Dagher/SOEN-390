@@ -1223,7 +1223,7 @@ export const polygons = [
     "",
     "",
     "CPELes P'tits Profs Daycare",
-    "http://lesptitsprofs.wordpress.com",
+    "https://lesptitsprofs.wordpress.com",
     false,
     [
       { latitude: 45.45969472027361, longitude: -73.63916844992578 },
