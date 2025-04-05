@@ -1,16 +1,25 @@
+import React from "react";
 import { TouchableOpacity, Image, Text } from "react-native";
 import PropTypes from 'prop-types'; // Import PropTypes
+import { trackEvent } from "@aptabase/react-native"; // Import trackEvent
 
-/**
- * GoToLoginButton component for redirecting users to the Login page.
- * @component
- * @param {Object} props - Component props.
- * @param {Function} props.onPress - Function to handle the button press.
- */
+
+GoToLoginButton component for redirecting users to the Login page.
+@component
+@param {Object} props - Component props.
+@param {Function} props.onPress - Function to handle the button press./
 const GoToLoginButton = ({ onPress }) => {
+  const handlePress = () => {
+    // Track the event when the button is clicked
+    trackEvent("Go to Login Clicked", {});
+
+    // Trigger the passed onPress function
+    if (onPress) onPress();
+  };
+
   return (
     <TouchableOpacity
-      onPress={onPress}
+      onPress={handlePress}
       className="flex-row items-center justify-center bg-white rounded-full py-3 px-6 shadow-lg border border-gray-300"
       style={{
         elevation: 3, // Android shadow
@@ -21,7 +30,7 @@ const GoToLoginButton = ({ onPress }) => {
         borderRadius: 10,
       }}
     >
-      {/* Google logo */}
+      {/ Google logo /}
       <Image
         source={{ uri: "https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png" }}
         style={{
@@ -32,7 +41,7 @@ const GoToLoginButton = ({ onPress }) => {
         resizeMode="contain"
       />
 
-      {/* Button text */}
+      {/ Button text */}
       <Text className="text-black text-lg font-semibold">Go to Login</Text>
     </TouchableOpacity>
   );
