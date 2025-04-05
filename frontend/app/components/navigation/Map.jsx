@@ -385,6 +385,71 @@ export default function CampusMap({ navigationParams }) {
     getCurrentLocation();
   }, []);
 
+  useEffect(() => {
+    if (params?.indoor) {
+      try{
+      console.log("Indoor tracing activated: Tracing route from start to end.");
+  
+      if (params.start && params.end) {
+        // Create new objects to avoid mutating params directly (right now we just have cc and hall)
+        let startLocation = { latitude: 45.458470794629754, longitude: -73.64061814691485 };
+        let endLocation = { latitude: 45.458470794629754, longitude: -73.64061814691485 };
+  
+        if (params.start[0] === 'H') {
+          startLocation = { latitude: 45.49781725012627, longitude: -73.57950979221253 };
+        }
+        else if (params.start[0]==='M'){
+          startLocation= {latitude:45.49550722087804, longitude:-73.57917572331318}
+        }
+  
+        if (params.end[0] === 'H') {
+          endLocation = { latitude: 45.49781725012627, longitude: -73.57950979221253 };
+        }
+
+        else if (params.end[0]==='M'){
+          endLocation = {latitude:45.49550722087804, longitude:-73.57917572331318}
+        }
+        
+        setIsSearch(true);
+        setStart(startLocation);
+        setEnd(endLocation);
+        setIsRoute(true);
+        
+  
+        setDestinationPosition(params.end);
+        setStartPosition(params.start);
+
+        // Reset all travel times before fetching new ones
+      setCarTravelTime(null);
+      setBikeTravelTime(null);
+      setMetroTravelTime(null);
+      setWalkTravelTime(null);
+
+      // Fetch travel times for all modes
+      const fetchAllTravelTimes = async () => {
+        await Promise.all([
+          fetchTravelTime(startLocation, endLocation, "DRIVING"),
+          fetchTravelTime(
+            startLocation,
+            endLocation,
+            "BICYCLING"
+          ),
+          fetchTravelTime(startLocation, endLocation, "TRANSIT"),
+          fetchTravelTime(startLocation, endLocation, "WALKING"),
+        ]);
+      };
+
+      fetchAllTravelTimes();
+
+      } else {
+        console.warn("Indoor tracing requested but start or end location is missing in params.");
+      }}
+      catch(e){
+        console.error('Error in mapping of outdoor directions', e)
+      }
+    }
+  }, [params]);
+
   return (
     <View style={styles.container}>
       <MapView

@@ -7,45 +7,101 @@ import React from "react";
 import { render, fireEvent } from "@testing-library/react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-
 import BottomNavBar from "../app/components/BottomNavBar/BottomNavBar";
 import { AppSettingsProvider } from "../app/AppSettingsContext";
 
-// Create a native stack navigator for test navigation.
+// Create a native stack navigator for test navigation
 const Stack = createNativeStackNavigator();
 
-// Mock all the icon components
+// Mock all icon components with proper scoping
 jest.mock(
   "../app/components/BottomNavBar/HomeIcons/HomeActive",
-  () => "HomeActive"
+  () => () => {
+    const React = require("react");
+    const { Text } = require("react-native");
+    return <Text>HomeActive</Text>;
+  }
 );
+
 jest.mock(
   "../app/components/BottomNavBar/HomeIcons/HomeInactive",
-  () => "HomeInactive"
+  () => () => {
+    const React = require("react");
+    const { Text } = require("react-native");
+    return <Text>HomeInactive</Text>;
+  }
 );
+
 jest.mock(
   "../app/components/BottomNavBar/CalendarIcons/CalendarActive",
-  () => "CalendarActive"
+  () => () => {
+    const React = require("react");
+    const { Text } = require("react-native");
+    return <Text>CalendarActive</Text>;
+  }
 );
+
 jest.mock(
   "../app/components/BottomNavBar/CalendarIcons/CalendarInactive",
-  () => "CalendarInactive"
+  () => () => {
+    const React = require("react");
+    const { Text } = require("react-native");
+    return <Text>CalendarInactive</Text>;
+  }
 );
+
 jest.mock(
   "../app/components/BottomNavBar/NavigationIcons/NavigationActive",
-  () => "NavigationActive"
+  () => () => {
+    const React = require("react");
+    const { Text } = require("react-native");
+    return <Text>NavigationActive</Text>;
+  }
 );
+
 jest.mock(
   "../app/components/BottomNavBar/NavigationIcons/NavigationInactive",
-  () => "NavigationInactive"
+  () => () => {
+    const React = require("react");
+    const { Text } = require("react-native");
+    return <Text>NavigationInactive</Text>;
+  }
 );
+
 jest.mock(
   "../app/components/BottomNavBar/SettingsIcons/SettingsActive",
-  () => "SettingsActive"
+  () => () => {
+    const React = require("react");
+    const { Text } = require("react-native");
+    return <Text>SettingsActive</Text>;
+  }
 );
+
 jest.mock(
   "../app/components/BottomNavBar/SettingsIcons/SettingsInactive",
-  () => "SettingsInactive"
+  () => () => {
+    const React = require("react");
+    const { Text } = require("react-native");
+    return <Text>SettingsInactive</Text>;
+  }
+);
+
+jest.mock(
+  "../app/components/BottomNavBar/IndoorIcons/IndoorActive",
+  () => () => {
+    const React = require("react");
+    const { Text } = require("react-native");
+    return <Text>IndoorActive</Text>;
+  }
+);
+
+jest.mock(
+  "../app/components/BottomNavBar/IndoorIcons/IndoorInactive",
+  () => () => {
+    const React = require("react");
+    const { Text } = require("react-native");
+    return <Text>IndoorInactive</Text>;
+  }
 );
 
 // Mock navigation
@@ -63,17 +119,11 @@ jest.mock("@react-navigation/native", () => {
   };
 });
 
-/**
- * Test suite for the <BottomNavBar /> component.
- */
 describe("<BottomNavBar />", () => {
   beforeEach(() => {
     mockNavigate.mockClear();
   });
 
-  /**
-   * Verifies that the BottomNavBar component renders correctly.
-   */
   test("Bottom Nav Bar renders correctly", () => {
     const { getByTestId } = render(
       <AppSettingsProvider>
@@ -85,16 +135,9 @@ describe("<BottomNavBar />", () => {
       </AppSettingsProvider>
     );
 
-    // Retrieve the BottomNavBar component using its testID.
-    const viewComponent = getByTestId("bottom-nav");
-
-    // Assert that the component exists in the rendered output.
-    expect(viewComponent).toBeTruthy();
+    expect(getByTestId("bottom-nav")).toBeTruthy();
   });
 
-  /**
-   * Tests that navigation is triggered when Home button is pressed
-   */
   test("navigates to Home screen when Home button is pressed", () => {
     const { getByText } = render(
       <AppSettingsProvider>
@@ -104,17 +147,10 @@ describe("<BottomNavBar />", () => {
       </AppSettingsProvider>
     );
 
-    // Press the Home button
-    const homeButton = getByText("HomeInactive");
-    fireEvent.press(homeButton);
-
-    // Verify navigation was called with correct screen
+    fireEvent.press(getByText("HomeInactive"));
     expect(mockNavigate).toHaveBeenCalledWith("Home");
   });
 
-  /**
-   * Tests that navigation is triggered when Calendar button is pressed
-   */
   test("navigates to Calendar screen when Calendar button is pressed", () => {
     const { getByText } = render(
       <AppSettingsProvider>
@@ -124,17 +160,10 @@ describe("<BottomNavBar />", () => {
       </AppSettingsProvider>
     );
 
-    // Press the Calendar button
-    const calendarButton = getByText("CalendarInactive");
-    fireEvent.press(calendarButton);
-
-    // Verify navigation was called with correct screen
+    fireEvent.press(getByText("CalendarInactive"));
     expect(mockNavigate).toHaveBeenCalledWith("Calendar");
   });
 
-  /**
-   * Tests that navigation is triggered when Navigation button is pressed
-   */
   test("navigates to Navigation screen when Navigation button is pressed", () => {
     const { getByText } = render(
       <AppSettingsProvider>
@@ -144,17 +173,10 @@ describe("<BottomNavBar />", () => {
       </AppSettingsProvider>
     );
 
-    // Press the Navigation button
-    const navigationButton = getByText("NavigationInactive");
-    fireEvent.press(navigationButton);
-
-    // Verify navigation was called with correct screen
+    fireEvent.press(getByText("NavigationInactive"));
     expect(mockNavigate).toHaveBeenCalledWith("Navigation");
   });
 
-  /**
-   * Tests that navigation is triggered when Settings button is pressed
-   */
   test("navigates to Settings screen when Settings button is pressed", () => {
     const { getByText } = render(
       <AppSettingsProvider>
@@ -164,25 +186,11 @@ describe("<BottomNavBar />", () => {
       </AppSettingsProvider>
     );
 
-    // Press the Settings button
-    const settingsButton = getByText("SettingsInactive");
-    fireEvent.press(settingsButton);
-
-    // Verify navigation was called with correct screen
+    fireEvent.press(getByText("SettingsInactive"));
     expect(mockNavigate).toHaveBeenCalledWith("Settings");
   });
 
-  /**
-   * Tests that the correct active icons are shown based on the current route
-   */
-  test("shows active icons based on current route", () => {
-    // Mock useRoute to return different routes
-    jest
-      .spyOn(require("@react-navigation/native"), "useRoute")
-      .mockImplementation(() => ({
-        name: "Calendar",
-      }));
-
+  test("navigates to Indoor screen when Indoor button is pressed", () => {
     const { getByText } = render(
       <AppSettingsProvider>
         <NavigationContainer>
@@ -191,10 +199,31 @@ describe("<BottomNavBar />", () => {
       </AppSettingsProvider>
     );
 
-    // Since we're on the Calendar route, it should show CalendarActive
+    fireEvent.press(getByText("IndoorInactive"));
+    expect(mockNavigate).toHaveBeenCalledWith("InDoorScreen");
+  });
+
+  test("shows active icons based on current route", () => {
+    // Create a test component with controlled navigation
+    const TestComponent = () => (
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName="Calendar">
+          <Stack.Screen name="Calendar" component={BottomNavBar} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    );
+  
+    const { getByText } = render(
+      <AppSettingsProvider>
+        <TestComponent />
+      </AppSettingsProvider>
+    );
+  
+    // Verify active and inactive icons
     expect(getByText("CalendarActive")).toBeTruthy();
     expect(getByText("HomeInactive")).toBeTruthy();
     expect(getByText("NavigationInactive")).toBeTruthy();
     expect(getByText("SettingsInactive")).toBeTruthy();
+    expect(getByText("IndoorInactive")).toBeTruthy();
   });
 });
