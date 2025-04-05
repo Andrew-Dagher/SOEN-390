@@ -35,7 +35,7 @@ export default function SettingsScreen() {
   const { signOut, isSignedIn } = useAuth();
 
 
-  const [isWheelchairAccessEnabled, setWheelchairAccessEnabled] = useState(wheelchairAccess);
+  const [isWheelchairAccessEnabled, setIsWheelchairAccessEnabled] = useState(wheelchairAccess);
   const [tempProfileImage, setTempProfileImage] = useState(profileImage);
   const [userName, setUserName] = useState("Guest");
   const [isColorBlindModeEnabled, setIsColorBlindModeEnabled] = useState(!!colorBlindMode);
@@ -72,7 +72,7 @@ export default function SettingsScreen() {
           label="Mobility disability"
           description="Enable features optimized for wheelchair users."
           value={isWheelchairAccessEnabled}
-          onChange={setWheelchairAccessEnabled}
+          onChange={setIsWheelchairAccessEnabled}
           textSize={textSize} 
         />
 
