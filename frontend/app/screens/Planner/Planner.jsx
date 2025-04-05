@@ -7,7 +7,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { polygons } from "../../screens/navigation/navigationConfig";
 import { fetchPublicCalendarEvents } from "../login/LoginHelper";
-import CustomizeModal from "./CustomizeModal";
 import { fetchGeminiData } from "./GeminiProcessor";
 export default function Planner() {
   // Date & Layout state
@@ -29,9 +28,6 @@ export default function Planner() {
   const [allPreferences, setAllPreferences] = useState({});
   const [classColor, setClassColor] = useState("#DCEDC8");
   const [taskColor, setTaskColor] = useState("#F0D9E2");
-
-  // Modal visibility
-  const [isCustomizeModalVisible, setIsCustomizeModalVisible] = useState(false);
 
   // Gemini optimized schedule overlay
   const [optimizedPlan, setOptimizedPlan] = useState(null);
@@ -105,34 +101,6 @@ export default function Planner() {
     fetchEvents();
   }, [selectedDate]);
 
-  // Save preferences (for CustomizeModal)
-  const handleSavePreferences = async (
-    datePrefs,
-    newClassColor,
-    newTaskColor
-  ) => {
-    try {
-      const updated = {
-        ...allPreferences,
-        [selectedDate]: { ...datePrefs },
-        globalClassColor: newClassColor,
-        globalTaskColor: newTaskColor,
-      };
-
-      setAllPreferences(updated);
-      setClassColor(newClassColor);
-      setTaskColor(newTaskColor);
-
-      await AsyncStorage.setItem("plannerPreferences", JSON.stringify(updated));
-      console.log(
-        "Updated prefs in Planner:",
-        JSON.stringify(updated, null, 2)
-      );
-    } catch (error) {
-      console.error("Error saving preferences in Planner:", error);
-    }
-  };
-
   // Calculate top and height for schedule cards
   const calculatePosition = (startDateTime, endDateTime) => {
     const startTime = moment(startDateTime);
@@ -159,7 +127,7 @@ export default function Planner() {
 
     const scheduleData = {
       classes: classes.map((item) => {
-        const prefs = (allPreferences[selectedDate] || {})[item.id] || {};
+        const prefs = allPreferences[selectedDate]?.[item.id] ?? {};
         return {
           id: item.id,
           name: item.title,
@@ -175,13 +143,11 @@ export default function Planner() {
         location: extractLocation(item.description),
         start_time: moment(item.start.dateTime).format("HH:mm"),
         end_time: moment(item.end.dateTime).format("HH:mm"),
-        important: !!(allPreferences[selectedDate] || {})[item.id]?.important,
+        important: !!allPreferences[selectedDate]?.[item.id]?.important,
       })),
     };
 
-    // console.log("Schedule Data:", JSON.stringify(scheduleData, null, 2));
-
-    // Call Gemi
+    // Call Gemini
     fetchGeminiData(scheduleData)
       .then((response) => {
         console.log("Gemini response:", response);
@@ -203,9 +169,10 @@ export default function Planner() {
       ...(optimizedPlan.tasks || []),
     ];
     // Sort events by start_time
-    const sortedEvents = events.sort((a, b) =>
-      moment(a.start_time, "HH:mm").diff(moment(b.start_time, "HH:mm"))
-    );
+    const sortEvents = (a, b) =>
+      moment(a.start_time, "HH:mm").diff(moment(b.start_time, "HH:mm"));
+
+    const sortedEvents = events.sort((a, b) => sortEvents(a, b));
     // Create waypoints: for each event, extract the building name from location,
     // then look up its coordinates in polygons.
     const waypoints = sortedEvents
@@ -330,7 +297,7 @@ export default function Planner() {
             })}
 
             {classes.map((item) => {
-              const prefs = (allPreferences[selectedDate] || {})[item.id] || {};
+              const prefs = allPreferences[selectedDate]?.[item.id] ?? {};
               const bgColor = prefs.skippable ? "#D3D3D3" : classColor;
               const { top, height, displayTime } = calculatePosition(
                 item.start.dateTime,
@@ -359,14 +326,14 @@ export default function Planner() {
               );
             })}
 
-            {toDoTasks.map((item, index) => {
+            {toDoTasks.map((item) => {
               const { top, height, displayTime } = calculatePosition(
                 item.start.dateTime,
                 item.end.dateTime
               );
               return (
                 <Card
-                  key={`task-${index}`}
+                  key={`task-${item.id}`}
                   style={[
                     styles.scheduleCard,
                     { top, height, backgroundColor: taskColor },
@@ -402,27 +369,6 @@ export default function Planner() {
         )}
       </TouchableOpacity>
 
-      <TouchableOpacity
-        testID="customize-button"
-        style={styles.customizeButton}
-        onPress={() => setIsCustomizeModalVisible(true)}
-      >
-        <Text style={styles.buttonText}>⚙️ Customize</Text>
-      </TouchableOpacity>
-
-      <CustomizeModal
-        testID="customize-modal"
-        visible={isCustomizeModalVisible}
-        onClose={() => setIsCustomizeModalVisible(false)}
-        classes={classes}
-        toDoTasks={toDoTasks}
-        selectedDate={selectedDate}
-        datePreferences={allPreferences[selectedDate] || {}}
-        initialClassColor={classColor}
-        initialTaskColor={taskColor}
-        onSavePreferences={handleSavePreferences}
-      />
-
       {/* Overlay with Optimized Plan and Go to Map Button */}
       {showOverlay && optimizedPlan && (
         <View style={styles.overlayBackground}>
@@ -435,7 +381,7 @@ export default function Planner() {
                 )
               )
               .map((item, index) => (
-                <Text key={index} style={styles.overlayText}>
+                <Text key={item.id} style={styles.overlayText}>
                   {`${index + 1}. ${item.start_time} - ${item.end_time}: ${
                     item.name
                   } at ${item.location}`}
