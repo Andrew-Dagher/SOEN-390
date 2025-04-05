@@ -67,7 +67,6 @@ describe('Indoor Navigation useEffect', () => {
 
   // Add other test cases here
 });
-
 // Cleanup
 afterEach(() => {
   jest.clearAllMocks();
