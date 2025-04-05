@@ -173,7 +173,7 @@ PoiMarker.propTypes = {
     name: PropTypes.string.isRequired,
     vicinity: PropTypes.string,
     poiType: PropTypes.string,
-    place_id: PropTypes.string.isRequired,
+    place_id: PropTypes.string.isRequired, // Ensure this is provided in tests
 
     // Nested geometry properties
     geometry: PropTypes.shape({

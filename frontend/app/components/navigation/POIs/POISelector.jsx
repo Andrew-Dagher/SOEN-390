@@ -15,16 +15,16 @@ import { poiTypes } from "../../../services/PoiService";
 import PropTypes from "prop-types"; // Added PropTypes import
 
 const PoiSelector = ({
-  showPoiSelector,
-  togglePoiSelector,
-  selectedPoiTypes,
-  setSelectedPoiTypes,
-  searchRadius,
-  setSearchRadius,
-  theme,
-  textSize,
-  styles,
-  applyFilters,
+  showPoiSelector = false,
+  togglePoiSelector = () => {},
+  selectedPoiTypes = ["none"],
+  setSelectedPoiTypes = () => {},
+  searchRadius = 1500,
+  setSearchRadius = () => {},
+  theme = { backgroundColor: "#007AFF" },
+  textSize = 14,
+  styles = { shadow: {} },
+  applyFilters = () => {},
 }) => {
   const [localRadius, setLocalRadius] = useState(searchRadius);
   const [localSelectedTypes, setLocalSelectedTypes] =
@@ -472,12 +472,6 @@ PoiSelector.propTypes = {
     shadow: PropTypes.object,
   }),
   applyFilters: PropTypes.func.isRequired,
-};
-
-// Add default props
-PoiSelector.defaultProps = {
-  textSize: 14,
-  styles: { shadow: {} },
 };
 
 export default PoiSelector;

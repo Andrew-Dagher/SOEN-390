@@ -7,7 +7,7 @@ import { poiTypes } from "../app/services/PoiService";
 jest.mock("react-native-maps", () => {
   const React = require("react");
   const { View } = require("react-native");
-  
+
   const MockMarker = ({ children, onPress }) => {
     return (
       <View testID="mock-marker" onPress={onPress}>
@@ -15,7 +15,7 @@ jest.mock("react-native-maps", () => {
       </View>
     );
   };
-  
+
   const MockCallout = ({ children, tooltip }) => {
     return (
       <View testID="mock-callout" tooltip={tooltip}>
@@ -23,7 +23,7 @@ jest.mock("react-native-maps", () => {
       </View>
     );
   };
-  
+
   return {
     Marker: MockMarker,
     Callout: MockCallout,
@@ -35,6 +35,7 @@ describe("PoiMarker Component", () => {
   const mockPoi = {
     name: "Test Location",
     poiType: "restaurant",
+    place_id: "test_place_id_123", // Add required place_id
     geometry: {
       location: {
         lat: 37.7749,
@@ -58,31 +59,31 @@ describe("PoiMarker Component", () => {
 
   it("renders the marker with correct POI information", () => {
     const { getByText, getByTestId } = render(<PoiMarker {...defaultProps} />);
-    
+
     // Check if marker renders
     expect(getByTestId("mock-marker")).toBeTruthy();
-    
+
     // Check if POI name is displayed
     expect(getByText("Test Location")).toBeTruthy();
-    
+
     // Check if vicinity is displayed
     expect(getByText("123 Test Street")).toBeTruthy();
-    
+
     // Check if rating is displayed
     expect(getByText("4.5")).toBeTruthy();
-    
+
     // Check if open status is displayed
     expect(getByText("Open Now")).toBeTruthy();
   });
 
   it("uses the POI's type when available", () => {
     const { getByText } = render(<PoiMarker {...defaultProps} />);
-    
+
     // Get the restaurant label from poiTypes
-    const restaurantLabel = poiTypes.find(
-      type => type.value === "restaurant"
-    )?.label || "Restaurant";
-    
+    const restaurantLabel =
+      poiTypes.find((type) => type.value === "restaurant")?.label ||
+      "Restaurant";
+
     // Check if the restaurant type label is displayed
     expect(getByText(restaurantLabel)).toBeTruthy();
   });
@@ -93,20 +94,19 @@ describe("PoiMarker Component", () => {
       ...mockPoi,
       poiType: undefined,
     };
-    
+
     const { getByText } = render(
-      <PoiMarker 
-        {...defaultProps} 
-        poi={poiWithoutType} 
-        selectedPoiType="cafe" 
+      <PoiMarker
+        {...defaultProps}
+        poi={poiWithoutType}
+        selectedPoiType="cafe"
       />
     );
-    
+
     // Get the cafe label from poiTypes
-    const cafeLabel = poiTypes.find(
-      type => type.value === "cafe"
-    )?.label || "Cafe";
-    
+    const cafeLabel =
+      poiTypes.find((type) => type.value === "cafe")?.label || "Cafe";
+
     // Check if the cafe type label is displayed
     expect(getByText(cafeLabel)).toBeTruthy();
   });
@@ -119,11 +119,11 @@ describe("PoiMarker Component", () => {
         open_now: false,
       },
     };
-    
+
     const { getByText } = render(
       <PoiMarker {...defaultProps} poi={closedPoi} />
     );
-    
+
     // Check if closed status is displayed
     expect(getByText("Closed")).toBeTruthy();
   });
@@ -133,19 +133,20 @@ describe("PoiMarker Component", () => {
     const { getByTestId } = render(
       <PoiMarker {...defaultProps} onPress={onPress} />
     );
-    
+
     // Trigger press on marker
     const marker = getByTestId("mock-marker");
     marker.props.onPress();
-    
+
     // Check if onPress was called with the POI
     expect(onPress).toHaveBeenCalledWith(mockPoi);
   });
 
   it("handles POIs without optional fields", () => {
-    // Create a minimal POI without optional fields
+    // Create a minimal POI without optional fields but with required place_id
     const minimalPoi = {
       name: "Minimal Location",
+      place_id: "minimal_place_123", // Add required place_id
       geometry: {
         location: {
           lat: 37.7749,
@@ -153,28 +154,40 @@ describe("PoiMarker Component", () => {
         },
       },
     };
-    
+
     const { getByText, queryByText } = render(
-      <PoiMarker 
-        {...defaultProps} 
-        poi={minimalPoi} 
-        selectedPoiType="grocery_or_supermarket" 
+      <PoiMarker
+        {...defaultProps}
+        poi={minimalPoi}
+        selectedPoiType="grocery_or_supermarket"
       />
     );
-    
+
     // Check if name is displayed
     expect(getByText("Minimal Location")).toBeTruthy();
-    
+
     // These fields should not be present
     expect(queryByText("Open Now")).toBeNull();
     expect(queryByText("Closed")).toBeNull();
-    
+
     // Get the grocery label from poiTypes
-    const groceryLabel = poiTypes.find(
-      type => type.value === "grocery_or_supermarket"
-    )?.label || "Grocery Store";
-    
+    const groceryLabel =
+      poiTypes.find((type) => type.value === "grocery_or_supermarket")?.label ||
+      "Grocery Store";
+
     // Check if the type is still displayed using selectedPoiType
     expect(getByText(groceryLabel)).toBeTruthy();
+  });
+
+  it("renders the correct marker color based on POI type", () => {
+    const { getByTestId } = render(<PoiMarker {...defaultProps} />);
+    const markerIconContainer = getByTestId("marker-icon-container");
+    expect(markerIconContainer.props.style.borderColor).toBe("#FF5252"); // Red for restaurant
+  });
+
+  it("renders the correct icon based on POI type", () => {
+    const { getByTestId } = render(<PoiMarker {...defaultProps} />);
+    const markerIcon = getByTestId("marker-icon-container").props.children;
+    expect(markerIcon.props.name).toBe("restaurant"); // Update expected icon name to match actual value
   });
 });
