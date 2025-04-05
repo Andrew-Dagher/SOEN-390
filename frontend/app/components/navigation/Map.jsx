@@ -108,7 +108,6 @@ export default function CampusMap({ navigationParams }) {
           })
           .filter(Boolean);
 
-        // console.log("Points:", points);
         setBusMarkers(points);
       },
     };
@@ -528,7 +527,6 @@ export default function CampusMap({ navigationParams }) {
           />
         ) : null}
         {busMarkers.map((bus) => {
-          // console.log("rendering bus marker", bus);
           return (
             <Marker
               testID="bus-marker"
