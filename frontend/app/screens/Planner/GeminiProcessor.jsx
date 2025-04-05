@@ -33,7 +33,6 @@ export async function fetchGeminiData(tasks) {
 
   // Separate tasks into university-related and external tasks
   const universityLocations = [];
-  const externalTasks = [];
 
   classes.forEach((classItem) => {
     const matchedLocation = matchUniversityLocation(classItem);
@@ -51,7 +50,6 @@ export async function fetchGeminiData(tasks) {
       }&location=${latitude},${longitude}&radius=1500&key=${
         process.env.EXPO_PUBLIC_GOOGLE_API_KEY
       }`;
-      // console.log("Google Maps API URL:", url);
 
       try {
         if (task.location.toLowerCase() === "online") {
@@ -61,9 +59,6 @@ export async function fetchGeminiData(tasks) {
         const results = response.data.results;
 
         if (results.length > 0) {
-          //   console.log("Found locations for task:", task);
-          //   console.log("Location details:", results);
-
           // Collect multiple locations for the task
           const nearestLocations = results.map((result) => {
             const { lat, lng } = result.geometry.location;
@@ -151,8 +146,6 @@ export async function fetchGeminiData(tasks) {
 
   const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
   const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-002:generateContent?key=${apiKey}`;
-
-  //   console.log("Sending Gemini prompt:\n", geminiPrompt);
 
   try {
     const res = await fetch(geminiUrl, {
