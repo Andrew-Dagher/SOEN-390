@@ -3,11 +3,13 @@ import { TouchableOpacity, Image, Text } from "react-native";
 import PropTypes from 'prop-types'; // Import PropTypes
 import { trackEvent } from "@aptabase/react-native"; // Import trackEvent
 
+/**
 
 GoToLoginButton component for redirecting users to the Login page.
 @component
 @param {Object} props - Component props.
-@param {Function} props.onPress - Function to handle the button press./
+@param {Function} props.onPress - Function to handle the button press.
+*/
 const GoToLoginButton = ({ onPress }) => {
   const handlePress = () => {
     // Track the event when the button is clicked
@@ -30,7 +32,7 @@ const GoToLoginButton = ({ onPress }) => {
         borderRadius: 10,
       }}
     >
-      {/ Google logo /}
+      {/* Google logo */}
       <Image
         source={{ uri: "https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png" }}
         style={{
@@ -41,7 +43,7 @@ const GoToLoginButton = ({ onPress }) => {
         resizeMode="contain"
       />
 
-      {/ Button text */}
+      {/* Button text */}
       <Text className="text-black text-lg font-semibold">Go to Login</Text>
     </TouchableOpacity>
   );

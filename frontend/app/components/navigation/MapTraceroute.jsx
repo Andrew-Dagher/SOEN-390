@@ -32,6 +32,7 @@ import {
 } from "../../screens/navigation/navigationConfig";
 import { IsAtSGW } from "../../screens/navigation/navigationUtils";
 import { trackEvent } from "@aptabase/react-native";
+import { Coachmark } from "react-native-coachmark";
 
 // Define the styles outside of the component
 const styles = StyleSheet.create({
@@ -256,9 +257,18 @@ const MapTraceroute = ({
   walkTravelTime,
 }) => {
   const [selected, setSelected] = useState("");
+  const [showCarCoachmark, setShowCarCoachmark] = useState(false);
+
   const slideAnim = useRef(
     new Animated.Value(-Dimensions.get("window").height * 0.3)
   ).current; // Initially set off-screen
+
+useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowCarCoachmark(true);
+    }, 1000); // 1-second delay
+    return () => clearTimeout(timer);
+  }, []);
 
   /**
    * Animates the traceroute panel sliding in.
@@ -427,6 +437,8 @@ const MapTraceroute = ({
         <View className="flex h-1/6">
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View className="flex flex-row items-center justify-around">
+                {showCarCoachmark && (
+                    <Coachmark autoShow message="Tap here to choose shuttle!">
               <TouchableOpacity
                 testID="car-button"
                 onPress={() => {
@@ -447,6 +459,8 @@ const MapTraceroute = ({
                   {carTravelTime || "Calculating..."}
                 </Text>
               </TouchableOpacity>
+                </Coachmark>
+              )}
               <TouchableOpacity
                 testID="bike-button"
                 onPress={() => {

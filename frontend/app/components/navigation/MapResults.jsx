@@ -23,6 +23,7 @@ import {
 import SearchIcon from "./Icons/SearchIcon";
 import MapResultItem from "./MapResults/MapResultItem";
 import { polygons } from "../../screens/navigation/navigationConfig";
+import { Coachmark } from "react-native-coachmark";
 
 /**
  * MapResults component allows users to search, filter, and select campus buildings.
@@ -72,6 +73,8 @@ const MapResults = ({
   // Component state
   const [selected, setSelected] = useState("");
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [showFilterCoachmark, setShowFilterCoachmark] = useState(false);
+
 
   // Screen dimensions and animation values
   const screenHeight = Dimensions.get("window").height;
@@ -110,6 +113,16 @@ const MapResults = ({
       keyboardWillHide.remove();
     };
   }, []);
+
+useEffect(() => {
+  const timer = setTimeout(() => {
+    setShowFilterCoachmark(true);
+  }, 500); // Delay in ms
+
+  return () => clearTimeout(timer);
+}, []);
+
+
 
   /**
    * Handles search submission and filters buildings based on input text.
@@ -254,80 +267,88 @@ const MapResults = ({
             </View>
           </View>
 
-          {/* Fixed-height, horizontally scrollable filters section */}
-          <View style={[styles.filterContainer, { height: FILTERS_HEIGHT }]}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.filterScrollContent}
-            >
-              <TouchableOpacity
-                onPress={() => setSelected("loyola")}
-                style={styles.filterButton}
-              >
-                <Text
-                  style={[
-                    styles.filterText,
-                    selected === "loyola" && styles.selectedFilter,
-                  ]}
-                >
-                  Loyola
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => setSelected("sgw")}
-                style={styles.filterButton}
-              >
-                <Text
-                  style={[
-                    styles.filterText,
-                    selected === "sgw" && styles.selectedFilter,
-                  ]}
-                >
-                  SGW
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => setSelected("my_rooms")}
-                style={styles.filterButton}
-              >
-                <Text
-                  style={[
-                    styles.filterText,
-                    selected === "my_rooms" && styles.selectedFilter,
-                  ]}
-                >
-                  My Rooms
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => setSelected("library")}
-                style={styles.filterButton}
-              >
-                <Text
-                  style={[
-                    styles.filterText,
-                    selected === "library" && styles.selectedFilter,
-                  ]}
-                >
-                  Library
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => setSelected("dining")}
-                style={styles.filterButton}
-              >
-                <Text
-                  style={[
-                    styles.filterText,
-                    selected === "dining" && styles.selectedFilter,
-                  ]}
-                >
-                  Dining
-                </Text>
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
+{/* Fixed-height, horizontally scrollable filters section */}
+<View style={[styles.filterContainer, { height: FILTERS_HEIGHT }]}>
+{showFilterCoachmark && (
+  <Coachmark
+    autoShow
+    message="Tap here for search filters"
+  >
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.filterScrollContent}
+    >
+      <TouchableOpacity
+        onPress={() => setSelected("loyola")}
+        style={styles.filterButton}
+      >
+        <Text
+          style={[
+            styles.filterText,
+            selected === "loyola" && styles.selectedFilter,
+          ]}
+        >
+          Loyola
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => setSelected("sgw")}
+        style={styles.filterButton}
+      >
+        <Text
+          style={[
+            styles.filterText,
+            selected === "sgw" && styles.selectedFilter,
+          ]}
+        >
+          SGW
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => setSelected("my_rooms")}
+        style={styles.filterButton}
+      >
+        <Text
+          style={[
+            styles.filterText,
+            selected === "my_rooms" && styles.selectedFilter,
+          ]}
+        >
+          My Rooms
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => setSelected("library")}
+        style={styles.filterButton}
+      >
+        <Text
+          style={[
+            styles.filterText,
+            selected === "library" && styles.selectedFilter,
+          ]}
+        >
+          Library
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => setSelected("dining")}
+        style={styles.filterButton}
+      >
+        <Text
+          style={[
+            styles.filterText,
+            selected === "dining" && styles.selectedFilter,
+          ]}
+        >
+          Dining
+        </Text>
+      </TouchableOpacity>
+    </ScrollView>
+  </Coachmark>
+)}
+</View>
+
 
           {/* Dynamically sized results section */}
           <View
