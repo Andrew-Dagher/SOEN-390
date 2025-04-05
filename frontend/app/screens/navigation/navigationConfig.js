@@ -1956,9 +1956,9 @@ export const polygons = [
 
 const createBuildingNames = () => {
   const names = [];
-  for (let i = 0; i < polygons.length; i++) {
-    names.push(polygons[i].name);
-  }
+  polygons.forEach((building) => {
+    names.push(building.name);
+  });
   return names;
 };
 
