@@ -169,10 +169,9 @@ export default function Planner() {
       ...(optimizedPlan.tasks || []),
     ];
     // Sort events by start_time
-    const sortEvents = (a, b) =>
-      moment(a.start_time, "HH:mm").diff(moment(b.start_time, "HH:mm"));
-
-    const sortedEvents = events.sort((a, b) => sortEvents(a, b));
+    const sortedEvents = events.toSorted((a, b) =>
+      moment(a.start_time, "HH:mm").diff(moment(b.start_time, "HH:mm"))
+    );
     // Create waypoints: for each event, extract the building name from location,
     // then look up its coordinates in polygons.
     const waypoints = sortedEvents
