@@ -1,6 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Picker } from "@react-native-picker/picker";
-import { MaterialIcons } from "@expo/vector-icons";
 import {
   View,
   Text,

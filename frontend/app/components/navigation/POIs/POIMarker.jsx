@@ -3,6 +3,7 @@ import { View, Text } from "react-native";
 import { Marker, Callout } from "react-native-maps";
 import { MaterialIcons } from "@expo/vector-icons";
 import { poiTypes } from "../../../services/PoiService";
+import PropTypes from "prop-types"; // Added PropTypes import
 
 const PoiMarker = ({ poi, selectedPoiType, onPress, textSize }) => {
   // Get the icon for the POI type
@@ -52,6 +53,7 @@ const PoiMarker = ({ poi, selectedPoiType, onPress, textSize }) => {
 
   return (
     <Marker
+      testID="poi-marker"
       coordinate={{
         latitude: poi.geometry.location.lat,
         longitude: poi.geometry.location.lng,
@@ -59,6 +61,7 @@ const PoiMarker = ({ poi, selectedPoiType, onPress, textSize }) => {
       onPress={() => onPress(poi)}
     >
       <View
+        testID="marker-icon-container"
         style={{
           backgroundColor: "white",
           padding: 5,
@@ -74,8 +77,9 @@ const PoiMarker = ({ poi, selectedPoiType, onPress, textSize }) => {
       >
         <MaterialIcons name={iconName} size={20} color={markerColor} />
       </View>
-      <Callout tooltip={true}>
+      <Callout testID="poi-callout" tooltip={true}>
         <View
+          testID="callout-container"
           style={{
             width: 200,
             padding: 10,
@@ -90,11 +94,15 @@ const PoiMarker = ({ poi, selectedPoiType, onPress, textSize }) => {
             elevation: 5,
           }}
         >
-          <Text style={{ fontWeight: "bold", fontSize: textSize }}>
+          <Text
+            testID="poi-name"
+            style={{ fontWeight: "bold", fontSize: textSize }}
+          >
             {poi.name}
           </Text>
           {/* Always show POI type with color indicator */}
           <View
+            testID="poi-type-container"
             style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}
           >
             <View
@@ -106,33 +114,43 @@ const PoiMarker = ({ poi, selectedPoiType, onPress, textSize }) => {
                 marginRight: 5,
               }}
             />
-            <Text style={{ fontSize: textSize - 2, color: "#666" }}>
+            <Text
+              testID="poi-type-label"
+              style={{ fontSize: textSize - 2, color: "#666" }}
+            >
               {getPoiTypeLabel(poiType)}
             </Text>
           </View>
 
           {poi.vicinity && (
-            <Text style={{ fontSize: textSize - 2, marginTop: 3 }}>
+            <Text
+              testID="poi-vicinity"
+              style={{ fontSize: textSize - 2, marginTop: 3 }}
+            >
               {poi.vicinity}
             </Text>
           )}
           {poi.rating && (
             <View
+              testID="poi-rating-container"
               style={{
                 flexDirection: "row",
                 alignItems: "center",
                 marginTop: 5,
               }}
             >
-              <Text style={{ marginRight: 5 }}>{poi.rating}</Text>
+              <Text testID="poi-rating" style={{ marginRight: 5 }}>
+                {poi.rating}
+              </Text>
               <MaterialIcons name="star" size={16} color="#FFD700" />
-              <Text style={{ marginLeft: 5 }}>
+              <Text testID="poi-rating-count" style={{ marginLeft: 5 }}>
                 ({poi.user_ratings_total || 0})
               </Text>
             </View>
           )}
           {poi.opening_hours && (
             <Text
+              testID="poi-open-status"
               style={{
                 marginTop: 5,
                 color: poi.opening_hours.open_now ? "green" : "red",
@@ -145,6 +163,46 @@ const PoiMarker = ({ poi, selectedPoiType, onPress, textSize }) => {
       </Callout>
     </Marker>
   );
+};
+
+// Define prop types
+PoiMarker.propTypes = {
+  // Main props
+  poi: PropTypes.shape({
+    // Basic POI properties
+    name: PropTypes.string.isRequired,
+    vicinity: PropTypes.string,
+    poiType: PropTypes.string,
+    place_id: PropTypes.string.isRequired,
+
+    // Nested geometry properties
+    geometry: PropTypes.shape({
+      location: PropTypes.shape({
+        lat: PropTypes.number.isRequired,
+        lng: PropTypes.number.isRequired,
+      }).isRequired,
+    }).isRequired,
+
+    // Optional rating properties
+    rating: PropTypes.number,
+    user_ratings_total: PropTypes.number,
+
+    // Optional opening hours
+    opening_hours: PropTypes.shape({
+      open_now: PropTypes.bool,
+    }),
+  }).isRequired,
+
+  // Other component props
+  selectedPoiType: PropTypes.string,
+  onPress: PropTypes.func.isRequired,
+  textSize: PropTypes.number,
+};
+
+// Default props
+PoiMarker.defaultProps = {
+  selectedPoiType: "",
+  textSize: 14,
 };
 
 export default PoiMarker;

@@ -12,6 +12,7 @@ import {
 import Slider from "@react-native-community/slider";
 import { MaterialIcons } from "@expo/vector-icons";
 import { poiTypes } from "../../../services/PoiService";
+import PropTypes from "prop-types"; // Added PropTypes import
 
 const PoiSelector = ({
   showPoiSelector,
@@ -141,12 +142,16 @@ const PoiSelector = ({
   return (
     <>
       {/* POI Filter Button */}
-      <View style={{ position: "absolute", right: 21, bottom: 190, zIndex: 10 }}>
+      <View
+        testID="poi-selector-container"
+        style={{ position: "absolute", right: 21, bottom: 190, zIndex: 10 }}
+      >
         <TouchableHighlight
+          testID="poi-filter-button"
           style={[
-            styles.shadow,
+            styles?.shadow, // Added optional chaining
             {
-              backgroundColor: theme.backgroundColor,
+              backgroundColor: theme?.backgroundColor, // Added optional chaining
               borderRadius: 50,
               padding: 10,
             },
@@ -214,35 +219,39 @@ const PoiSelector = ({
               style={{
                 fontSize: textSize + 2,
                 fontWeight: "bold",
-                color: theme.backgroundColor,
+                color: theme?.backgroundColor, // Added optional chaining
               }}
             >
               Filter Points of Interest
             </Text>
-            <TouchableOpacity onPress={togglePoiSelector}>
+            <TouchableOpacity testID="close-button" onPress={togglePoiSelector}>
               <MaterialIcons
                 name="close"
                 size={24}
-                color={theme.backgroundColor}
+                color={theme?.backgroundColor} // Added optional chaining
               />
             </TouchableOpacity>
           </View>
 
           {/* Range Selector */}
           <View style={{ marginBottom: 16 }}>
-            <Text style={{ fontSize: textSize - 2, marginBottom: 8 }}>
+            <Text
+              testID="radius-display"
+              style={{ fontSize: textSize - 2, marginBottom: 8 }}
+            >
               Search Radius: {localRadius}m
             </Text>
             <Slider
+              testID="slider"
               style={{ width: "100%", height: 40 }}
               minimumValue={100}
               maximumValue={2500}
               step={100}
               value={localRadius}
               onValueChange={setLocalRadius}
-              minimumTrackTintColor={theme.backgroundColor}
+              minimumTrackTintColor={theme?.backgroundColor} // Added optional chaining
               maximumTrackTintColor="#d3d3d3"
-              thumbTintColor={theme.backgroundColor}
+              thumbTintColor={theme?.backgroundColor} // Added optional chaining
             />
             <View
               style={{
@@ -282,7 +291,7 @@ const PoiSelector = ({
               key="none"
               style={{
                 backgroundColor: localSelectedTypes.includes("none")
-                  ? theme.backgroundColor
+                  ? theme?.backgroundColor // Added optional chaining
                   : "#f0f0f0",
                 padding: 12,
                 borderRadius: 8,
@@ -317,7 +326,7 @@ const PoiSelector = ({
               key="all"
               style={{
                 backgroundColor: localSelectedTypes.includes("all")
-                  ? theme.backgroundColor
+                  ? theme?.backgroundColor // Added optional chaining
                   : "#f0f0f0",
                 padding: 12,
                 borderRadius: 8,
@@ -353,7 +362,7 @@ const PoiSelector = ({
                   key={type.value}
                   style={{
                     backgroundColor: localSelectedTypes.includes(type.value)
-                      ? theme.backgroundColor
+                      ? theme?.backgroundColor // Added optional chaining
                       : "#f0f0f0",
                     padding: 12,
                     borderRadius: 8,
@@ -421,7 +430,7 @@ const PoiSelector = ({
             {/* Apply button */}
             <TouchableHighlight
               style={{
-                backgroundColor: theme.backgroundColor,
+                backgroundColor: theme?.backgroundColor, // Added optional chaining
                 paddingVertical: 12,
                 paddingHorizontal: 16,
                 borderRadius: 8,
@@ -445,6 +454,30 @@ const PoiSelector = ({
       </Animated.View>
     </>
   );
+};
+
+// Add PropTypes validation
+PoiSelector.propTypes = {
+  showPoiSelector: PropTypes.bool.isRequired,
+  togglePoiSelector: PropTypes.func.isRequired,
+  selectedPoiTypes: PropTypes.arrayOf(PropTypes.string).isRequired,
+  setSelectedPoiTypes: PropTypes.func.isRequired,
+  searchRadius: PropTypes.number.isRequired,
+  setSearchRadius: PropTypes.func.isRequired,
+  theme: PropTypes.shape({
+    backgroundColor: PropTypes.string.isRequired,
+  }).isRequired,
+  textSize: PropTypes.number,
+  styles: PropTypes.shape({
+    shadow: PropTypes.object,
+  }),
+  applyFilters: PropTypes.func.isRequired,
+};
+
+// Add default props
+PoiSelector.defaultProps = {
+  textSize: 14,
+  styles: { shadow: {} },
 };
 
 export default PoiSelector;
