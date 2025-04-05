@@ -1,26 +1,26 @@
 import React, { useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import { fetchNearbyPOIs, poiTypes } from "../../../services/PoiService";
 import PoiMarker from "./POIMarker";
 import PoiSelector from "./POISelector";
 import { trackEvent } from "@aptabase/react-native";
 
 const PoiManager = ({
-  campus,
-  SGWLocation,
-  LoyolaLocation,
-  isRoute,
-  isSearch,
-  textSize,
-  theme,
-  styles,
-  onSelectPoi,
+  campus = "",
+  SGWLocation = null,
+  LoyolaLocation = null,
+  isRoute = false,
+  isSearch = false,
+  textSize = 14,
+  theme = "light",
+  styles = {},
+  onSelectPoi = () => {},
 }) => {
   const [pois, setPois] = useState([]);
   const [selectedPoiTypes, setSelectedPoiTypes] = useState(["none"]); // Start with "none" (no filters) as default
   const [showPoiSelector, setShowPoiSelector] = useState(false);
-  const [selectedPoi, setSelectedPoi] = useState(null);
   const [searchRadius, setSearchRadius] = useState(1500);
-  const [setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const togglePoiSelector = () => {
     setShowPoiSelector(!showPoiSelector);
@@ -110,10 +110,9 @@ const PoiManager = ({
   useEffect(() => {
     // Initial fetch with default values (no filters, default radius)
     fetchPois(["none"], searchRadius);
-  }, [campus]);
+  }, [campus, SGWLocation, LoyolaLocation, searchRadius]);
 
   const handlePoiPress = (poi) => {
-    setSelectedPoi(poi);
     onSelectPoi(poi); // Pass the selected POI to the parent component
   };
 
@@ -146,6 +145,24 @@ const PoiManager = ({
       />
     </>
   );
+};
+
+PoiManager.propTypes = {
+  campus: PropTypes.string,
+  SGWLocation: PropTypes.shape({
+    latitude: PropTypes.number,
+    longitude: PropTypes.number,
+  }),
+  LoyolaLocation: PropTypes.shape({
+    latitude: PropTypes.number,
+    longitude: PropTypes.number,
+  }),
+  isRoute: PropTypes.bool,
+  isSearch: PropTypes.bool,
+  textSize: PropTypes.number,
+  theme: PropTypes.string,
+  styles: PropTypes.object,
+  onSelectPoi: PropTypes.func,
 };
 
 export default PoiManager;
