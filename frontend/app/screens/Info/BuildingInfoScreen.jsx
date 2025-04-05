@@ -1,4 +1,3 @@
-
 /**
  * @file BuildingDetails.jsx
  * @description Displays detailed information about a building including its departments,
@@ -6,8 +5,8 @@
  * and handles external link opening.
  */
 
-import PropTypes from "prop-types"; // Import PropTypes
-import React, { useState } from "react";
+import PropTypes from "prop-types";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -18,6 +17,7 @@ import {
   StatusBar,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { Coachmark } from "react-native-coachmark";
 import MapPinIcon from "../../components/navigation/Icons/MapPinIcon";
 import WheelChairIcon from "../../components/navigation/Icons/WheelChairIcon";
 import BikeIcon from "../../components/navigation/Icons/BikeIcon";
@@ -27,8 +27,28 @@ import ParkingIcon from "../../components/navigation/Icons/ParkingIcon";
 
 const BuildingDetails = ({ route }) => {
   const [activeTab, setActiveTab] = useState("Departments");
+  const [showCoachmark, setShowCoachmark] = useState(false); // For tab navigation
+  const [showIndoorCoachmark, setShowIndoorCoachmark] = useState(false); // For Indoor Map
   const navigation = useNavigation();
   const building = route.params;
+
+  // Trigger tab navigation coachmark after 1-second delay
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowCoachmark(true);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Trigger Indoor Map coachmark after 1-second delay, only when Floorplans tab is active and floor plans exist
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (activeTab === "Floorplans" && building?.floorPlans?.length > 0) {
+        setShowIndoorCoachmark(true);
+      }
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [activeTab, building?.floorPlans]); // Re-run when activeTab or floorPlans change
 
   const icons = [
     building?.isHandicap && <WheelChairIcon key="wheelchair" />,
@@ -48,7 +68,6 @@ const BuildingDetails = ({ route }) => {
     navigation.navigate("InDoorScreen", { building: building, selectedFloorplan: floorplan });
   };
 
-  // Updated: Use item itself as key instead of the array index.
   const renderListItem = (item, link) => {
     if (!item) return null;
 
@@ -77,7 +96,6 @@ const BuildingDetails = ({ route }) => {
   };
 
   const renderContent = () => {
-
     let items, links;
     switch (activeTab) {
       case "Departments":
@@ -107,19 +125,21 @@ const BuildingDetails = ({ route }) => {
 
     const itemsArray = Array.isArray(items) ? items : [items];
     const linksArray = Array.isArray(links) ? links : [links];
-    if (activeTab == 'Floorplans') {
+    if (activeTab === "Floorplans") {
       return (
         <View className="px-4">
-          <Pressable
-            onPress={() => handleFloorplanPress(links)}
-            className="py-4"
-          >
-            <Text className="text-blue-600">Indoor Map</Text>
-          </Pressable>
-            
+          {showIndoorCoachmark && (
+            <Coachmark autoShow message="Tap here for the indoor map!">
+              <Pressable
+                onPress={() => handleFloorplanPress(links)}
+                className="py-4"
+              >
+                <Text className="text-blue-600">Indoor Map</Text>
+              </Pressable>
+            </Coachmark>
+          )}
         </View>
-      )
-
+      );
     }
     return (
       <View className="px-4">
@@ -170,27 +190,30 @@ const BuildingDetails = ({ route }) => {
 
       <View className="flex-1">
         <View className="mx-4 bg-white rounded-xl overflow-hidden">
-          <View className="flex flex-row border-b border-gray-200">
-            {['Departments', 'Services', 'Floorplans'].map((tab) => (
-              
-              (tab !== 'Floorplans' || (building.floorPlans && building.floorPlans.length > 0)) && (
-                <Pressable
-                  key={tab}
-                  onPress={() => setActiveTab(tab)}
-                  className={`flex-1 py-4 ${activeTab === tab ? "border-b-2 border-red-800" : ""}`}
-                >
-                  <Text className={`text-center text-base ${activeTab === tab ? "text-red-800 font-semibold" : "text-gray-500"}`}>
-                    {tab}
-                  </Text>
-                </Pressable>
-              )
-            ))}
-          </View>
-
+          {showCoachmark && (
+            <Coachmark autoShow message="Detailed building information">
+              <View className="flex flex-row border-b border-gray-200">
+                {["Departments", "Services", "Floorplans"].map((tab) => (
+                  (tab !== "Floorplans" || (building.floorPlans && building.floorPlans.length > 0)) && (
+                    <Pressable
+                      key={tab}
+                      onPress={() => setActiveTab(tab)}
+                      className={`flex-1 py-4 ${activeTab === tab ? "border-b-2 border-red-800" : ""}`}
+                    >
+                      <Text
+                        className={`text-center text-base ${activeTab === tab ? "text-red-800 font-semibold" : "text-gray-500"}`}
+                      >
+                        {tab}
+                      </Text>
+                    </Pressable>
+                  )
+                ))}
+              </View>
+            </Coachmark>
+          )}
           <ScrollView>{renderContent()}</ScrollView>
         </View>
       </View>
-
     </View>
   );
 };
