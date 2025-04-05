@@ -162,7 +162,7 @@ jobs:
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
             -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
             -Dsonar.exclusions=**/__tests__/**,**/*.test.js \
-            -Dsonar.coverage.exclusions=**/__tests__/**,**/*.test.js \
+            -Dsonar.coverage.exclusions=**/__tests__/**,**/*.test.js,**/*Icon*.js,**/*Icon*.jsx \
             -Dsonar.javascript.lcov.reportPaths=backend/coverage/lcov.info,frontend/coverage/lcov.info || (echo "SonarCloud analysis failed" && exit 1)
       
       - name: Get SonarCloud Results

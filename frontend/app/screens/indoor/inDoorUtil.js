@@ -2,7 +2,6 @@ import { buildings } from "./inDoorConfig";
 
 export const toPickerList = () => {
   let pickerList = [];
-
   buildings.forEach(building => {
     building.floors.forEach(floor => {
       Object.keys(floor.rooms).forEach(room => {
@@ -13,7 +12,6 @@ export const toPickerList = () => {
       });
     });
   });
-
   return pickerList;
 };
 
@@ -50,19 +48,25 @@ export const getFloorIdByRoomId = (roomValue) => {
   return null; // Return null if the room ID is not found
 };
 
-export const getEntranceByRoomId = (roomId, accessible=false, outdoor=false) => {
+// Helper function to determine the correct entrance based on accessibility and outdoor flags
+function determineEntrance(floor, accessible, outdoor) {
+  let entrance = floor.entrance;
+  if (accessible && floor.disabled_entrance) {
+    entrance = floor.disabled_entrance;
+  }
+  if (outdoor && floor.disabled_entrance) {
+    entrance = floor.outdoor_entrance;
+  }
+  return entrance;
+}
+
+export const getEntranceByRoomId = (roomId, accessible = false, outdoor = false) => {
   for (const building of buildings) {
-    for (const floor of building.floors) {
-      if (Object.values(floor.rooms).includes(roomId)) {
-        let fl= floor.entrance
-        if (accessible && floor.disabled_entrance){
-          fl=floor.disabled_entrance
-        }
-        if(outdoor&& floor.disabled_entrance){
-          fl=floor.outdoor_entrance
-        }
-        return fl; // Return entrance for the floor if room is found
-      }
+    // Find the floor that contains the roomId
+    const floor = building.floors.find(f => Object.values(f.rooms).includes(roomId));
+    if (floor) {
+      // Return the entrance based on the provided flags
+      return determineEntrance(floor, accessible, outdoor);
     }
   }
   return null; // Return null if the room ID is not found
@@ -72,9 +76,7 @@ export const getUrlByRoomId = (roomId) => {
   for (const building of buildings) {
     for (const floor of building.floors) {
       if (Object.values(floor.rooms).includes(roomId)) {
-
-        let url = floor.url
-        
+        let url = floor.url;
         return url;
       }
     }
@@ -85,14 +87,15 @@ export const getUrlByRoomId = (roomId) => {
 export const getUrlByFloorId = (floorId) => {
   for (const building of buildings) {
     for (const floor of building.floors) {
-      console.log(floor.floor_id,floorId)
-      console.log(floor.floor_id === floorId)
+      console.log(floor.floor_id, floorId);
+      console.log(floor.floor_id === floorId);
       if (floor.floor_id === floorId) {
         return floor.url; // Return URL for the floor if room is found
       }
     }
   }
-  return null; // Return null if the room ID is not found
+  return null; // Return null if the floor ID is not found
 };
+
 // Pre-generate picker list
 export const pickerList = toPickerList();

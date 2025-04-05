@@ -6,9 +6,7 @@ const COOKIE_URL = "https://shuttle.concordia.ca/concordiabusmap/Map.aspx";
 const LOCATION_URL =
   "https://shuttle.concordia.ca/concordiabusmap/WebService/GService.asmx/GetGoogleObject"; // URL to get the bus locations
 const HOST = "shuttle.concordia.ca"; // Host
-const AXIOSINSTANCE = axios.create({
-  withCredentials: true,
-});
+
 class BusService {
   static instance; // Singleton
   static intervalId;
@@ -26,7 +24,7 @@ class BusService {
 
   async getCookie() {
     try {
-      const response = await AXIOSINSTANCE.get(COOKIE_URL, {
+      const response = await axios.get(COOKIE_URL, {
         headers: {
           Host: HOST,
           "User-Agent": "Mozilla/5.0", // Mimic a browser
@@ -42,7 +40,7 @@ class BusService {
   async getBusLocations() {
     try {
       const cookie = await this.getCookie();
-      const response = await AXIOSINSTANCE.post(
+      const response = await axios.post(
         LOCATION_URL,
         {}, // Empty body
         {
@@ -57,7 +55,7 @@ class BusService {
       );
       return response.data;
     } catch (error) {
-      console.error("1 Error getting bus locations: ", error);
+      console.error("Error getting bus locations: ", error);
     }
   }
 
@@ -67,7 +65,7 @@ class BusService {
       const busData = await this.getBusLocations();
       this.notifyObservers(busData);
     } catch (error) {
-      console.error("2 Error updating bus locations: ", error);
+      console.error("Error updating bus locations: ", error);
     }
   }
 

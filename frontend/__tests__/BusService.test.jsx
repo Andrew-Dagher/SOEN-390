@@ -1,5 +1,4 @@
 import axios from "axios";
-import MockAdapter from "axios-mock-adapter";
 import BusService from "../app/services/BusService";
 
 jest.mock("axios");
@@ -15,11 +14,20 @@ describe("BusService", () => {
   afterAll(() => {});
 
   describe("getCookie", () => {
-    it("should fetch and return the cookie", async () => {
+    it("should fetch and return the cookie, and log the headers", async () => {
       const mockCookie = ["ASP.NET_SessionId=mockSessionId; path=/; HttpOnly"];
+      const mockHeaders = {
+        "set-cookie": mockCookie,
+        someOtherHeader: "someHeaderValue",
+      };
+
+      // Mock axios.get response
       axios.get.mockResolvedValue({
-        headers: { "set-cookie": mockCookie },
+        headers: mockHeaders,
       });
+
+      // Spy on console.log to confirm it logs the headers
+      const consoleLogSpy = jest.spyOn(console, "log").mockImplementation(() => {});
 
       const cookie = await BusService.getCookie();
 
@@ -32,25 +40,27 @@ describe("BusService", () => {
           },
         }
       );
+
+      // Confirm we log the headers
+      expect(consoleLogSpy).toHaveBeenCalledWith("Headers: ", mockHeaders);
+
+      // Confirm we returned the set-cookie array
       expect(cookie).toEqual(mockCookie);
+
+      consoleLogSpy.mockRestore();
     });
 
     it("should handle errors during cookie retrieval", async () => {
       const mockError = new Error("Failed to get cookie");
       axios.get.mockRejectedValue(mockError);
 
-      const consoleSpy = jest
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+      const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {});
 
       const cookie = await BusService.getCookie();
 
       expect(axios.get).toHaveBeenCalled();
       expect(cookie).toBeUndefined();
-      expect(consoleSpy).toHaveBeenCalledWith(
-        "Error getting cookie: ",
-        mockError
-      );
+      expect(consoleSpy).toHaveBeenCalledWith("Error getting cookie: ", mockError);
 
       consoleSpy.mockRestore();
     });
@@ -59,195 +69,7 @@ describe("BusService", () => {
   describe("getBusLocations", () => {
     it("should fetch and return bus locations", async () => {
       const mockCookie = ["ASP.NET_SessionId=mockSessionId; path=/; HttpOnly"];
-      const mockLocations = {
-        d: {
-          __type: "GoogleObject",
-          Directions: {
-            Addresses: [],
-            Locale: "en_US",
-            ShowDirectionInstructions: false,
-            HideMarkers: false,
-            PolylineOpacity: 0.6,
-            PolylineWeight: 3,
-            PolylineColor: "#0000FF",
-          },
-          Points: [
-            {
-              PointStatus: "",
-              Address: "",
-              ID: "GPLoyola",
-              IconImage: "icons/T12-13661-icon-LOY.png",
-              IconShadowImage: "",
-              IconImageWidth: 57,
-              IconShadowWidth: 0,
-              IconShadowHeight: 0,
-              IconAnchor_posX: 28,
-              IconAnchor_posY: 47,
-              InfoWindowAnchor_posX: 28,
-              InfoWindowAnchor_posY: 15,
-              Draggable: false,
-              IconImageHeight: 47,
-              Latitude: 45.458022,
-              Longitude: -73.639835,
-              InfoHTML: "",
-              ToolTip: "",
-            },
-            {
-              PointStatus: "",
-              Address: "",
-              ID: "GPSirGeorge",
-              IconImage: "icons/T12-13661-icon-SGW.png",
-              IconShadowImage: "",
-              IconImageWidth: 57,
-              IconShadowWidth: 0,
-              IconShadowHeight: 0,
-              IconAnchor_posX: 28,
-              IconAnchor_posY: 47,
-              InfoWindowAnchor_posX: 28,
-              InfoWindowAnchor_posY: 15,
-              Draggable: false,
-              IconImageHeight: 47,
-              Latitude: 45.497109,
-              Longitude: -73.578734,
-              InfoHTML: "",
-              ToolTip: "",
-            },
-            {
-              PointStatus: "",
-              Address: "",
-              ID: "BUS0",
-              IconImage: "icons/T12-13661-icon-bus.png",
-              IconShadowImage: "",
-              IconImageWidth: 53,
-              IconShadowWidth: 0,
-              IconShadowHeight: 0,
-              IconAnchor_posX: 26,
-              IconAnchor_posY: 80,
-              InfoWindowAnchor_posX: 26,
-              InfoWindowAnchor_posY: 26,
-              Draggable: false,
-              IconImageHeight: 80,
-              Latitude: 45.4499321,
-              Longitude: -73.6319199,
-              InfoHTML: "",
-              ToolTip: "",
-            },
-            {
-              PointStatus: "",
-              Address: "",
-              ID: "BUS1",
-              IconImage: "icons/T12-13661-icon-bus.png",
-              IconShadowImage: "",
-              IconImageWidth: 53,
-              IconShadowWidth: 0,
-              IconShadowHeight: 0,
-              IconAnchor_posX: 26,
-              IconAnchor_posY: 80,
-              InfoWindowAnchor_posX: 26,
-              InfoWindowAnchor_posY: 26,
-              Draggable: false,
-              IconImageHeight: 80,
-              Latitude: 45.7183762,
-              Longitude: -73.7131042,
-              InfoHTML: "",
-              ToolTip: "",
-            },
-            {
-              PointStatus: "",
-              Address: "",
-              ID: "BUS2",
-              IconImage: "icons/T12-13661-icon-bus.png",
-              IconShadowImage: "",
-              IconImageWidth: 53,
-              IconShadowWidth: 0,
-              IconShadowHeight: 0,
-              IconAnchor_posX: 26,
-              IconAnchor_posY: 80,
-              InfoWindowAnchor_posX: 26,
-              InfoWindowAnchor_posY: 26,
-              Draggable: false,
-              IconImageHeight: 80,
-              Latitude: 45.4971886,
-              Longitude: -73.578392,
-              InfoHTML: "",
-              ToolTip: "",
-            },
-            {
-              PointStatus: "",
-              Address: "",
-              ID: "BUS3",
-              IconImage: "icons/T12-13661-icon-bus.png",
-              IconShadowImage: "",
-              IconImageWidth: 53,
-              IconShadowWidth: 0,
-              IconShadowHeight: 0,
-              IconAnchor_posX: 26,
-              IconAnchor_posY: 80,
-              InfoWindowAnchor_posX: 26,
-              InfoWindowAnchor_posY: 26,
-              Draggable: false,
-              IconImageHeight: 80,
-              Latitude: 45.4531593,
-              Longitude: -73.7331085,
-              InfoHTML: "",
-              ToolTip: "",
-            },
-            {
-              PointStatus: "",
-              Address: "",
-              ID: "BUS4",
-              IconImage: "icons/T12-13661-icon-bus.png",
-              IconShadowImage: "",
-              IconImageWidth: 53,
-              IconShadowWidth: 0,
-              IconShadowHeight: 0,
-              IconAnchor_posX: 26,
-              IconAnchor_posY: 80,
-              InfoWindowAnchor_posX: 26,
-              InfoWindowAnchor_posY: 26,
-              Draggable: false,
-              IconImageHeight: 80,
-              Latitude: 45.4584045,
-              Longitude: -73.6382217,
-              InfoHTML: "",
-              ToolTip: "",
-            },
-          ],
-          Polylines: [],
-          Polygons: [],
-          CenterPoint: {
-            PointStatus: "",
-            Address: "",
-            ID: "1",
-            IconImage: "",
-            IconShadowImage: "",
-            IconImageWidth: 32,
-            IconShadowWidth: 0,
-            IconShadowHeight: 0,
-            IconAnchor_posX: 16,
-            IconAnchor_posY: 32,
-            InfoWindowAnchor_posX: 16,
-            InfoWindowAnchor_posY: 5,
-            Draggable: false,
-            IconImageHeight: 32,
-            Latitude: 45.48469766613475,
-            Longitude: -73.6083984375,
-            InfoHTML: "",
-            ToolTip: "",
-          },
-          ZoomLevel: 14,
-          ShowZoomControl: false,
-          RecenterMap: false,
-          AutomaticBoundaryAndZoom: false,
-          ShowTraffic: false,
-          ShowMapTypesControl: false,
-          Width: "1920px",
-          Height: "1080px",
-          MapType: "",
-          APIKey: "AIzaSyBHv4-d_68ISROn8_sW3DHG3AfIpq7QGzM",
-          APIVersion: "2",
-        },
-      };
+      const mockLocations = { d: { __type: "GoogleObject", Points: [] } };
 
       axios.get.mockResolvedValue({
         headers: { "set-cookie": mockCookie },
@@ -288,9 +110,7 @@ describe("BusService", () => {
       });
       axios.post.mockRejectedValue(mockError);
 
-      const consoleSpy = jest
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+      const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {});
 
       const locations = await BusService.getBusLocations();
 
@@ -309,9 +129,7 @@ describe("BusService", () => {
       const mockError = new Error("Failed to get cookie");
       axios.get.mockRejectedValue(mockError);
 
-      const consoleSpy = jest
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+      const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {});
 
       const locations = await BusService.getBusLocations();
 
@@ -326,10 +144,53 @@ describe("BusService", () => {
     });
   });
 
+  describe("update method (notifyObservers)", () => {
+    afterEach(() => {
+      BusService.clearObservers();
+    });
+
+    it("should fetch bus data and notify all observers", async () => {
+      // Spy on getBusLocations to return a known value
+      const getBusLocationsSpy = jest
+        .spyOn(BusService, "getBusLocations")
+        .mockResolvedValue("mockBusData");
+
+      // Mock observer
+      const observer = { update: jest.fn() };
+      BusService.addObserver(observer);
+
+      // Call update
+      await BusService.update();
+
+      expect(getBusLocationsSpy).toHaveBeenCalled();
+      // The observer should have received the "mockBusData"
+      expect(observer.update).toHaveBeenCalledWith("mockBusData");
+    });
+
+    it("should handle errors and log them during update", async () => {
+      const mockError = new Error("Update error");
+      jest.spyOn(BusService, "getBusLocations").mockRejectedValue(mockError);
+
+      const consoleErrorSpy = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      await BusService.update();
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "2 Error updating bus locations: ",
+        mockError
+      );
+
+      consoleErrorSpy.mockRestore();
+    });
+  });
+
   describe("Observer pattern", () => {
     afterEach(() => {
       BusService.clearObservers();
     });
+
     it("should add an observer", () => {
       const observer = { update: jest.fn() };
       BusService.addObserver(observer);
@@ -340,6 +201,7 @@ describe("BusService", () => {
       const observer = { update: jest.fn() };
       BusService.addObserver(observer);
       BusService.addObserver(observer);
+      // Should remain 1
       expect(BusService.observers.length).toBe(1);
     });
 
@@ -360,7 +222,7 @@ describe("BusService", () => {
 
     afterEach(() => {
       BusService.stop();
-      jest.useRealTimers(); // Restore real timers after each test
+      jest.useRealTimers(); // Restore real timers
     });
 
     it("should start the bus service", () => {
