@@ -26,14 +26,17 @@ export default function SettingsScreen() {
   const {
     textSize, setTextSize,
     colorBlindMode, setColorBlindMode,
-    profileImage, setProfileImage
+    profileImage, setProfileImage,
+      setWheelchairAccess,
+      wheelchairAccess, 
   } = useAppSettings();
 
   const theme = getThemeColors();
   const navigation = useNavigation();
   const { signOut, isSignedIn } = useAuth();
 
-  const [isWheelchairAccessEnabled, setIsWheelchairAccessEnabled] = useState(false);
+
+  const [isWheelchairAccessEnabled, setWheelchairAccessEnabled] = useState(wheelchairAccess);
   const [tempProfileImage, setTempProfileImage] = useState(profileImage);
   const [userName, setUserName] = useState("Guest");
   const [isColorBlindModeEnabled, setIsColorBlindModeEnabled] = useState(!!colorBlindMode);
@@ -44,6 +47,7 @@ export default function SettingsScreen() {
   const applyChanges = () => {
     setTextSize(tempSize);
     setProfileImage(tempProfileImage);
+    setWheelchairAccess(isWheelchairAccessEnabled)
   };
 
   return (
@@ -69,7 +73,7 @@ export default function SettingsScreen() {
           label="Mobility disability"
           description="Enable features optimized for wheelchair users."
           value={isWheelchairAccessEnabled}
-          onChange={setIsWheelchairAccessEnabled}
+          onChange={setWheelchairAccessEnabled}
           textSize={textSize} 
         />
 
