@@ -38,6 +38,7 @@ import { useAppSettings } from "../../AppSettingsContext";
 import getThemeColors from "../../ColorBindTheme";
 import busService from "../../services/BusService";
 import PropTypes from "prop-types";
+import MapPolygonHighlight from "./MapPolygonHighlight";
 
 export default function CampusMap({ navigationParams }) {
   const route = useRoute();
@@ -308,33 +309,29 @@ export default function CampusMap({ navigationParams }) {
     ref.current?.animateToRegion(location.coords);
   };
 
-  const renderPolygons = polygons.map((building) => {
-    return (
-      <View key={building.name}>
-        {end == null ? (
-          <Marker
-            testID={"building-" + building.name}
-            coordinate={building.point}
-            onPress={() => handleMarkerPress(building)}
-            image={require("../../../assets/concordia-logo.png")}
+  const renderPolygons = polygons.map((building, idx) => (
+    <View key={idx}>
+      {end == null ? (
+        <Marker
+          coordinate={building.point}
+          onPress={() => handleMarkerPress(building)}
+          image={require("../../../assets/concordia-logo.png")}
+        >
+          <Callout
+            tooltip={true}
+            onPress={() => navigation.navigate("Building Details", building)}
           >
-            <Callout
-              tooltip={true}
-              onPress={() => navigation.navigate("Building Details", building)}
-            >
-              <MapCard building={building} isCallout={true} />
-            </Callout>
-          </Marker>
-        ) : null}
-        <Polygon
-          coordinates={building.boundaries}
-          strokeWidth={2}
-          strokeColor={theme.backgroundColor}
-          fillColor={theme.polygonFillColor}
-        />
-      </View>
-    );
-  });
+            <MapCard building={building} isCallout={true} />
+          </Callout>
+        </Marker>
+      ) : null}
+      <MapPolygonHighlight
+        building={building}
+        location={location}
+        theme={theme}
+      />
+    </View>
+  ));  
 
   const traceRouteOnReady = (args) => {
     console.log("Directions are ready!");
@@ -502,7 +499,7 @@ export default function CampusMap({ navigationParams }) {
             origin={SGWShuttlePickup}
             destination={LoyolaShuttlePickup}
             apikey={process.env.EXPO_PUBLIC_GOOGLE_API_KEY}
-            strokeColor="#862532"
+            strokeColor= {theme.backgroundColor}
             strokeWidth={6}
             mode={"DRIVING"}
           />
@@ -512,7 +509,7 @@ export default function CampusMap({ navigationParams }) {
             origin={start}
             destination={end}
             apikey={process.env.EXPO_PUBLIC_GOOGLE_API_KEY}
-            strokeColor="#862532"
+            strokeColor= {theme.backgroundColor}
             strokeWidth={6}
             waypoints={[]} // replaced state with an empty array literal
             mode={mode}
