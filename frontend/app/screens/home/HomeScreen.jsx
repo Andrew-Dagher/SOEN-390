@@ -12,31 +12,16 @@ import HomeCard from "../../components/Homescreen/HomeCard";
 import MapPic from "../../../assets/MapScreenshot.png";
 import CalendarPic from "../../../assets/CalendarScreenshot.png";
 import { useNavigation } from "@react-navigation/native";
+import { Coachmark } from "react-native-coachmark";
 
-// Retrieve screen dimensions for responsive design.
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
-/**
- * HomeScreen component renders the main home view.
- * It displays the user's name in the header and provides navigation cards.
- *
- * @component
- * @returns {JSX.Element} The rendered HomeScreen component.
- */
 export default function HomeScreen() {
-  // Hook to manage navigation between screens.
   const navigation = useNavigation();
-
-  // State to store the user's full name.
   const [username, setUsername] = useState("");
+  const [step, setStep] = useState(0);
+  const [showCoachmark, setShowCoachmark] = useState(true);
 
-  /**
-   * Loads the user data from AsyncStorage when the component mounts.
-   * Updates the username state with the full name from the stored user data.
-   *
-   * @async
-   * @function loadUserData
-   */
   useEffect(() => {
     const loadUserData = async () => {
       try {
@@ -53,32 +38,65 @@ export default function HomeScreen() {
     loadUserData();
   }, []);
 
+  const handleHide = (nextStep) => {
+    setShowCoachmark(false);
+    setTimeout(() => {
+      setStep(nextStep);
+      setShowCoachmark(true);
+    }, 1000); // Delay to avoid flicker
+  };
+
   return (
     <View style={styles.container}>
-      {/* Header displaying the user's name */}
+      {/* Step 0: Welcome Message */}
+      {step === 0 && (
+        <View style={styles.coachmarkWrapper}>
+          <Coachmark
+            message="Hey! Welcome to the step-by-step guide. This is your home screen."
+            autoShow
+            visible={showCoachmark}
+            onHide={() => handleHide(1)}
+          >
+            <View style={styles.anchorPoint} />
+          </Coachmark>
+        </View>
+      )}
+
       <HomeHeader name={username} />
+
       <SafeAreaView style={styles.mainContent}>
-        {/* Container holding navigation cards */}
         <View style={styles.cardContainer}>
-          <TouchableOpacity onPress={() => navigation.navigate("Navigation")}>
-            <HomeCard image={MapPic} text="Find your next class" />
-          </TouchableOpacity>
+          {/* Step 1: Find Class Coachmark */}
+          {step === 1 ? (
+            <Coachmark
+              message="Tap here to find your next class location on the map!"
+              autoShow
+              visible={showCoachmark}
+              onHide={() => handleHide(2)}
+            >
+              <TouchableOpacity onPress={() => navigation.navigate("Navigation")}>
+                <HomeCard image={MapPic} text="Find your next class" />
+              </TouchableOpacity>
+            </Coachmark>
+          ) : (
+            <TouchableOpacity onPress={() => navigation.navigate("Navigation")}>
+              <HomeCard image={MapPic} text="Find your next class" />
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity onPress={() => navigation.navigate("Calendar")}>
             <HomeCard image={CalendarPic} text="Access your calendar" />
           </TouchableOpacity>
         </View>
       </SafeAreaView>
-      {/* Bottom navigation is now rendered in App.js and stays fixed across screens */}
     </View>
   );
 }
 
-// Stylesheet for HomeScreen component.
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    // Add bottom padding to ensure content doesn't get hidden behind the navbar
     paddingBottom: 60,
   },
   mainContent: {
@@ -92,5 +110,15 @@ const styles = StyleSheet.create({
     gap: screenHeight * 0.02,
     paddingTop: screenHeight * 0.03,
     paddingHorizontal: screenWidth * 0.05,
+  },
+  coachmarkWrapper: {
+    position: "absolute",
+    top: screenHeight * 0.25,
+    left: screenWidth * 0.1,
+    zIndex: 999,
+  },
+  anchorPoint: {
+    width: 1,
+    height: 1,
   },
 });

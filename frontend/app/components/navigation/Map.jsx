@@ -38,6 +38,7 @@ import { useAppSettings } from "../../AppSettingsContext";
 import getThemeColors from "../../ColorBindTheme";
 import busService from "../../services/BusService";
 import PropTypes from "prop-types";
+import { Coachmark } from "react-native-coachmark";
 
 export default function CampusMap({ navigationParams }) {
   const route = useRoute();
@@ -377,71 +378,6 @@ export default function CampusMap({ navigationParams }) {
     getCurrentLocation();
   }, []);
 
-  useEffect(() => {
-    if (params?.indoor) {
-      try{
-      console.log("Indoor tracing activated: Tracing route from start to end.");
-  
-      if (params.start && params.end) {
-        // Create new objects to avoid mutating params directly (right now we just have cc and hall)
-        let startLocation = { latitude: 45.458470794629754, longitude: -73.64061814691485 };
-        let endLocation = { latitude: 45.458470794629754, longitude: -73.64061814691485 };
-  
-        if (params.start[0] === 'H') {
-          startLocation = { latitude: 45.49781725012627, longitude: -73.57950979221253 };
-        }
-        else if (params.start[0]==='M'){
-          startLocation= {latitude:45.49550722087804, longitude:-73.57917572331318}
-        }
-  
-        if (params.end[0] === 'H') {
-          endLocation = { latitude: 45.49781725012627, longitude: -73.57950979221253 };
-        }
-
-        else if (params.end[0]==='M'){
-          endLocation = {latitude:45.49550722087804, longitude:-73.57917572331318}
-        }
-        
-        setIsSearch(true);
-        setStart(startLocation);
-        setEnd(endLocation);
-        setIsRoute(true);
-        
-  
-        setDestinationPosition(params.end);
-        setStartPosition(params.start);
-
-        // Reset all travel times before fetching new ones
-      setCarTravelTime(null);
-      setBikeTravelTime(null);
-      setMetroTravelTime(null);
-      setWalkTravelTime(null);
-
-      // Fetch travel times for all modes
-      const fetchAllTravelTimes = async () => {
-        await Promise.all([
-          fetchTravelTime(startLocation, endLocation, "DRIVING"),
-          fetchTravelTime(
-            startLocation,
-            endLocation,
-            "BICYCLING"
-          ),
-          fetchTravelTime(startLocation, endLocation, "TRANSIT"),
-          fetchTravelTime(startLocation, endLocation, "WALKING"),
-        ]);
-      };
-
-      fetchAllTravelTimes();
-
-      } else {
-        console.warn("Indoor tracing requested but start or end location is missing in params.");
-      }}
-      catch(e){
-        console.error('Error in mapping of outdoor directions', e)
-      }
-    }
-  }, [params]);
-
   return (
     <View style={styles.container}>
       <MapView
@@ -643,57 +579,64 @@ export default function CampusMap({ navigationParams }) {
 
       {selectedBuilding && !isSearch && (
         <View className="absolute w-full bottom-20">
-          <View className="flex flex-row justify-center items-center">
-            <TouchableHighlight
-              testID="set-start-end"
-              style={[
-                styles.shadow,
-                { backgroundColor: theme.backgroundColor },
-              ]}
-              className="mr-4 rounded-xl p-4 bg-primary-red"
-              onPress={handleSetStart}
-            >
-              <View className="flex flex-row justify-around items-center">
-                {start != null && start != location?.coords ? (
+          <Coachmark
+            message="Set your start point or get directions here"
+            autoShow
+            visible={true}
+          >
+            <View className="flex flex-row justify-center items-center">
+              <TouchableHighlight
+                testID="set-start-end"
+                style={[
+                  styles.shadow,
+                  { backgroundColor: theme.backgroundColor },
+                ]}
+                className="mr-4 rounded-xl p-4 bg-primary-red"
+                onPress={handleSetStart}
+              >
+                <View className="flex flex-row justify-around items-center">
+                  {start != null && start != location?.coords ? (
+                    <Text
+                      style={[{ fontSize: textSize }]}
+                      className="color-white mr-4 font-bold"
+                    >
+                      Set Destination
+                    </Text>
+                  ) : (
+                    <Text
+                      style={[{ fontSize: textSize }]}
+                      className="color-white mr-4 font-bold"
+                    >
+                      Set Start
+                    </Text>
+                  )}
+                  <NavigationIcon />
+                </View>
+              </TouchableHighlight>
+              <TouchableHighlight
+                testID="get-directions"
+                style={[
+                  styles.shadow,
+                  { backgroundColor: theme.backgroundColor },
+                ]}
+                className="rounded-xl p-4 bg-primary-red"
+                onPress={handleGetDirections}
+              >
+                <View className="flex flex-row justify-around items-center">
                   <Text
                     style={[{ fontSize: textSize }]}
                     className="color-white mr-4 font-bold"
                   >
-                    Set Destination
+                    Get Directions
                   </Text>
-                ) : (
-                  <Text
-                    style={[{ fontSize: textSize }]}
-                    className="color-white mr-4 font-bold"
-                  >
-                    Set Start
-                  </Text>
-                )}
-                <NavigationIcon />
-              </View>
-            </TouchableHighlight>
-            <TouchableHighlight
-              testID="get-directions"
-              style={[
-                styles.shadow,
-                { backgroundColor: theme.backgroundColor },
-              ]}
-              className="rounded-xl p-4 bg-primary-red"
-              onPress={handleGetDirections}
-            >
-              <View className="flex flex-row justify-around items-center">
-                <Text
-                  style={[{ fontSize: textSize }]}
-                  className="color-white mr-4 font-bold"
-                >
-                  Get Directions
-                </Text>
-                <DirectionsIcon />
-              </View>
-            </TouchableHighlight>
-          </View>
+                  <DirectionsIcon />
+                </View>
+              </TouchableHighlight>
+            </View>
+          </Coachmark>
         </View>
       )}
+
 
       <View className="w-full absolute bottom-0">
         <BottomNavBar />

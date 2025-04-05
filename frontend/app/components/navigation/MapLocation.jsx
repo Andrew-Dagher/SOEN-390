@@ -6,6 +6,7 @@
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 import PropTypes from "prop-types"; // Import PropTypes
 import LocationIcon from "./Icons/LocationIcon";
+import { Coachmark } from "react-native-coachmark"; // Imported Coachmark
 
 /**
  * MapLocation component provides a button to pan to the user's current location.
@@ -40,14 +41,20 @@ const MapLocation = ({ panToMyLocation, setLocation }) => {
 
   return (
     <View className="absolute justify-end items-center right-4 h-full">
-      <TouchableOpacity
-        testID="map-location-button"
-        onPress={handleClick}
-        style={styles.shadow}
-        className="mb-40 flex items-center justify-center rounded-3xl bg-white p-2 mr-4"
+      <Coachmark
+        message="Tap here to center the map on your location!"
+        autoShow
+        visible={true}
       >
-        <LocationIcon />
-      </TouchableOpacity>
+        <TouchableOpacity
+          testID="map-location-button"
+          onPress={handleClick}
+          style={styles.shadow}
+          className="mb-40 flex items-center justify-center rounded-3xl bg-white p-2 mr-4"
+        >
+          <LocationIcon />
+        </TouchableOpacity>
+      </Coachmark>
     </View>
   );
 };
