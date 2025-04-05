@@ -1,3 +1,13 @@
 comment:
   layout: "reach, diff, changes"
   require_changes: false
+
+coverage:
+  status:
+    project:
+      default:
+        target: 70%
+
+    patch:
+      default:
+        target: 70%
