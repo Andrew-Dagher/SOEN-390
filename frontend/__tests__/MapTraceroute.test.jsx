@@ -5,7 +5,7 @@
  */
 
 import React from "react";
-import { render, fireEvent, waitFor } from "@testing-library/react-native";
+import { render, fireEvent } from "@testing-library/react-native";
 import MapTraceroute from "../app/components/navigation/MapTraceroute";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { IsAtSGW } from "../app/screens/navigation/navigationUtils";

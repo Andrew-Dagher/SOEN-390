@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
+import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import CampusMap from '../app/components/navigation/Map';
 
@@ -153,8 +153,6 @@ describe('CampusMap - Coverage Tests', () => {
         />
       </NavigationContainer>
     );
-    // Trigger Get Directions to cause fetchTravelTime calls
-    const dirBtn = await waitFor(() => document.querySelector('[data-testid="get-directions"]') || null);
     // Alternatively, if using getByTestId:
     const { getByTestId } = render(
       <NavigationContainer>
@@ -262,7 +260,7 @@ describe('CampusMap - Coverage Tests', () => {
 
   // 9. handleSetStart branch: if (start != null && start !== location?.coords)
   it('executes setStart branch when start already exists and differs from location.coords', async () => {
-    const { getByTestId, findByTestId } = render(
+    const { findByTestId } = render(
       <NavigationContainer>
         <CampusMap
           navigationParams={{
