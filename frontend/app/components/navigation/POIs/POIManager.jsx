@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import PropTypes from "prop-types"; // Added PropTypes import
 import { fetchNearbyPOIs, poiTypes } from "../../../services/PoiService";
 import PoiMarker from "./POIMarker";
 import PoiSelector from "./POISelector";
@@ -19,9 +18,9 @@ const PoiManager = ({
   const [pois, setPois] = useState([]);
   const [selectedPoiTypes, setSelectedPoiTypes] = useState(["none"]); // Start with "none" (no filters) as default
   const [showPoiSelector, setShowPoiSelector] = useState(false);
-  // Removed unused selectedPoi state variable
+  const [selectedPoi, setSelectedPoi] = useState(null);
   const [searchRadius, setSearchRadius] = useState(1500);
-  const [isLoading, setIsLoading] = useState(false); // Keeping for future use, might be needed
+  const [setIsLoading] = useState(false);
 
   const togglePoiSelector = () => {
     setShowPoiSelector(!showPoiSelector);
@@ -111,11 +110,11 @@ const PoiManager = ({
   useEffect(() => {
     // Initial fetch with default values (no filters, default radius)
     fetchPois(["none"], searchRadius);
-  }, [campus, searchRadius]); // Added searchRadius to dependencies
+  }, [campus]);
 
   const handlePoiPress = (poi) => {
-    // Directly pass the selected POI to the parent component without setting state
-    onSelectPoi(poi);
+    setSelectedPoi(poi);
+    onSelectPoi(poi); // Pass the selected POI to the parent component
   };
 
   return (
@@ -147,26 +146,6 @@ const PoiManager = ({
       />
     </>
   );
-};
-
-// Add PropTypes validation for all props
-PoiManager.propTypes = {
-  campus: PropTypes.string.isRequired,
-  SGWLocation: PropTypes.object.isRequired,
-  LoyolaLocation: PropTypes.object.isRequired,
-  isRoute: PropTypes.bool,
-  isSearch: PropTypes.bool,
-  textSize: PropTypes.number,
-  theme: PropTypes.object.isRequired,
-  styles: PropTypes.object.isRequired,
-  onSelectPoi: PropTypes.func.isRequired,
-};
-
-// Add default props
-PoiManager.defaultProps = {
-  isRoute: false,
-  isSearch: false,
-  textSize: 14,
 };
 
 export default PoiManager;

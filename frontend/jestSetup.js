@@ -26,13 +26,13 @@ jest.mock("react-native", () => {
       interpolate: jest.fn(() => ({ __getValue: jest.fn() })),
     })),
     timing: jest.fn(() => ({
-      start: jest.fn((cb) => cb && cb({ finished: true })),
+      start: jest.fn((cb) => cb?.({ finished: true })),
     })),
     spring: jest.fn(() => ({
-      start: jest.fn((cb) => cb && cb({ finished: true })),
+      start: jest.fn((cb) => cb?.({ finished: true })),
     })),
     parallel: jest.fn(() => ({
-      start: jest.fn((cb) => cb && cb({ finished: true })),
+      start: jest.fn((cb) => cb?.({ finished: true })),
     })),
     View: "Animated.View",
     createAnimatedComponent: jest.fn((component) => component),
