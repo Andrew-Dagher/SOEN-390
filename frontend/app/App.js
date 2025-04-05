@@ -21,6 +21,7 @@ import "../global.css";
 import HomeScreen from "./screens/home/HomeScreen";
 import CalendarScreen from "./screens/calendar/CalendarScreen";
 import NavigationScreen from "./screens/navigation/NavigationScreen";
+import InDoorScreen from "./screens/indoor/InDoorScreen";
 import LoginScreen from "./screens/login/LoginScreen";
 import SettingsScreen from "./screens/settings/settingsScreen";
 import BuildingInfoScreen from "./screens/Info/BuildingInfoScreen";
@@ -86,6 +87,11 @@ export default function App() {
                   name="Login"
                   options={{ headerShown: false }}
                   component={LoginScreen}
+                />
+                <Stack.Screen 
+                  name="InDoorScreen" 
+                  component={InDoorScreen} 
+                  options={{ headerShown: false }} 
                 />
               </Stack.Navigator>
               
