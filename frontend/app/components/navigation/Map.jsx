@@ -299,8 +299,8 @@ export default function CampusMap({ navigationParams }) {
     ref.current?.animateToRegion(location.coords);
   };
 
-  const renderPolygons = polygons.map((building, idx) => (
-    <View key={idx}>
+  const renderPolygons = polygons.map((building) => (
+    <View key={building.name}>
       {end == null ? (
         <Marker
           coordinate={building.point}
