@@ -1,17 +1,15 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { TouchableOpacity, Text, StyleSheet, Animated, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import * as Location from "expo-location";
 import PropTypes from "prop-types";
 import CalendarDirectionsIcon from "./CalendarIcons/CalendarDirectionsIcon"; // Import the icon
-import getThemeColors from "../../ColorBindTheme"; // Ensure correct path
-import { trackEvent } from "@aptabase/react-native";
+import { trackEvent } from "@aptabase/react-native";  // Import trackEvent
 
 export default function NextClassButton({ eventObserver }) {
   const navigation = useNavigation();
   const [nextEventLocation, setNextEventLocation] = useState(null);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const theme = getThemeColors();
+  const [fadeAnim] = useState(new Animated.Value(0)); // Fade animation
 
   useEffect(() => {
     const observerCallback = (events) => {
@@ -48,23 +46,20 @@ export default function NextClassButton({ eventObserver }) {
     if (!nextEventLocation) return;
 
     try {
-      // Parse location info from the event description
       const parts = nextEventLocation.split(",").map((p) => p.trim());
       const campus = (parts[0] || "").toLowerCase().replace(/<\/?pre>/g, "").trim();
       const buildingName = (parts[1] || "").replace(/<\/?pre>/g, "").trim();
 
-      // Get the user's current location
       const currentLocation = await Location.getCurrentPositionAsync({});
-      
-      // Track the button click event
+
+      // Track the event using Aptabase
       trackEvent("Next Class Button Clicked", {
-        campus,
-        buildingName,
+        campus: campus,
+        buildingName: buildingName,
         latitude: currentLocation.coords.latitude,
-        longitude: currentLocation.coords.longitude,
+        longitude: currentLocation.coords.longitude
       });
 
-      // Navigate to the "Navigation" screen with the relevant details
       navigation.navigate("Navigation", {
         campus,
         buildingName,
@@ -78,15 +73,11 @@ export default function NextClassButton({ eventObserver }) {
     }
   };
 
-  // Render nothing if there's no upcoming event
   if (!nextEventLocation) return null;
 
   return (
     <Animated.View style={[styles.floatingContainer, { opacity: fadeAnim }]}>
-      <TouchableOpacity
-        style={[styles.floatingButton, { backgroundColor: theme.backgroundColor }]}
-        onPress={handleGoToNextClass}
-      >
+      <TouchableOpacity style={[styles.floatingButton, { backgroundColor: theme.backgroundColor }]} onPress={handleGoToNextClass}>
         <Text style={styles.floatingButtonText}>Go to My Next Class</Text>
         <CalendarDirectionsIcon style={styles.icon} />
       </TouchableOpacity>
@@ -110,7 +101,7 @@ const styles = StyleSheet.create({
   floatingButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#862532", // Fallback color; will be overridden by theme.backgroundColor if available
+    backgroundColor: "#862532",
     paddingVertical: 14,
     paddingHorizontal: 20,
     borderRadius: 15,
