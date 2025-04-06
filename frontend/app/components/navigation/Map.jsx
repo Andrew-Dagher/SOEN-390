@@ -196,6 +196,15 @@ export default function CampusMap({ navigationParams }) {
     }
   };
 
+  const fetchAllTravelTimes = async (start, end) => {
+    await Promise.all([
+      fetchTravelTime(start, end, "DRIVING"),
+      fetchTravelTime(start, end, "BICYCLING"),
+      fetchTravelTime(start, end, "TRANSIT"),
+      fetchTravelTime(start, end, "WALKING"),
+    ]);
+  };
+
   useEffect(() => {
     if (params?.campus === "loyola") {
       handleLoyola();
@@ -237,15 +246,7 @@ export default function CampusMap({ navigationParams }) {
       setMetroTravelTime(null);
       setWalkTravelTime(null);
 
-      const fetchAllTravelTimes = async () => {
-        await Promise.all([
-          fetchTravelTime(start, selectedBuilding.point, "DRIVING"),
-          fetchTravelTime(start, selectedBuilding.point, "BICYCLING"),
-          fetchTravelTime(start, selectedBuilding.point, "TRANSIT"),
-          fetchTravelTime(start, selectedBuilding.point, "WALKING"),
-        ]);
-      };
-      fetchAllTravelTimes();
+      fetchAllTravelTimes(start, selectedBuilding.point);
       return;
     }
     setStart(selectedBuilding.point);
@@ -254,7 +255,9 @@ export default function CampusMap({ navigationParams }) {
 
   const handleGetDirections = () => {
     try {
-      trackEvent("Get Directions", { "selected building": selectedBuilding.name });
+      trackEvent("Get Directions", {
+        "selected building": selectedBuilding.name,
+      });
       console.log("Event tracked");
       setIsRoute(true);
       setIsSearch(true);
@@ -270,16 +273,7 @@ export default function CampusMap({ navigationParams }) {
       setMetroTravelTime(null);
       setWalkTravelTime(null);
 
-      const fetchAllTravelTimes = async () => {
-        await Promise.all([
-          fetchTravelTime(location?.coords, selectedBuilding.point, "DRIVING"),
-          fetchTravelTime(location?.coords, selectedBuilding.point, "BICYCLING"),
-          fetchTravelTime(location?.coords, selectedBuilding.point, "TRANSIT"),
-          fetchTravelTime(location?.coords, selectedBuilding.point, "WALKING"),
-        ]);
-      };
-
-      fetchAllTravelTimes();
+      fetchAllTravelTimes(location?.coords, selectedBuilding.point);
     } catch (e) {
       console.error(e);
     }
@@ -331,7 +325,7 @@ export default function CampusMap({ navigationParams }) {
         theme={theme}
       />
     </View>
-  ));  
+  ));
 
   const traceRouteOnReady = (args) => {
     console.log("Directions are ready!");
@@ -376,65 +370,69 @@ export default function CampusMap({ navigationParams }) {
 
   useEffect(() => {
     if (params?.indoor) {
-      try{
-      console.log("Indoor tracing activated: Tracing route from start to end.");
-  
-      if (params.start && params.end) {
-        // Create new objects to avoid mutating params directly (right now we just have cc and hall)
-        let startLocation = { latitude: 45.458470794629754, longitude: -73.64061814691485 };
-        let endLocation = { latitude: 45.458470794629754, longitude: -73.64061814691485 };
-  
-        if (params.start[0] === 'H') {
-          startLocation = { latitude: 45.49781725012627, longitude: -73.57950979221253 };
+      try {
+        console.log(
+          "Indoor tracing activated: Tracing route from start to end."
+        );
+
+        if (params.start && params.end) {
+          // Create new objects to avoid mutating params directly (right now we just have cc and hall)
+          let startLocation = {
+            latitude: 45.458470794629754,
+            longitude: -73.64061814691485,
+          };
+          let endLocation = {
+            latitude: 45.458470794629754,
+            longitude: -73.64061814691485,
+          };
+
+          if (params.start[0] === "H") {
+            startLocation = {
+              latitude: 45.49781725012627,
+              longitude: -73.57950979221253,
+            };
+          } else if (params.start[0] === "M") {
+            startLocation = {
+              latitude: 45.49550722087804,
+              longitude: -73.57917572331318,
+            };
+          }
+
+          if (params.end[0] === "H") {
+            endLocation = {
+              latitude: 45.49781725012627,
+              longitude: -73.57950979221253,
+            };
+          } else if (params.end[0] === "M") {
+            endLocation = {
+              latitude: 45.49550722087804,
+              longitude: -73.57917572331318,
+            };
+          }
+
+          setIsSearch(true);
+          setStart(startLocation);
+          setEnd(endLocation);
+          setIsRoute(true);
+
+          setDestinationPosition(params.end);
+          setStartPosition(params.start);
+
+          // Reset all travel times before fetching new ones
+          setCarTravelTime(null);
+          setBikeTravelTime(null);
+          setMetroTravelTime(null);
+          setWalkTravelTime(null);
+
+          // Fetch travel times for all modes
+          fetchAllTravelTimes(startLocation, endLocation);
+        } else {
+          console.warn(
+            "Indoor tracing requested but start or end location is missing in params."
+          );
         }
-        else if (params.start[0]==='M'){
-          startLocation= {latitude:45.49550722087804, longitude:-73.57917572331318}
-        }
-  
-        if (params.end[0] === 'H') {
-          endLocation = { latitude: 45.49781725012627, longitude: -73.57950979221253 };
-        }
-
-        else if (params.end[0]==='M'){
-          endLocation = {latitude:45.49550722087804, longitude:-73.57917572331318}
-        }
-        
-        setIsSearch(true);
-        setStart(startLocation);
-        setEnd(endLocation);
-        setIsRoute(true);
-        
-  
-        setDestinationPosition(params.end);
-        setStartPosition(params.start);
-
-        // Reset all travel times before fetching new ones
-      setCarTravelTime(null);
-      setBikeTravelTime(null);
-      setMetroTravelTime(null);
-      setWalkTravelTime(null);
-
-      // Fetch travel times for all modes
-      const fetchAllTravelTimes = async () => {
-        await Promise.all([
-          fetchTravelTime(startLocation, endLocation, "DRIVING"),
-          fetchTravelTime(
-            startLocation,
-            endLocation,
-            "BICYCLING"
-          ),
-          fetchTravelTime(startLocation, endLocation, "TRANSIT"),
-          fetchTravelTime(startLocation, endLocation, "WALKING"),
-        ]);
-      };
-
-      fetchAllTravelTimes();
-
-      } else {
-        console.warn("Indoor tracing requested but start or end location is missing in params.");
-      }}
-      catch(e){
-        console.error('Error in mapping of outdoor directions', e)
+      } catch (e) {
+        console.error("Error in mapping of outdoor directions", e);
       }
     }
   }, [params]);
@@ -499,7 +497,7 @@ export default function CampusMap({ navigationParams }) {
             origin={SGWShuttlePickup}
             destination={LoyolaShuttlePickup}
             apikey={process.env.EXPO_PUBLIC_GOOGLE_API_KEY}
-            strokeColor= {theme.backgroundColor}
+            strokeColor={theme.backgroundColor}
             strokeWidth={6}
             mode={"DRIVING"}
           />
@@ -509,7 +507,7 @@ export default function CampusMap({ navigationParams }) {
             origin={start}
             destination={end}
             apikey={process.env.EXPO_PUBLIC_GOOGLE_API_KEY}
-            strokeColor= {theme.backgroundColor}
+            strokeColor={theme.backgroundColor}
             strokeWidth={6}
             waypoints={[]} // replaced state with an empty array literal
             mode={mode}
