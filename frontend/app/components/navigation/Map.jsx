@@ -9,7 +9,6 @@ import {
 import MapView, {
   Marker,
   PROVIDER_DEFAULT,
-  Polygon,
   Callout,
 } from "react-native-maps";
 import { useNavigation, useRoute } from "@react-navigation/native";
@@ -309,8 +308,8 @@ export default function CampusMap({ navigationParams }) {
     ref.current?.animateToRegion(location.coords);
   };
 
-  const renderPolygons = polygons.map((building, idx) => (
-    <View key={idx}>
+  const renderPolygons = polygons.map((building) => (
+    <View key={building.name}>
       {end == null ? (
         <Marker
           coordinate={building.point}
@@ -331,7 +330,8 @@ export default function CampusMap({ navigationParams }) {
         theme={theme}
       />
     </View>
-  ));  
+  ));
+  
 
   const traceRouteOnReady = (args) => {
     console.log("Directions are ready!");
