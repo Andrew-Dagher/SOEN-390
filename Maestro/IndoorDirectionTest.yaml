@@ -1,0 +1,119 @@
+appId: host.exp.Exponent
+---
+- launchApp
+# Testing Signing in as a guest
+- tapOn: "frontend"
+- tapOn: "Continue as Guest"
+
+# Tap on indoor map
+- tapOn:
+    id: "nav-indoor"
+
+# Select start and destination
+- tapOn:
+    point: "50%,21%"
+- tapOn: "H917"
+- tapOn:
+    point: "50%,31%"
+- swipe:
+    start: 50%,52%
+    end: 50%,35%
+    duration: 230
+- tapOn: "MB1.101"
+- tapOn: "Search"
+
+# Wait for animation
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# Move screen
+- swipe:
+    start: 50%,88%
+    end: 50%,76%
+    duration: 400
+
+# Next Direction
+- tapOn: "Next Directions"
+- waitForAnimationToEnd:
+    timeout: 2000
+- swipe:
+    start: 50%,88%
+    end: 50%,76%
+    duration: 400
+- tapOn: "Next Directions"
+- waitForAnimationToEnd:
+    timeout: 1500
+- swipe:
+    start: 50%,88%
+    end: 50%,76%
+    duration: 400
+- tapOn: "Next Directions"
+- swipe:
+    start: 50%,88%
+    end: 50%,76%
+    duration: 400
+- waitForAnimationToEnd:
+    timeout: 2000
+
+################################################################################################################################################
+# Show staircase
+# Select start and destination
+- tapOn:
+    point: "50%,21%"
+- swipe:
+    start: 50%,42%
+    end: 50%,22%
+    duration: 230
+- tapOn:
+    point: "50%,37%"
+- tapOn:
+    point: "50%,31%"
+- swipe:
+    start: 50%,52%
+    end: 50%,22%
+    duration: 230
+- tapOn: "MBS2.210"
+- tapOn: "Search"
+- waitForAnimationToEnd:
+    timeout: 3000
+- swipe:
+    start: 50%,88%
+    end: 50%,76%
+    duration: 400
+
+################################################################################################################################################
+# For disable people, using the elevator
+- tapOn:
+    point: 88%,97%
+- tapOn:
+    point: "89%,29%"
+- tapOn: "Apply Changes"
+- tapOn:
+    id: "nav-indoor"
+
+# Select start and destination
+- tapOn:
+    point: "50%,21%"
+- tapOn: "H917"
+- tapOn:
+    point: "50%,31%"
+- swipe:
+    start: 50%,52%
+    end: 50%,35%
+    duration: 230
+- tapOn: "MB1.101"
+- tapOn: "Search"
+
+# Wait for animation
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Wait for animation
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Move screen
+- swipe:
+    start: 50%,88%
+    end: 50%,76%
+    duration: 400

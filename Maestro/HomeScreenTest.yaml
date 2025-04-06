@@ -1,0 +1,27 @@
+appId: host.exp.Exponent
+---
+- launchApp
+# Testing Signing in as a guest
+- tapOn: "frontend"
+- tapOn: "Continue as Guest"
+
+# Assert the homescreen is displayed
+- assertVisible: "Welcome back"
+- assertVisible: "Find your next class"
+- assertVisible: "Access your calendar"
+
+# Testing the navigation bar
+# Tap on map
+- tapOn:
+    point: 38%,97%
+- assertVisible: "Search the campus"
+
+# Tap on calendar
+- tapOn:
+    point: 63%,97%
+- assertVisible: "January"
+
+# Tap on settings
+- tapOn:
+    point: 88%,97%
+- assertVisible: "Accessibility Settings"

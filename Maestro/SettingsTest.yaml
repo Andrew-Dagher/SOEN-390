@@ -1,0 +1,24 @@
+appId: host.exp.Exponent
+---
+- launchApp
+# Testing Signing in as a guest
+- tapOn: "frontend"
+- tapOn: "Continue as Guest"
+
+# Tap on settings
+- tapOn:
+    point: 88%,97%
+- assertVisible: "Accessibility Settings"
+
+# Set the mobility settings
+- tapOn:
+    point: "89%,29%"
+
+# Set the color vision deficient settings
+- tapOn:
+    point: "89%,41%"
+
+# Select Tritanomaly as the color vision deficiency
+- tapOn:
+    point: "93%,55%"
+- tapOn: "Apply Changes"
