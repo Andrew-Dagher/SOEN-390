@@ -128,3 +128,76 @@ export const getUrlByFloorId = (floorId) => {
 
 // Pre-generate picker list
 export const pickerList = toPickerList();
+
+
+export const handleToCampus = (value, value1, wheelchairAccess, setDirectionsFlow, setIndex) => {
+  if (value == null || value1 == null) return;
+
+  let floorId = getFloorIdByRoomId(value);
+  let startUrl = getUrlByFloorId(floorId);
+  let nextFloorId = getFloorIdByRoomId(value1);
+  let entranceLoc = getEntranceByRoomId(value);
+  let nextEntranceLoc = getEntranceByRoomId(value1);
+
+  if (wheelchairAccess){
+    entranceLoc=getEntranceByRoomId(value, true)
+    nextEntranceLoc= getEntranceByRoomId(value1, true)
+  }
+
+
+  if (areRoomsOnSameFloor(value, value1)) {
+    // If rooms are on the same floor, directly show the indoor map
+    let url = startUrl + "&floor=" + floorId + "&location=" + value1 + "&departure=" + value
+    let flow = [
+      {url: url, is_indoor: true}
+    ]
+    setDirectionsFlow(flow);
+    setIndex(0);
+    return;
+  } 
+  if (areRoomsOnSameBuilding(value, value1)) {
+    // rooms are on different floors but same building
+    let url1 = startUrl+ "&floor=" + floorId + "&departure=" + value + "&location=" + entranceLoc;
+    let url2 = startUrl + "&floor=" + nextFloorId + "&location=" + value1 + "&departure=" + nextEntranceLoc;
+    let flow = [
+      {url: url1, is_indoor: true},
+      {url: url2, is_indoor: true}
+    ]
+    console.log("hhi");
+    console.log(flow);
+    setDirectionsFlow(flow);
+    setIndex(0);
+    return;
+  }
+  // If rooms are on different buildings, get outdoor navigations
+  // Multi-floor or multi-building navigation
+  let buildingURL = getUrlByRoomId(value1);
+  let entranceFloor = getEntranceFloor(floorId); // get the information for the first floor of the building
+  let entranceFloor2 = getEntranceFloor(nextFloorId); // get the information for the first floor of the building destination
+  if (wheelchairAccess){
+    nextEntranceLoc=getEntranceByRoomId(value1, true,true)
+  }
+  else{
+    nextEntranceLoc=getEntranceByRoomId(value1, false, true)
+  }
+
+  let url1 = startUrl + "&floor=" + floorId + "&departure=" + value + "&location=" + entranceLoc;
+  let url2 = startUrl+"&floor="+ entranceFloor.floor_id + "&departure="+entranceFloor.exit+"&location="+entranceFloor.entrance;
+  let url3 = buildingURL + "&floor=" + entranceFloor2.floor_id + "&departure=" + entranceFloor2.exit+"&location="+entranceFloor2.entrance; // build the building destination first floor
+  let url4 = buildingURL + "&floor=" + nextFloorId + "&location=" + value1 + "&departure=" + nextEntranceLoc;
+  if (isEntranceFloor(floorId)) {
+    url2 = null;
+  }
+  if (isEntranceFloor(nextFloorId)) {
+    url3 = null;
+  }
+  let flow = [
+    {url: url1, is_indoor: true},
+    ...(url2 ? [{url: url2, is_indoor: true}] : []),
+    {is_indoor: false},
+    ...(url3 ? [{url: url3, is_indoor: true}] : []),
+    {url: url4, is_indoor: true}
+  ]
+  setDirectionsFlow(flow);
+  setIndex(0);
+};

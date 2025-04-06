@@ -5,7 +5,8 @@ import {
   getFloorIdByRoomId, 
   getEntranceByRoomId, 
   getUrlByRoomId, 
-  getUrlByFloorId 
+  getUrlByFloorId,
+  handleToCampus
 } from '../app/screens/indoor/inDoorUtil.js'; // Assuming the filename is inDoorConfig.js
 
 describe('Indoor Navigation Functions', () => {
@@ -39,7 +40,8 @@ describe('Indoor Navigation Functions', () => {
       { label: "MBS2.230", value: "s_911ae8f281dc315d" },
       { label: "MBS2.170", value: "s_dc5193bc7e83b6bd" },
       { label: "MBS2.140", value: "s_e3f4fd3a15de757a" },
-      { label: "MBS2.130", value: "s_4b9db910a637656b" }
+      { label: "MBS2.130", value: "s_4b9db910a637656b" },
+      { label: "H110", value: "s_e2338f7e63930230"}
     ];
 
     expect(pickerList).toEqual(expectedList);
@@ -75,5 +77,112 @@ describe('Indoor Navigation Functions', () => {
   test('getUrlByFloorId should return correct URL for floor', () => {
     expect(getUrlByFloorId('m_ff2c8c646277c61e')).toBe('https://app.mappedin.com/map/67d7285c3b90e4000beb55d5/directions?kiosk=false&outdoors=false');
     expect(getUrlByFloorId('m_00a45bb03dc793b9')).toBe('https://app.mappedin.com/map/67d88e2581104a000b6df10e/directions?embedded=true&outdoors=false&kiosk=false');
+  });
+});
+
+
+describe('handleToCampus', () => {
+  const mockSetDirectionsFlow = jest.fn();
+  const mockSetIndex = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should return early if value or value1 is null', () => {
+    handleToCampus(null, 'room2', false, mockSetDirectionsFlow, mockSetIndex);
+    expect(mockSetDirectionsFlow).not.toHaveBeenCalled();
+
+    handleToCampus('room1', null, false, mockSetDirectionsFlow, mockSetIndex);
+    expect(mockSetDirectionsFlow).not.toHaveBeenCalled();
+  });
+
+  it('should handle same floor navigation', () => {
+    jest.spyOn(indoorUtil, 'getFloorIdByRoomId').mockReturnValue('F1');
+    jest.spyOn(indoorUtil, 'getUrlByFloorId').mockReturnValue('https://indoor.map');
+    jest.spyOn(indoorUtil, 'areRoomsOnSameFloor').mockReturnValue(true);
+    
+    handleToCampus('room1', 'room2', false, mockSetDirectionsFlow, mockSetIndex);
+
+    expect(mockSetDirectionsFlow).toHaveBeenCalledWith([
+      {
+        url: 'https://indoor.map&floor=F1&location=room2&departure=room1',
+        is_indoor: true
+      }
+    ]);
+    expect(mockSetIndex).toHaveBeenCalledWith(0);
+  });
+
+  it('should handle same building different floors navigation', () => {
+    jest.spyOn(indoorUtil, 'getFloorIdByRoomId').mockImplementation((room) => room === 'room1' ? 'F1' : 'F2');
+    jest.spyOn(indoorUtil, 'getUrlByFloorId').mockReturnValue('https://indoor.map');
+    jest.spyOn(indoorUtil, 'areRoomsOnSameFloor').mockReturnValue(false);
+    jest.spyOn(indoorUtil, 'areRoomsOnSameBuilding').mockReturnValue(true);
+    jest.spyOn(indoorUtil, 'getEntranceByRoomId').mockImplementation((room) => `entrance-${room}`);
+
+    handleToCampus('H917', 'H963', false, mockSetDirectionsFlow, mockSetIndex);
+
+    expect(mockSetDirectionsFlow).toHaveBeenCalledWith([
+      {
+        url: 'https://indoor.map&floor=F1&departure=room1&location=entrance-room1',
+        is_indoor: true
+      },
+      {
+        url: 'https://indoor.map&floor=F2&location=room2&departure=entrance-room2',
+        is_indoor: true
+      }
+    ]);
+    expect(mockSetIndex).toHaveBeenCalledWith(0);
+  });
+
+  it('should handle multi-building navigation with entrance floors', () => {
+    jest.spyOn(indoorUtil, 'getFloorIdByRoomId').mockImplementation((room) => room === 'room1' ? 'F1' : 'F4');
+    jest.spyOn(indoorUtil, 'getUrlByFloorId').mockReturnValue('https://map.from');
+    jest.spyOn(indoorUtil, 'getUrlByRoomId').mockReturnValue('https://map.to');
+    jest.spyOn(indoorUtil, 'areRoomsOnSameFloor').mockReturnValue(false);
+    jest.spyOn(indoorUtil, 'areRoomsOnSameBuilding').mockReturnValue(false);
+    jest.spyOn(indoorUtil, 'getEntranceByRoomId').mockImplementation((room, wheelchair, isDest) => {
+      if (isDest) return `final-entrance-${room}`;
+      return `entrance-${room}`;
+    });
+    jest.spyOn(indoorUtil, 'getEntranceFloor').mockImplementation((floorId) => {
+      return {
+        floor_id: `entrance-${floorId}`,
+        exit: `exit-${floorId}`,
+        entrance: `entrance-${floorId}`
+      };
+    });
+    jest.spyOn(indoorUtil, 'isEntranceFloor').mockReturnValue(false);
+
+    handleToCampus('H917', 'MB1.110', false, mockSetDirectionsFlow, mockSetIndex);
+
+    expect(mockSetDirectionsFlow).toHaveBeenCalledWith([
+      { url: 'https://map.from&floor=F1&departure=room1&location=entrance-room1', is_indoor: true },
+      { url: 'https://map.from&floor=entrance-F1&departure=exit-F1&location=entrance-F1', is_indoor: true },
+      { is_indoor: false },
+      { url: 'https://map.to&floor=entrance-F4&departure=exit-F4&location=entrance-F4', is_indoor: true },
+      { url: 'https://map.to&floor=F4&location=room2&departure=final-entrance-room2', is_indoor: true }
+    ]);
+    expect(mockSetIndex).toHaveBeenCalledWith(0);
+  });
+
+  it('should skip floors if already on entrance floor', () => {
+    jest.spyOn(indoorUtil, 'getFloorIdByRoomId').mockImplementation((room) => room === 'room1' ? 'F1' : 'F4');
+    jest.spyOn(indoorUtil, 'getUrlByFloorId').mockReturnValue('https://map.from');
+    jest.spyOn(indoorUtil, 'getUrlByRoomId').mockReturnValue('https://map.to');
+    jest.spyOn(indoorUtil, 'areRoomsOnSameFloor').mockReturnValue(false);
+    jest.spyOn(indoorUtil, 'areRoomsOnSameBuilding').mockReturnValue(false);
+    jest.spyOn(indoorUtil, 'getEntranceByRoomId').mockReturnValue('some-entrance');
+    jest.spyOn(indoorUtil, 'getEntranceFloor').mockImplementation((floorId) => ({
+      floor_id: `E-${floorId}`,
+      exit: `exit-${floorId}`,
+      entrance: `entrance-${floorId}`
+    }));
+    jest.spyOn(indoorUtil, 'isEntranceFloor').mockImplementation((floorId) => floorId === 'F1');
+
+    handleToCampus('MB1.110', 'H917', false, mockSetDirectionsFlow, mockSetIndex);
+
+    const flow = mockSetDirectionsFlow.mock.calls[0][0];
+    expect(flow.find(f => f.url?.includes('&floor=E-F1'))).toBeUndefined();
   });
 });
