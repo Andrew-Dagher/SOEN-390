@@ -34,7 +34,7 @@ import getThemeColors from "../../ColorBindTheme";
 import busService from "../../services/BusService";
 import PropTypes from "prop-types";
 import MapPolygonHighlight from "./MapPolygonHighlight";
-
+import RenderBusMarkers from "./Icons/RenderBusMarkers";
 export default function CampusMap({ navigationParams }) {
   const route = useRoute();
   const params = navigationParams || route.params; // Ensure params are retrieved
@@ -523,7 +523,7 @@ export default function CampusMap({ navigationParams }) {
           />
         ) : null}
 
-        {renderBusMarkers}
+        {RenderBusMarkers(busMarkers)}
         <View ref={polygonRef}>{renderPolygons}</View>
       </MapView>
 
