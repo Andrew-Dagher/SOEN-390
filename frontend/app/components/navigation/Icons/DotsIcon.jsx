@@ -4,6 +4,7 @@
  */
 
 import React from "react";
+import PropTypes from "prop-types"; // Import PropTypes
 import Svg, { Path } from "react-native-svg";
 
 /**
@@ -32,5 +33,13 @@ const DotsIcon = ({
     />
   </Svg>
 );
+
+// PropTypes validation
+DotsIcon.propTypes = {
+  width: PropTypes.number,
+  height: PropTypes.number,
+  color: PropTypes.string,
+  strokeWidth: PropTypes.number,
+};
 
 export default DotsIcon;

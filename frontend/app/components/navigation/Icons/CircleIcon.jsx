@@ -4,6 +4,7 @@
  */
 
 import * as React from "react";
+import PropTypes from "prop-types"; // Import PropTypes
 import Svg, { Path } from "react-native-svg";
 
 /**
@@ -27,5 +28,12 @@ const CircleIcon = ({ color = "#000", size = 10, strokeWidth = 1.333 }) => (
     />
   </Svg>
 );
+
+// PropTypes validation
+CircleIcon.propTypes = {
+  color: PropTypes.string,
+  size: PropTypes.number,
+  strokeWidth: PropTypes.number,
+};
 
 export default CircleIcon;

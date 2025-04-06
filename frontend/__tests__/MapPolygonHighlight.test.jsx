@@ -1,5 +1,5 @@
 import React from "react";
-import { render, rerender } from "@testing-library/react-native";
+import { render } from "@testing-library/react-native";
 import MapPolygonHighlight, { isPointInPolygon } from "../app/components/navigation/MapPolygonHighlight";
 import { Polygon } from "react-native-maps";
 import { useAppSettings } from "../app/AppSettingsContext";
@@ -54,7 +54,7 @@ describe("MapPolygonHighlight", () => {
     // Initial theme
     useAppSettings.mockReturnValue({ colorBlindMode: "default" });
 
-    const { rerender, getByTestId } = render(
+    const { rerender } = render(
       <MapPolygonHighlight building={mockBuilding} location={mockLocationInside} />
     );
 

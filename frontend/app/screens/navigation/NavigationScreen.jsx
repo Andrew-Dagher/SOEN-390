@@ -3,9 +3,11 @@
  * @description A screen component that displays a map for navigation purposes.
  */
 
+import PropTypes from "prop-types"; // Import PropTypes
 import React from 'react';
-import { View, Text, Button } from 'react-native';
+import { View } from 'react-native';
 import Map from '../../components/navigation/Map';
+import { trackEvent } from "@aptabase/react-native";
 import { useRoute } from "@react-navigation/native";
 
 /**
@@ -17,6 +19,7 @@ import { useRoute } from "@react-navigation/native";
  * @returns {JSX.Element} The rendered NavigationScreen component.
  */
 export default function NavigationScreen({ navigation }) {
+  trackEvent("Navigation Screen", {});
     const route = useRoute();
   return (
     <View
@@ -29,3 +32,6 @@ export default function NavigationScreen({ navigation }) {
     </View>
   );
 }
+NavigationScreen.propTypes = {
+  navigation: PropTypes.object.isRequired,
+};

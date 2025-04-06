@@ -1,4 +1,3 @@
-
 /**
  * SettingsScreen component allows the user to modify various settings including
  * accessibility options, text size, and profile image. It also provides a logout option.
@@ -14,30 +13,32 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
-import Slider from "@react-native-community/slider";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "@clerk/clerk-expo";
 import { useAppSettings } from "../../AppSettingsContext";
 import getThemeColors from "../../ColorBindTheme";
-import BottomNavBar from "../../components/BottomNavBar/BottomNavBar";
 import { loadUserData, pickImage, handleLogout } from "../../settingsUtils";
 import PropTypes from "prop-types"; 
+import RNCSlider from "@react-native-community/slider";
 
 export default function SettingsScreen() {
   const {
     textSize, setTextSize,
     colorBlindMode, setColorBlindMode,
-    profileImage, setProfileImage
+    profileImage, setProfileImage,
+      setWheelchairAccess,
+      wheelchairAccess, 
   } = useAppSettings();
 
   const theme = getThemeColors();
   const navigation = useNavigation();
   const { signOut, isSignedIn } = useAuth();
 
-  const [isWheelchairAccessEnabled, setWheelchairAccessEnabled] = useState(false);
+
+  const [isWheelchairAccessEnabled, setIsWheelchairAccessEnabled] = useState(wheelchairAccess);
   const [tempProfileImage, setTempProfileImage] = useState(profileImage);
   const [userName, setUserName] = useState("Guest");
-  const [isColorBlindModeEnabled, setColorBlindModeEnabled] = useState(!!colorBlindMode);
+  const [isColorBlindModeEnabled, setIsColorBlindModeEnabled] = useState(!!colorBlindMode);
   const [tempSize, setTempSize] = useState(textSize);
 
   useEffect(() => { loadUserData(setUserName, setProfileImage); }, []);
@@ -45,6 +46,7 @@ export default function SettingsScreen() {
   const applyChanges = () => {
     setTextSize(tempSize);
     setProfileImage(tempProfileImage);
+    setWheelchairAccess(isWheelchairAccessEnabled)
   };
 
   return (
@@ -52,7 +54,7 @@ export default function SettingsScreen() {
       <ScrollView>
         {/* Profile Section */}
         <View style={[styles.header, { backgroundColor: theme.backgroundColor }]} className="pt-16 pb-8 items-center">
-          <TouchableOpacity onPress={() => pickImage(setTempProfileImage)} className="mb-4">
+          <TouchableOpacity onPress={() => pickImage(setTempProfileImage)} className="mb-4" accessibilityRole="button" accessibilityLabel="avatar" testID="avatar-button">
             <Image
               source={ profileImage ? { uri: profileImage } : require("../../../assets/default-avatar.png") }
               className="w-24 h-24 rounded-full border-4 border-white"
@@ -70,7 +72,7 @@ export default function SettingsScreen() {
           label="Mobility disability"
           description="Enable features optimized for wheelchair users."
           value={isWheelchairAccessEnabled}
-          onChange={setWheelchairAccessEnabled}
+          onChange={setIsWheelchairAccessEnabled}
           textSize={textSize} 
         />
 
@@ -80,7 +82,7 @@ export default function SettingsScreen() {
             label="Color vision deficient"
             value={isColorBlindModeEnabled}
             onChange={(value) => {
-              setColorBlindModeEnabled(value);
+              setIsColorBlindModeEnabled(value);
               if (!value) setColorBlindMode(null);
             }}
             textSize={textSize}
@@ -104,7 +106,7 @@ export default function SettingsScreen() {
           {/* Text Size Settings */}
           <View className="mb-6">
             <Text style={[{ fontSize: textSize }]} className="text-lg font-medium mb-2">Text size</Text>
-            <Slider
+            <RNCSlider
               minimumValue={12}
               maximumValue={25}
               step={1}
@@ -113,7 +115,10 @@ export default function SettingsScreen() {
               minimumTrackTintColor={theme.backgroundColor}
               maximumTrackTintColor="#D1D1D6"
               className="w-full h-10"
+              accessibilityRole="adjustable"
+              testID="slider"
             />
+    
             <Text style={{ fontSize: tempSize }} className="text-gray-900 mb-2">Preview text size</Text>
           </View>
 
@@ -135,7 +140,6 @@ export default function SettingsScreen() {
 
         </View>
       </ScrollView>
-      <BottomNavBar />
     </View>
   );
 }

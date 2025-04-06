@@ -36,6 +36,7 @@ import BottomNavBar from "../BottomNavBar/BottomNavBar";
 import { trackEvent } from "@aptabase/react-native";
 import { useAppSettings } from "../../AppSettingsContext";
 import getThemeColors from "../../ColorBindTheme";
+import busService from "../../services/BusService";
 import PropTypes from "prop-types";
 
 export default function CampusMap({ navigationParams }) {
@@ -46,39 +47,88 @@ export default function CampusMap({ navigationParams }) {
   const navigation = useNavigation();
 
   const [searchResult, setSearchResult] = useState([]);
-  const [isSelected, setIsSelected] = useState(false);
-  const [locationData, setLocationData] = useState(SGWLocation);
+  // Removed unused isSelected state
+  // const [isSelected, setIsSelected] = useState(false);
+  // Replace state with a constant because locationData is never updated
+  const locationData = SGWLocation;
+  // Removed unused errorMsg state
+  // const [errorMsg, setErrorMsg] = useState(null);
   const [isSearch, setIsSearch] = useState(false);
   const [selectedBuilding, setSelectedBuilding] = useState(null);
   const [start, setStart] = useState(); // start lat lng of traceroute
-  const [end, setEnd] = useState(); // destination lt lng of traceroute
+  const [end, setEnd] = useState(); // destination lat lng of traceroute
   const [location, setLocation] = useState(null); // current user location
-  const [errorMsg, setErrorMsg] = useState(null); // error message when getting location
   const [searchText, setSearchText] = useState(""); // textinput value
   const [closeTraceroute, setCloseTraceroute] = useState(false); // bool to hide traceroute
   const [startPosition, setStartPosition] = useState(""); // name of start position for traceroute
   const [destinationPosition, setDestinationPosition] = useState(""); // name of destination position for traceroute
-  const [waypoints, setWaypoints] = useState([]); // array of waypoints traceroutes that should be rendered by the GoogleAPI
+  // Removed unused waypoints state and its setter
+  // const [waypoints, setWaypoints] = useState([]); // array of waypoints traceroutes that should be rendered by the GoogleAPI
   const [campus, setCampus] = useState("sgw");
   const [mode, setMode] = useState("WALKING"); // Mode of transportation
   const [isRoute, setIsRoute] = useState(false);
-  const [carTravelTime, setCarTravelTime] = useState(null); //Estimated travel time by car
-  const [bikeTravelTime, setBikeTravelTime] = useState(null); //Estimated travel time by bicycle
-  const [metroTravelTime, setMetroTravelTime] = useState(null); //Estimated travel time by public transit
-  const [walkTravelTime, setWalkTravelTime] = useState(null); //Estimated travel time on foot
+  const [carTravelTime, setCarTravelTime] = useState(null); // Estimated travel time by car
+  const [bikeTravelTime, setBikeTravelTime] = useState(null); // Estimated travel time by bicycle
+  const [metroTravelTime, setMetroTravelTime] = useState(null); // Estimated travel time by public transit
+  const [walkTravelTime, setWalkTravelTime] = useState(null); // Estimated travel time on foot
   const [walkToBus, setWalkToBus] = useState({
-    start:null,
-    end:null
+    start: null,
+    end: null,
   });
   const [walkFromBus, setWalkFromBus] = useState({
-    start:null,
-    end:null
+    start: null,
+    end: null,
   });
-  const [isShuttle,setIsShuttle] = useState(false);
+  const [isShuttle, setIsShuttle] = useState(false);
   const ref = useRef(null);
   const polygonRef = useRef(null);
   const hasRoute = start && end;
   //Aptabase.init("A-US-0837971026")
+
+  // Add to busService observer list
+  const [busMarkers, setBusMarkers] = useState([]);
+
+  const observerRef = useRef(null);
+
+  useEffect(() => {
+    // Create observer
+    observerRef.current = {
+      update: (data) => {
+        let points = data["d"]["Points"]
+          .map((bus) => {
+            if (bus["ID"].includes("BUS")) {
+              return {
+                id: bus["ID"],
+                latitude: bus["Latitude"],
+                longitude: bus["Longitude"],
+              };
+            }
+          })
+          .filter(Boolean);
+
+        console.log("Points:", points);
+        setBusMarkers(points);
+      },
+    };
+
+    // Add observer when the screen is focused
+    busService.addObserver(observerRef.current);
+    busService.update();
+    // Listen for when the screen loses focus (e.g., navigating away)
+    const unsubscribeBlur = navigation.addListener("blur", () => {
+      if (observerRef.current) {
+        busService.removeObserver(observerRef.current);
+      }
+    });
+
+    return () => {
+      unsubscribeBlur();
+      if (observerRef.current) {
+        busService.removeObserver(observerRef.current);
+      }
+    };
+  }, [navigation, route]);
+
   const fetchTravelTime = async (start, end, mode) => {
     if (!start || !end) return;
 
@@ -91,24 +141,28 @@ export default function CampusMap({ navigationParams }) {
 
     // Check if start and end locations are the same
     if (start.latitude === end.latitude && start.longitude === end.longitude) {
-      console.log(`Start and end locations are the same. Setting travel time to 0 min.`);
+      console.log(
+        `Start and end locations are the same. Setting travel time to 0 min.`
+      );
       setTravelTime[mode]?.("0 min");
       return;
-  }
+    }
 
     // Base URL defined as a global constant
-    const GOOGLE_DIRECTIONS_API_BASE_URL = "https://maps.googleapis.com/maps/api/directions/json";
+    const GOOGLE_DIRECTIONS_API_BASE_URL =
+      "https://maps.googleapis.com/maps/api/directions/json";
 
     const travelMode = mode.toLowerCase();
 
-    let url = `${GOOGLE_DIRECTIONS_API_BASE_URL}?origin=${start.latitude},${start.longitude}` +
-          `&destination=${end.latitude},${end.longitude}` +
-          `&mode=${travelMode}` +
-          `&key=${process.env.EXPO_PUBLIC_GOOGLE_API_KEY}`;
+    let url =
+      `${GOOGLE_DIRECTIONS_API_BASE_URL}?origin=${start.latitude},${start.longitude}` +
+      `&destination=${end.latitude},${end.longitude}` +
+      `&mode=${travelMode}` +
+      `&key=${process.env.EXPO_PUBLIC_GOOGLE_API_KEY}`;
 
     // specific parameters for transit mode
-    if (travelMode === 'transit') {
-      url += '&transit_mode=bus|subway|train';
+    if (travelMode === "transit") {
+      url += "&transit_mode=bus|subway|train";
     }
 
     try {
@@ -116,56 +170,58 @@ export default function CampusMap({ navigationParams }) {
       const data = await response.json();
 
       if (data.status !== "OK") {
-        console.error(`Error fetching ${mode} directions:`, data.status, data.error_message);
+        console.error(
+          `Error fetching ${mode} directions:`,
+          data.status,
+          data.error_message
+        );
         // Set appropriate state to indicate no route found
         setTravelTime[mode]?.("No route");
         return;
       }
 
       const route = data.routes[0];
-      if (!route || !route.legs || !route.legs[0]) {
-        console.error('No valid route found');
+      // Use optional chaining for a more concise check
+      if (!route?.legs?.[0]) {
+        console.error("No valid route found");
         return;
       }
 
       const duration = route.legs[0].duration.text;
-      // Update the appropriate state based on the mode
       setTravelTime[mode]?.(duration);
     } catch (error) {
       console.error(`Error fetching ${mode} directions:`, error);
-      // Set error state for the specific mode
       setTravelTime[mode]?.("Error");
     }
   };
 
-    useEffect(() => {
-      if (params?.campus === "loyola") {
-        handleLoyola();
-      } else if (params?.campus === "sgw") {
-        handleSGW();
+  useEffect(() => {
+    if (params?.campus === "loyola") {
+      handleLoyola();
+    } else if (params?.campus === "sgw") {
+      handleSGW();
+    }
+
+    if (params?.currentLocation && params?.buildingName) {
+      const selectedBuilding = polygons.find(
+        (b) => b.name.toLowerCase() === params.buildingName.toLowerCase()
+      );
+
+      if (selectedBuilding) {
+        setStart(params.currentLocation);
+        setStartPosition("Your Location");
+
+        setEnd(selectedBuilding.point);
+        setDestinationPosition(selectedBuilding.name);
+        setSelectedBuilding(selectedBuilding);
+
+        setIsRoute(true); // Automatically start route
+        setIsSearch(true);
+      } else {
+        console.warn("Building not found:", params.buildingName);
       }
-
-      if (params?.currentLocation && params?.buildingName) {
-        const selectedBuilding = polygons.find(
-          (b) => b.name.toLowerCase() === params.buildingName.toLowerCase()
-        );
-
-        if (selectedBuilding) {
-          setStart(params.currentLocation);
-          setStartPosition("Your Location");
-
-          setEnd(selectedBuilding.point);
-          setDestinationPosition(selectedBuilding.name);
-          setSelectedBuilding(selectedBuilding);
-
-          setIsRoute(true); // Automatically start route
-          setIsSearch(true);
-        } else {
-          console.warn("Building not found:", params.buildingName);
-        }
-      }
-    }, [params]);
-
+    }
+  }, [params]);
 
   const handleSetStart = () => {
     if (start != null && start !== location?.coords) {
@@ -174,70 +230,69 @@ export default function CampusMap({ navigationParams }) {
       setDestinationPosition(selectedBuilding.name);
       setEnd(selectedBuilding.point);
 
-    // Reset travel times
-    setCarTravelTime(null);
-    setBikeTravelTime(null);
-    setMetroTravelTime(null);
-    setWalkTravelTime(null);
+      // Reset travel times
+      setCarTravelTime(null);
+      setBikeTravelTime(null);
+      setMetroTravelTime(null);
+      setWalkTravelTime(null);
 
-    // Fetch times from start point to selected building
-    const fetchAllTravelTimes = async () => {
-      await Promise.all([
-        fetchTravelTime(start, selectedBuilding.point, 'DRIVING'),
-        fetchTravelTime(start, selectedBuilding.point, 'BICYCLING'),
-        fetchTravelTime(start, selectedBuilding.point, 'TRANSIT'),
-        fetchTravelTime(start, selectedBuilding.point, 'WALKING'),
-      ]);
-    };
-    fetchAllTravelTimes();
-    return;
-  }
-  setStart(selectedBuilding.point);
-  setStartPosition(selectedBuilding.name);
-};
+      const fetchAllTravelTimes = async () => {
+        await Promise.all([
+          fetchTravelTime(start, selectedBuilding.point, "DRIVING"),
+          fetchTravelTime(start, selectedBuilding.point, "BICYCLING"),
+          fetchTravelTime(start, selectedBuilding.point, "TRANSIT"),
+          fetchTravelTime(start, selectedBuilding.point, "WALKING"),
+        ]);
+      };
+      fetchAllTravelTimes();
+      return;
+    }
+    setStart(selectedBuilding.point);
+    setStartPosition(selectedBuilding.name);
+  };
 
   const handleGetDirections = () => {
     try {
-      trackEvent("Get Directions", { selectedBuilding });
+      trackEvent("Get Directions", { "selected building": selectedBuilding.name });
       console.log("Event tracked");
-    setIsRoute(true);
-    setIsSearch(true);
-    setEnd(selectedBuilding.point);
-    setDestinationPosition(selectedBuilding.name);
-    if (location != null) {
-      setStart(location.coords);
-    }
-    setStartPosition("Your Location");
+      setIsRoute(true);
+      setIsSearch(true);
+      setEnd(selectedBuilding.point);
+      setDestinationPosition(selectedBuilding.name);
+      if (location != null) {
+        setStart(location.coords);
+      }
+      setStartPosition("Your Location");
 
-    // Reset all travel times before fetching new ones
-    setCarTravelTime(null);
-    setBikeTravelTime(null);
-    setMetroTravelTime(null);
-    setWalkTravelTime(null);
+      setCarTravelTime(null);
+      setBikeTravelTime(null);
+      setMetroTravelTime(null);
+      setWalkTravelTime(null);
 
-    // Fetch travel times for all modes
-    const fetchAllTravelTimes = async () => {
-      await Promise.all([
-        fetchTravelTime(location?.coords, selectedBuilding.point, 'DRIVING'),
-        fetchTravelTime(location?.coords, selectedBuilding.point, 'BICYCLING'),
-        fetchTravelTime(location?.coords, selectedBuilding.point, 'TRANSIT'),
-        fetchTravelTime(location?.coords, selectedBuilding.point, 'WALKING'),
-      ]);
-    };
+      const fetchAllTravelTimes = async () => {
+        await Promise.all([
+          fetchTravelTime(location?.coords, selectedBuilding.point, "DRIVING"),
+          fetchTravelTime(location?.coords, selectedBuilding.point, "BICYCLING"),
+          fetchTravelTime(location?.coords, selectedBuilding.point, "TRANSIT"),
+          fetchTravelTime(location?.coords, selectedBuilding.point, "WALKING"),
+        ]);
+      };
 
-    fetchAllTravelTimes();
-  } catch (e) {
-    console.error(e);
+      fetchAllTravelTimes();
+    } catch (e) {
+      console.error(e);
     }
   };
 
   const handleLoyola = () => {
+    trackEvent("Switched to Loyola", {});
     setCampus("loyola");
     ref.current?.animateToRegion(LoyolaLocation);
   };
 
   const handleSGW = () => {
     setCampus("sgw");
+    trackEvent("Switched to SGW", {});
     ref.current?.animateToRegion(SGWLocation);
   };
 
@@ -245,19 +300,20 @@ export default function CampusMap({ navigationParams }) {
   const handleMarkerPress = (building) => {
     setIsSearch(false);
     setSelectedBuilding(building);
-    setIsSelected(true);
+    trackEvent("Selected building", { building: building.name });
+    // Removed unused setIsSelected(true) call
   };
 
   const panToMyLocation = () => {
     ref.current?.animateToRegion(location.coords);
   };
 
-  const renderPolygons = polygons.map((building, idx) => {
+  const renderPolygons = polygons.map((building) => {
     return (
-      <View key={idx}>
+      <View key={building.name}>
         {end == null ? (
           <Marker
-            testID={"building-"+idx}
+            testID={"building-" + building.name}
             coordinate={building.point}
             onPress={() => handleMarkerPress(building)}
             image={require("../../../assets/concordia-logo.png")}
@@ -273,8 +329,8 @@ export default function CampusMap({ navigationParams }) {
         <Polygon
           coordinates={building.boundaries}
           strokeWidth={2}
-          strokeColor= {theme.backgroundColor}
-          fillColor= {theme.polygonFillColor}
+          strokeColor={theme.backgroundColor}
+          fillColor={theme.polygonFillColor}
         />
       </View>
     );
@@ -291,7 +347,6 @@ export default function CampusMap({ navigationParams }) {
     setStart(null);
     setSelectedBuilding(null);
     setCloseTraceroute(false);
-    setIsSelected(false);
   };
 
   const handleMapPress = () => {};
@@ -303,22 +358,89 @@ export default function CampusMap({ navigationParams }) {
 
   useEffect(() => {
     console.log("is route: " + isRoute);
-  }, [isRoute, waypoints, mode, isShuttle, end]);
+  }, [isRoute, mode, isShuttle, end]); // removed waypoints from dependency
 
   useEffect(() => {
-    if (location != null && start != location.coords) return;
+    if (location != null && start != location?.coords) return;
     async function getCurrentLocation() {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        setErrorMsg("Permission to access location was denied");
+        // Removed errorMsg state assignment; you can add logging if needed.
+        console.error("Permission to access location was denied");
         return;
       }
 
       let location = await Location.getCurrentPositionAsync({});
+      trackEvent("Check current Location", { Location: location });
       setLocation(location);
     }
     getCurrentLocation();
   }, []);
+
+  useEffect(() => {
+    if (params?.indoor) {
+      try{
+      console.log("Indoor tracing activated: Tracing route from start to end.");
+  
+      if (params.start && params.end) {
+        // Create new objects to avoid mutating params directly (right now we just have cc and hall)
+        let startLocation = { latitude: 45.458470794629754, longitude: -73.64061814691485 };
+        let endLocation = { latitude: 45.458470794629754, longitude: -73.64061814691485 };
+  
+        if (params.start[0] === 'H') {
+          startLocation = { latitude: 45.49781725012627, longitude: -73.57950979221253 };
+        }
+        else if (params.start[0]==='M'){
+          startLocation= {latitude:45.49550722087804, longitude:-73.57917572331318}
+        }
+  
+        if (params.end[0] === 'H') {
+          endLocation = { latitude: 45.49781725012627, longitude: -73.57950979221253 };
+        }
+
+        else if (params.end[0]==='M'){
+          endLocation = {latitude:45.49550722087804, longitude:-73.57917572331318}
+        }
+        
+        setIsSearch(true);
+        setStart(startLocation);
+        setEnd(endLocation);
+        setIsRoute(true);
+        
+  
+        setDestinationPosition(params.end);
+        setStartPosition(params.start);
+
+        // Reset all travel times before fetching new ones
+      setCarTravelTime(null);
+      setBikeTravelTime(null);
+      setMetroTravelTime(null);
+      setWalkTravelTime(null);
+
+      // Fetch travel times for all modes
+      const fetchAllTravelTimes = async () => {
+        await Promise.all([
+          fetchTravelTime(startLocation, endLocation, "DRIVING"),
+          fetchTravelTime(
+            startLocation,
+            endLocation,
+            "BICYCLING"
+          ),
+          fetchTravelTime(startLocation, endLocation, "TRANSIT"),
+          fetchTravelTime(startLocation, endLocation, "WALKING"),
+        ]);
+      };
+
+      fetchAllTravelTimes();
+
+      } else {
+        console.warn("Indoor tracing requested but start or end location is missing in params.");
+      }}
+      catch(e){
+        console.error('Error in mapping of outdoor directions', e)
+      }
+    }
+  }, [params]);
 
   return (
     <View style={styles.container}>
@@ -351,34 +473,40 @@ export default function CampusMap({ navigationParams }) {
           coordinate={LoyolaShuttlePickup}
           image={require("../../../assets/shuttle.png")}
         />
-        {hasRoute  ? <Marker coordinate={end} /> : null}
-        {hasRoute  ? <Marker coordinate={start} /> : null}
-        {hasRoute && isShuttle ? (<MapViewDirections
-          origin={walkToBus.start}
-          destination={walkToBus.end}
-          apikey={process.env.EXPO_PUBLIC_GOOGLE_API_KEY}
-          strokeColor="red"
-          strokeWidth={6}
-          mode={"WALKING"}
-        />) : null}
-        {hasRoute && isShuttle ? (<MapViewDirections
-          testID='walkfrombus'
-          origin={walkFromBus.start}
-          destination={walkFromBus.end}
-          apikey={process.env.EXPO_PUBLIC_GOOGLE_API_KEY}
-          strokeColor="red"
-          strokeWidth={6}
-          mode={"WALKING"}
-        />) : null}
-        {hasRoute && isShuttle ? (<MapViewDirections
-          testID='walktobus'
-          origin={SGWShuttlePickup}
-          destination={LoyolaShuttlePickup}
-          apikey={process.env.EXPO_PUBLIC_GOOGLE_API_KEY}
-          strokeColor="#862532"
-          strokeWidth={6}
-          mode={"DRIVING"}
-        />) : null}
+        {hasRoute ? <Marker coordinate={end} /> : null}
+        {hasRoute ? <Marker coordinate={start} /> : null}
+        {hasRoute && isShuttle ? (
+          <MapViewDirections
+            origin={walkToBus.start}
+            destination={walkToBus.end}
+            apikey={process.env.EXPO_PUBLIC_GOOGLE_API_KEY}
+            strokeColor="red"
+            strokeWidth={6}
+            mode={"WALKING"}
+          />
+        ) : null}
+        {hasRoute && isShuttle ? (
+          <MapViewDirections
+            testID="walkfrombus"
+            origin={walkFromBus.start}
+            destination={walkFromBus.end}
+            apikey={process.env.EXPO_PUBLIC_GOOGLE_API_KEY}
+            strokeColor="red"
+            strokeWidth={6}
+            mode={"WALKING"}
+          />
+        ) : null}
+        {hasRoute && isShuttle ? (
+          <MapViewDirections
+            testID="walktobus"
+            origin={SGWShuttlePickup}
+            destination={LoyolaShuttlePickup}
+            apikey={process.env.EXPO_PUBLIC_GOOGLE_API_KEY}
+            strokeColor="#862532"
+            strokeWidth={6}
+            mode={"DRIVING"}
+          />
+        ) : null}
         {hasRoute && !isShuttle ? (
           <MapViewDirections
             origin={start}
@@ -386,11 +514,25 @@ export default function CampusMap({ navigationParams }) {
             apikey={process.env.EXPO_PUBLIC_GOOGLE_API_KEY}
             strokeColor="#862532"
             strokeWidth={6}
-            waypoints={waypoints}
+            waypoints={[]} // replaced state with an empty array literal
             mode={mode}
             onReady={traceRouteOnReady}
           />
         ) : null}
+        {busMarkers.map((bus) => {
+          console.log("rendering bus marker", bus);
+          return (
+            <Marker
+              testID="bus-marker"
+              key={bus.id}
+              coordinate={{
+                latitude: bus.latitude,
+                longitude: bus.longitude,
+              }}
+              image={require("../../../assets/shuttle-bus-map.png")}
+            />
+          );
+        })}
         <View ref={polygonRef}>{renderPolygons}</View>
       </MapView>
 
@@ -414,6 +556,7 @@ export default function CampusMap({ navigationParams }) {
           end={end}
           setStart={setStart}
           setEnd={setEnd}
+          startPosition={startPosition}
           destinationPosition={destinationPosition}
           setDestinationPosition={setDestinationPosition}
           setStartPosition={setStartPosition}
@@ -492,7 +635,10 @@ export default function CampusMap({ navigationParams }) {
       )}
 
       {!isSearch && (
-        <MapLocation panToMyLocation={panToMyLocation} setLocation={setLocation} />
+        <MapLocation
+          panToMyLocation={panToMyLocation}
+          setLocation={setLocation}
+        />
       )}
 
       {selectedBuilding && !isSearch && (
@@ -500,25 +646,48 @@ export default function CampusMap({ navigationParams }) {
           <View className="flex flex-row justify-center items-center">
             <TouchableHighlight
               testID="set-start-end"
-              style={[styles.shadow, { backgroundColor: theme.backgroundColor }]}
-              className='mr-4 rounded-xl p-4 bg-primary-red'
+              style={[
+                styles.shadow,
+                { backgroundColor: theme.backgroundColor },
+              ]}
+              className="mr-4 rounded-xl p-4 bg-primary-red"
               onPress={handleSetStart}
             >
-              <View className='flex flex-row justify-around items-center'>
-                {start != null && start != location?.coords ? <Text style={[{ fontSize: textSize }]} className='color-white mr-4 font-bold'>Set Destination</Text> : <Text style={[{ fontSize: textSize }]} className='color-white mr-4 font-bold'>Set Start</Text>}
-
+              <View className="flex flex-row justify-around items-center">
+                {start != null && start != location?.coords ? (
+                  <Text
+                    style={[{ fontSize: textSize }]}
+                    className="color-white mr-4 font-bold"
+                  >
+                    Set Destination
+                  </Text>
+                ) : (
+                  <Text
+                    style={[{ fontSize: textSize }]}
+                    className="color-white mr-4 font-bold"
+                  >
+                    Set Start
+                  </Text>
+                )}
                 <NavigationIcon />
               </View>
             </TouchableHighlight>
             <TouchableHighlight
               testID="get-directions"
-              style={[styles.shadow, { backgroundColor: theme.backgroundColor }]}
-              className='rounded-xl p-4 bg-primary-red'
+              style={[
+                styles.shadow,
+                { backgroundColor: theme.backgroundColor },
+              ]}
+              className="rounded-xl p-4 bg-primary-red"
               onPress={handleGetDirections}
             >
-              <View className='flex flex-row justify-around items-center'>
-                <Text style={[{ fontSize: textSize }]} className='color-white mr-4 font-bold'>Get Directions</Text>
-
+              <View className="flex flex-row justify-around items-center">
+                <Text
+                  style={[{ fontSize: textSize }]}
+                  className="color-white mr-4 font-bold"
+                >
+                  Get Directions
+                </Text>
                 <DirectionsIcon />
               </View>
             </TouchableHighlight>

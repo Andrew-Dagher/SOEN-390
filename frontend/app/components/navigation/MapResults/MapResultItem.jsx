@@ -2,26 +2,21 @@ import {
   View,
   Text,
   StyleSheet,
-  Animated,
-  Dimensions,
-  TouchableOpacity,
   TouchableHighlight,
-  PanResponder,
   Pressable,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import WheelChairIcon from "../Icons/WheelChairIcon";
 import BikeIcon from "../Icons/BikeIcon";
-import MetroIcon from "../Icons/MetroIcon";
 import InformationIcon from "../Icons/InformationIcon";
 import NavigationIcon from "../Icons/NavigationIcon";
 import DirectionsIcon from "../Icons/DirectionsIcon";
-import { useEffect, useRef } from "react";
 import SmallNavigationIcon from "../Icons/SmallNavigationIcon";
 import { useAppSettings } from "../../../AppSettingsContext";
 import getThemeColors from "../../../ColorBindTheme";
 import ParkingIcon from "../Icons/ParkingIcon";
 import CreditCardIcon from "../Icons/CreditCardIcon";
+import PropTypes from "prop-types";
 
 const MapResultItem = ({
   fetchTravelTime,
@@ -29,7 +24,6 @@ const MapResultItem = ({
   setBikeTravelTime,
   setMetroTravelTime,
   setWalkTravelTime,
-  isRoute,
   location,
   setIsSearch,
   setIsRoute,
@@ -39,7 +33,6 @@ const MapResultItem = ({
   building,
   start,
   setStart,
-  end,
   setEnd,
 }) => {
   const navigation = useNavigation();
@@ -126,7 +119,7 @@ const MapResultItem = ({
         </View>
         <View className="mb-4 flex flex-row">
           <SmallNavigationIcon />
-          <Text className="color-slate-400 text-xs">{building.address}</Text>
+          <Text className="color-slate-400 text-xs ml-2">{building.address}</Text>
         </View>
         <View className="flex flex-row justify-around items-center">
           <TouchableHighlight
@@ -194,5 +187,37 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 });
+
+// propTypes validation
+MapResultItem.propTypes = {
+  fetchTravelTime: PropTypes.func.isRequired,
+  setCarTravelTime: PropTypes.func.isRequired,
+  setBikeTravelTime: PropTypes.func.isRequired,
+  setMetroTravelTime: PropTypes.func.isRequired,
+  setWalkTravelTime: PropTypes.func.isRequired,
+  location: PropTypes.shape({
+    coords: PropTypes.object,
+  }),
+  setIsSearch: PropTypes.func.isRequired,
+  setIsRoute: PropTypes.func.isRequired,
+  setCloseTraceroute: PropTypes.func.isRequired,
+  setStartPosition: PropTypes.func.isRequired,
+  setDestinationPosition: PropTypes.func.isRequired,
+  building: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    address: PropTypes.string.isRequired,
+    point: PropTypes.object.isRequired,
+    isHandicap: PropTypes.bool,
+    isBike: PropTypes.bool,
+    isParking: PropTypes.bool,
+    isCredit: PropTypes.bool,
+    isInfo: PropTypes.bool,
+  }).isRequired,
+  start: PropTypes.object,
+  setStart: PropTypes.func.isRequired,
+  setEnd: PropTypes.func.isRequired,
+};
+
+
 
 export default MapResultItem;

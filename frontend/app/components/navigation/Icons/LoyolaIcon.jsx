@@ -4,6 +4,7 @@
  */
 
 import * as React from "react";
+import PropTypes from "prop-types"; // Import PropTypes
 import { View } from "react-native";
 import Svg, { Path, Text } from "react-native-svg";
 
@@ -68,5 +69,10 @@ const LoyolaIcon = ({ campus }) => (
     </Svg>
   </View>
 );
+
+// PropTypes validation
+LoyolaIcon.propTypes = {
+  campus: PropTypes.string.isRequired,
+};
 
 export default LoyolaIcon;
