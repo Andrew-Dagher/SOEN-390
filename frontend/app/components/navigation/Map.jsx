@@ -205,6 +205,13 @@ export default function CampusMap({ navigationParams }) {
     ]);
   };
 
+  const resetTravelTimes = () => {
+    setCarTravelTime(null);
+    setBikeTravelTime(null);
+    setMetroTravelTime(null);
+    setWalkTravelTime(null);
+  };
+
   useEffect(() => {
     if (params?.campus === "loyola") {
       handleLoyola();
@@ -241,10 +248,7 @@ export default function CampusMap({ navigationParams }) {
       setEnd(selectedBuilding.point);
 
       // Reset travel times
-      setCarTravelTime(null);
-      setBikeTravelTime(null);
-      setMetroTravelTime(null);
-      setWalkTravelTime(null);
+      resetTravelTimes();
 
       fetchAllTravelTimes(start, selectedBuilding.point);
       return;
@@ -268,10 +272,7 @@ export default function CampusMap({ navigationParams }) {
       }
       setStartPosition("Your Location");
 
-      setCarTravelTime(null);
-      setBikeTravelTime(null);
-      setMetroTravelTime(null);
-      setWalkTravelTime(null);
+      resetTravelTimes(); // Reset travel times before fetching new ones
 
       fetchAllTravelTimes(location?.coords, selectedBuilding.point);
     } catch (e) {
@@ -419,10 +420,7 @@ export default function CampusMap({ navigationParams }) {
           setStartPosition(params.start);
 
           // Reset all travel times before fetching new ones
-          setCarTravelTime(null);
-          setBikeTravelTime(null);
-          setMetroTravelTime(null);
-          setWalkTravelTime(null);
+          resetTravelTimes();
 
           // Fetch travel times for all modes
           fetchAllTravelTimes(startLocation, endLocation);
