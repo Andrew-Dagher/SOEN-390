@@ -14,12 +14,16 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { useOAuth, useUser, useAuth } from "@clerk/clerk-expo";
+import { useSSO, useUser, useAuth } from "@clerk/clerk-expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ConcordiaLogo from "../../components/ConcordiaLogo";
 import * as WebBrowser from "expo-web-browser";
 import ContinueWithGoogle from "../../components/ContinueWithGoogle";
-import { checkExistingSession, storeUserData, handleGuestLogin } from "./LoginHelper"; // Import refactored functions
+import {
+  checkExistingSession,
+  storeUserData,
+  handleGuestLogin,
+} from "./LoginHelper"; // Import refactored functions
 
 /**
  * LoginScreen component serves as the default export and wraps the LoginScreenContent.
@@ -79,17 +83,17 @@ function LoginScreenContent() {
     ]).start();
   }, [logoPosition, formOpacity]);
 
-  const { startOAuthFlow } = useOAuth({
-    strategy: "oauth_google",
-    extraParams: {
-      scope:
-        "openid profile email https://www.googleapis.com/auth/calendar.readonly",
-    },
-  });
+  const { startSSOFlow } = useSSO();
 
   const handleGoogleSignIn = async () => {
     try {
-      const { createdSessionId, setActive } = await startOAuthFlow();
+      const { createdSessionId, setActive } = await startSSOFlow({
+        strategy: "oauth_google",
+        extraParams: {
+          scope:
+            "openid profile email https://www.googleapis.com/auth/calendar.readonly",
+        },
+      });
 
       if (createdSessionId) {
         await AsyncStorage.setItem("sessionId", createdSessionId);
@@ -123,7 +127,10 @@ function LoginScreenContent() {
   }
 
   return (
-    <View testID="login-screen" className="flex-1 bg-[#862532] justify-center items-center">
+    <View
+      testID="login-screen"
+      className="flex-1 bg-[#862532] justify-center items-center"
+    >
       <Animated.View style={{ transform: [{ translateY: logoPosition }] }}>
         <ConcordiaLogo width={288} height={96} />
       </Animated.View>
@@ -137,7 +144,10 @@ function LoginScreenContent() {
             <ContinueWithGoogle onPress={handleGoogleSignIn} />
           </TouchableOpacity>
 
-          <TouchableOpacity className="mt-5" onPress={() => handleGuestLogin(navigation)}>
+          <TouchableOpacity
+            className="mt-5"
+            onPress={() => handleGuestLogin(navigation)}
+          >
             <Text className="text-[#1A73E8] text-lg font-medium underline">
               Continue as Guest
             </Text>

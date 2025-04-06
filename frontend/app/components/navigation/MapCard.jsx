@@ -100,11 +100,13 @@ const MapCard = ({ building, isCallout = false }) => {
   return (
     <Pressable
       testID="mapcard-view"
-      style={({ pressed }) => [styles.shadow, pressed && { opacity: 0.7 }]}
+      style={({ pressed }) => [pressed && { opacity: 0.7 }]}
       onPress={handlePress}
       delayPressIn={isCallout ? 100 : 0}
     >
+    <View style={styles.shadow}>
       <CardContent buildingData={buildingData} />
+    </View>
     </Pressable>
   );
 };
@@ -126,7 +128,7 @@ const styles = StyleSheet.create({
   shadow: {
     width: 250,
     backgroundColor: "white",
-    padding: 6,
+    padding: 10,
     borderRadius: 8,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
