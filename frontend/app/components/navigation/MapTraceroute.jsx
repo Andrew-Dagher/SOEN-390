@@ -35,6 +35,16 @@ import { trackEvent } from "@aptabase/react-native";
 
 // Define the styles outside of the component
 const styles = StyleSheet.create({
+  shadow: {
+    boxShadow:
+      "0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)",
+    textAlign: "center",
+  },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  }, 
   input: {
     borderColor: "#E0E0E0",
     borderWidth: 1,
@@ -50,6 +60,24 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 1,
   },
+  // Search container styles with z-index
+  searchContainer: {
+    position: "relative",
+    zIndex: 1,
+    width: "70%",
+    height: 150, // Set a fixed height for the container to prevent compression
+  },
+  originContainer: {
+    position: "relative",
+    zIndex: 3000,
+    marginBottom: 60, // Increased space between inputs to prevent overlap
+  },
+  destinationContainer: {
+    position: "relative",
+    zIndex: 2000,
+    marginTop: 10, // Added top margin to further separate from origin input
+  },
+  // Autocomplete styles
   autocompleteContainer: {
     position: "absolute",
     zIndex: 9999,
@@ -82,15 +110,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "white",
   },
-  poweredContainer: {
-    justifyContent: "flex-end",
-    alignItems: "center",
-    borderBottomRightRadius: 8,
-    borderBottomLeftRadius: 8,
-    borderColor: "#E0E0E0",
-    borderTopWidth: 0.5,
-    paddingVertical: 8,
-  },
   separator: {
     height: 1,
     backgroundColor: "#F0F0F0",
@@ -101,7 +120,16 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#333333",
   },
-})
+  poweredContainer: {
+    justifyContent: "flex-end",
+    alignItems: "center",
+    borderBottomRightRadius: 8,
+    borderBottomLeftRadius: 8,
+    borderColor: "#E0E0E0",
+    borderTopWidth: 0.5,
+    paddingVertical: 8,
+  },
+});
 
 /**
  * Input component for selecting locations.
@@ -219,17 +247,7 @@ const MapTraceroute = ({
 }) => {
   const [selected, setSelected] = useState("");
 
-  const styles = StyleSheet.create({
-    shadow: {
-      boxShadow:
-        "0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)",
-      textAlign: "center",
-    },
-    container: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-    },
+  const styles_custom = StyleSheet.create({
     slidingView: {
       position: "absolute",
       top: 0, // Start from the top of the screen
@@ -241,91 +259,7 @@ const MapTraceroute = ({
       borderBottomLeftRadius: 16,
       borderBottomRightRadius: 16,
     },
-    input: {
-      borderColor: "#E0E0E0",
-      borderWidth: 1,
-      height: 48,
-      borderRadius: 8,
-      paddingHorizontal: 12,
-      fontSize: 16,
-      backgroundColor: "#F8F8F8",
-      color: "#333333",
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.1,
-      shadowRadius: 2,
-      elevation: 1,
-    },
-    // Search container styles with z-index
-    searchContainer: {
-      position: "relative",
-      zIndex: 1,
-      width: "70%",
-      height: 150, // Set a fixed height for the container to prevent compression
-    },
-    originContainer: {
-      position: "relative",
-      zIndex: 3000,
-      marginBottom: 60, // Increased space between inputs to prevent overlap
-    },
-    destinationContainer: {
-      position: "relative",
-      zIndex: 2000,
-      marginTop: 10, // Added top margin to further separate from origin input
-    },
-    // Autocomplete styles
-    autocompleteContainer: {
-      position: "absolute",
-      zIndex: 9999,
-      backgroundColor: "transparent",
-      width: "100%",
-      left: 0,
-      right: 0,
-      height: 50, // Fixed height for the autocomplete container
-    },
-    listView: {
-      position: "absolute",
-      top: 50, // Position below the input field
-      backgroundColor: "white",
-      borderRadius: 8,
-      elevation: 4,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.2,
-      shadowRadius: 3,
-      zIndex: 10000,
-      width: "100%",
-      maxHeight: 220,
-      borderWidth: 1,
-      borderColor: "#E0E0E0",
-    },
-    row: {
-      padding: 15,
-      height: "auto",
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: "white",
-    },
-    separator: {
-      height: 1,
-      backgroundColor: "#F0F0F0",
-      marginLeft: 12,
-      marginRight: 12,
-    },
-    description: {
-      fontSize: 15,
-      color: "#333333",
-    },
-    poweredContainer: {
-      justifyContent: "flex-end",
-      alignItems: "center",
-      borderBottomRightRadius: 8,
-      borderBottomLeftRadius: 8,
-      borderColor: "#E0E0E0",
-      borderTopWidth: 0.5,
-      paddingVertical: 8,
-    },
-  });
+  })
 
   const slideAnim = useRef(
     new Animated.Value(-Dimensions.get("window").height * 0.3)
@@ -436,7 +370,7 @@ const MapTraceroute = ({
     <Animated.View
       className="rounded-xl p-3"
       testID="sliding-view"
-      style={[styles.slidingView, styles.shadow, { top: slideAnim }]}
+      style={[styles_custom.slidingView, styles.shadow, { top: slideAnim }]}
     >
       <View className="flex h-full w-full flex-col p-2">
         {!indoor && <View className="mt-2 h-5/6 flex flex-row justify-center items-center">
