@@ -5,6 +5,8 @@ import { PinchGestureHandler } from "react-native-gesture-handler";
 import moment from "moment";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
+import { useAuth } from "@clerk/clerk-expo";
+import GoToLoginButton from "../../components/Calendar/GoToLoginButton";
 import { polygons } from "../../screens/navigation/navigationConfig";
 import { fetchPublicCalendarEvents } from "../login/LoginHelper";
 import { fetchGeminiData } from "./GeminiProcessor";
@@ -38,6 +40,27 @@ export default function Planner() {
   const TODO_CALENDAR_ID = process.env.EXPO_PUBLIC_GOOGLE_CALENDAR_ID2;
 
   const navigation = useNavigation();
+  const { isSignedIn } = useAuth();
+
+  // Guest mode view
+  if (!isSignedIn) {
+    return (
+      <View style={styles.guestContainer}>
+        <GoToLoginButton
+          onPress={async () => {
+            try {
+              await AsyncStorage.removeItem("sessionId");
+              await AsyncStorage.removeItem("userData");
+              await AsyncStorage.removeItem("guestMode");
+              navigation.reset({ index: 0, routes: [{ name: "Login" }] });
+            } catch (error) {
+              console.error("Login Redirect Error:", error);
+            }
+          }}
+        />
+      </View>
+    );
+  }
 
   // Load saved preferences
   useEffect(() => {
@@ -559,5 +582,12 @@ const styles = StyleSheet.create({
     color: "#862532",
     fontSize: 14,
     fontWeight: "bold",
+  },
+  // Guest container
+  guestContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F5F5F5",
   },
 });
