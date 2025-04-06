@@ -3,10 +3,11 @@ import { TouchableOpacity, Text, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import * as Location from "expo-location";
 import PropTypes from 'prop-types';  // Import PropTypes
+import getThemeColors from "../../ColorBindTheme";
 
 export default function GoToClassButton({ locationString }) {
   const navigation = useNavigation();
-
+  const theme = getThemeColors();
   const handleGoToClass = async () => {
     try {
       // Safely split the string
@@ -34,7 +35,7 @@ export default function GoToClassButton({ locationString }) {
   };
 
   return (
-    <TouchableOpacity style={styles.nextClassButton} onPress={handleGoToClass}>
+    <TouchableOpacity style={[styles.nextClassButton, { backgroundColor: theme.backgroundColor }]} onPress={handleGoToClass}>
       <Text style={styles.nextClassButtonText}>Go to Class</Text>
     </TouchableOpacity>
   );

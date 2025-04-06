@@ -7,6 +7,7 @@ import * as React from "react";
 import PropTypes from "prop-types"; // Import PropTypes
 import { View } from "react-native";
 import Svg, { Path, Text } from "react-native-svg";
+import getThemeColors from "../../../ColorBindTheme";
 
 /**
  * LoyolaIcon component renders an SVG icon based on the selected campus.
@@ -16,7 +17,9 @@ import Svg, { Path, Text } from "react-native-svg";
  * @param {string} props.campus - Specifies which campus icon to render ("sgw" or "loyola").
  * @returns {JSX.Element} The rendered campus icon.
  */
-const LoyolaIcon = ({ campus }) => (
+const LoyolaIcon = ({ campus }) => {
+  const theme = getThemeColors();
+  return (
   <View>
     <Svg
       xmlns="http://www.w3.org/2000/svg"
@@ -28,7 +31,7 @@ const LoyolaIcon = ({ campus }) => (
       {/* SGW Campus Icon */}
       {campus === "sgw" && (
         <Path
-          stroke="#862532"
+          stroke= {theme.backgroundColor}
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeMiterlimit={10}
@@ -41,14 +44,14 @@ const LoyolaIcon = ({ campus }) => (
       {campus === "loyola" && (
         <>
           <Path
-            fill="#862532"
-            stroke="#862532"
+            fill={theme.backgroundColor}
+            stroke={theme.backgroundColor}
             strokeWidth={0.001}
             d="M18.866 5H8.482C5.166 5 3.5 6.683 3.5 10.033v26.634h9v-6.25c0-.684.567-1.25 1.25-1.25s1.25.55 1.25 1.25v6.25h8.833V10.033c0-3.35-1.65-5.033-4.966-5.033Zm-.95 16.25h-8.25c-.684 0-1.25-.567-1.25-1.25s.566-1.25 1.25-1.25h8.25c.683 0 1.25.567 1.25 1.25s-.567 1.25-1.25 1.25Zm0-6.25h-8.25c-.684 0-1.25-.567-1.25-1.25s.566-1.25 1.25-1.25h8.25c.683 0 1.25.567 1.25 1.25s-.567 1.25-1.25 1.25Z"
           />
           <Path
-            fill="#862532"
-            stroke="#862532"
+            fill={theme.backgroundColor}
+            stroke={theme.backgroundColor}
             strokeWidth={0.001}
             d="M38.333 35.419h-3.784v-5c1.583-.517 2.733-2 2.733-3.75v-3.334c0-2.183-1.783-3.966-3.966-3.966-2.184 0-3.967 1.783-3.967 3.966v3.334c0 1.733 1.133 3.2 2.683 3.733v5.017H1.667c-.684 0-1.25.566-1.25 1.25 0 .683.566 1.25 1.25 1.25h31.55c.033 0 .05.016.083.016.033 0 .05-.016.083-.016h4.95c.684 0 1.25-.567 1.25-1.25 0-.684-.566-1.25-1.25-1.25Z"
           />
@@ -59,7 +62,7 @@ const LoyolaIcon = ({ campus }) => (
       <Text
         x="20"
         y="46.5"
-        fill="#862532"
+        fill={theme.backgroundColor}
         fontSize="10"
         textAnchor="middle"
         fontFamily="system-ui"
@@ -68,7 +71,7 @@ const LoyolaIcon = ({ campus }) => (
       </Text>
     </Svg>
   </View>
-);
+)};
 
 // PropTypes validation
 LoyolaIcon.propTypes = {
