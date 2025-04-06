@@ -6,12 +6,7 @@ import {
   Dimensions,
   TouchableHighlight,
 } from "react-native";
-import MapView, {
-  Marker,
-  PROVIDER_DEFAULT,
-  Polygon,
-  Callout,
-} from "react-native-maps";
+import MapView, { Marker, PROVIDER_DEFAULT, Callout } from "react-native-maps";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import MapViewDirections from "react-native-maps-directions";
 import NavigationIcon from "./Icons/NavigationIcon";
@@ -328,6 +323,21 @@ export default function CampusMap({ navigationParams }) {
     </View>
   ));
 
+  const renderBusMarkers = busMarkers.map((bus) => {
+    console.log("rendering bus marker", bus);
+    return (
+      <Marker
+        testID="bus-marker"
+        key={bus.id}
+        coordinate={{
+          latitude: bus.latitude,
+          longitude: bus.longitude,
+        }}
+        image={require("../../../assets/shuttle-bus-map.png")}
+      />
+    );
+  });
+
   const traceRouteOnReady = (args) => {
     console.log("Directions are ready!");
   };
@@ -512,20 +522,8 @@ export default function CampusMap({ navigationParams }) {
             onReady={traceRouteOnReady}
           />
         ) : null}
-        {busMarkers.map((bus) => {
-          console.log("rendering bus marker", bus);
-          return (
-            <Marker
-              testID="bus-marker"
-              key={bus.id}
-              coordinate={{
-                latitude: bus.latitude,
-                longitude: bus.longitude,
-              }}
-              image={require("../../../assets/shuttle-bus-map.png")}
-            />
-          );
-        })}
+
+        {renderBusMarkers}
         <View ref={polygonRef}>{renderPolygons}</View>
       </MapView>
 
