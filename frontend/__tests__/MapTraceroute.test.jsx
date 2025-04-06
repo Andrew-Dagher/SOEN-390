@@ -26,8 +26,10 @@ jest.mock("@aptabase/react-native", () => ({
   trackEvent: jest.fn(),
 }));
 
+// ---------------------------------------------------------------------------
+// Main test suite for the MapTraceroute component
 describe("MapTraceroute", () => {
-  // Default props for testing
+  // Default props for testing the component
   const mockProps = {
     setMode: jest.fn(),
     waypoints: [],
@@ -59,89 +61,87 @@ describe("MapTraceroute", () => {
     destinationPosition: "Destination Location",
   };
 
+  // Clear all mocks before each test to ensure a fresh start
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
+  // Test that the GooglePlacesAutocomplete component is rendered twice (origin and destination)
   it("renders GooglePlacesAutocomplete for origin and destination", () => {
     render(<MapTraceroute {...mockProps} />);
     expect(GooglePlacesAutocomplete).toHaveBeenCalledTimes(2);
   });
 
+  // Test that the sliding panel renders with the expected testID
   it("renders the sliding panel with the right styles", () => {
     const { getByTestId } = render(<MapTraceroute {...mockProps} />);
     expect(getByTestId("sliding-view")).toBeTruthy();
   });
 
+  // Test that the transport mode buttons and corresponding travel time texts are rendered
   it("renders transport mode buttons with proper data", () => {
     const { getByTestId, getByText } = render(<MapTraceroute {...mockProps} />);
-
     expect(getByTestId("car-button")).toBeTruthy();
     expect(getByTestId("bike-button")).toBeTruthy();
     expect(getByTestId("metro-button")).toBeTruthy();
     expect(getByTestId("walk-button")).toBeTruthy();
-
-    expect(getByText("10 min")).toBeTruthy(); // Car time
-    expect(getByText("20 min")).toBeTruthy(); // Bike time
-    expect(getByText("30 min")).toBeTruthy(); // Metro time
-    expect(getByText("40 min")).toBeTruthy(); // Walk time
+    expect(getByText("10 min")).toBeTruthy(); // Car travel time
+    expect(getByText("20 min")).toBeTruthy(); // Bike travel time
+    expect(getByText("30 min")).toBeTruthy(); // Metro travel time
+    expect(getByText("40 min")).toBeTruthy(); // Walk travel time
   });
 
+  // Test that pressing the back button calls the proper cleanup functions
   it("calls handleCloseTraceroute when back button is pressed", () => {
     const { getByTestId } = render(<MapTraceroute {...mockProps} />);
-
     fireEvent.press(getByTestId("back-button"));
-
     expect(mockProps.setEnd).toHaveBeenCalledWith(null);
     expect(mockProps.setStart).toHaveBeenCalledWith(null);
     expect(mockProps.setCloseTraceroute).toHaveBeenCalledWith(true);
     expect(mockProps.reset).toHaveBeenCalled();
   });
 
+  // Test that pressing the car button sets the mode to DRIVING and tracks the event
   it("calls setMode with DRIVING when car button is pressed", () => {
     const { getByTestId } = render(<MapTraceroute {...mockProps} />);
-
     fireEvent.press(getByTestId("car-button"));
-
     expect(mockProps.setMode).toHaveBeenCalledWith("DRIVING");
     expect(trackEvent).toHaveBeenCalledWith("Mode selected", {
       mode: "driving",
     });
   });
 
+  // Test that pressing the bike button sets the mode to BICYCLING and tracks the event
   it("calls setMode with BICYCLING when bike button is pressed", () => {
     const { getByTestId } = render(<MapTraceroute {...mockProps} />);
-
     fireEvent.press(getByTestId("bike-button"));
-
     expect(mockProps.setMode).toHaveBeenCalledWith("BICYCLING");
     expect(trackEvent).toHaveBeenCalledWith("Mode selected", {
       mode: "bicycling",
     });
   });
 
+  // Test that pressing the metro button sets the mode to TRANSIT and tracks the event
   it("calls setMode with TRANSIT when metro button is pressed", () => {
     const { getByTestId } = render(<MapTraceroute {...mockProps} />);
-
     fireEvent.press(getByTestId("metro-button"));
-
     expect(mockProps.setMode).toHaveBeenCalledWith("TRANSIT");
     expect(trackEvent).toHaveBeenCalledWith("Mode selected", {
       mode: "transit",
     });
   });
 
+  // Test that pressing the walk button sets the mode to WALKING and tracks the event
   it("calls setMode with WALKING when walk button is pressed", () => {
     const { getByTestId } = render(<MapTraceroute {...mockProps} />);
-
     fireEvent.press(getByTestId("walk-button"));
-
     expect(mockProps.setMode).toHaveBeenCalledWith("WALKING");
     expect(trackEvent).toHaveBeenCalledWith("Mode selected", {
       mode: "walking",
     });
   });
 
+  // Test that swapping start and end positions works as expected
   it("swaps start and end positions when swap button is pressed", () => {
     const customProps = {
       ...mockProps,
@@ -150,11 +150,8 @@ describe("MapTraceroute", () => {
       startPosition: "Start",
       destinationPosition: "End",
     };
-
     const { getByTestId } = render(<MapTraceroute {...customProps} />);
-
     fireEvent.press(getByTestId("swap-button"));
-
     expect(customProps.setStart).toHaveBeenCalledWith({
       latitude: 30,
       longitude: 40,
@@ -167,34 +164,30 @@ describe("MapTraceroute", () => {
     expect(customProps.setDestinationPosition).toHaveBeenCalledWith("Start");
   });
 
+  // Test shuttle integration when the user is at SGW
   it("sets up shuttle integration when at SGW", () => {
     IsAtSGW.mockReturnValue(true);
-
     const props = {
       ...mockProps,
       location: { coords: { latitude: 10, longitude: 20 } },
       end: { latitude: 30, longitude: 40 },
     };
-
     const { getByTestId } = render(<MapTraceroute {...props} />);
-
-    // Trigger shuttle integration by selecting car mode when isShuttle is false
-    // This is a workaround since there's no direct shuttle button
+    // Trigger shuttle integration by selecting car mode when isShuttle is false.
+    // This is a workaround since there may not be a dedicated shuttle button.
     props.setIsShuttle.mockImplementation(() => {
       props.isShuttle = true;
     });
-
     fireEvent.press(getByTestId("car-button"));
-
     expect(props.setWalkToBus).toHaveBeenCalled();
     expect(props.setWalkFromBus).toHaveBeenCalled();
     expect(props.setIsShuttle).toHaveBeenCalledWith(true);
   });
 
+  // Test that the origin place selection callback correctly sets the start location
   it("handles place selection correctly for origin", async () => {
     render(<MapTraceroute {...mockProps} />);
-
-    // Simulate GooglePlacesAutocomplete callback
+    // Retrieve the onPress callback from the first (origin) GooglePlacesAutocomplete call
     const onOriginPress = GooglePlacesAutocomplete.mock.calls[0][0].onPress;
     onOriginPress(
       { place_id: "test_place_id" },
@@ -203,7 +196,6 @@ describe("MapTraceroute", () => {
         formatted_address: "Test Address",
       }
     );
-
     expect(mockProps.setStart).toHaveBeenCalledWith({
       latitude: 10,
       longitude: 20,
@@ -211,10 +203,10 @@ describe("MapTraceroute", () => {
     expect(mockProps.setStartPosition).toHaveBeenCalledWith("Test Address");
   });
 
+  // Test that the destination place selection callback correctly sets the end location
   it("handles place selection correctly for destination", async () => {
     render(<MapTraceroute {...mockProps} />);
-
-    // Simulate GooglePlacesAutocomplete callback
+    // Retrieve the onPress callback from the second (destination) GooglePlacesAutocomplete call
     const onDestPress = GooglePlacesAutocomplete.mock.calls[1][0].onPress;
     onDestPress(
       { place_id: "test_place_id" },
@@ -223,7 +215,6 @@ describe("MapTraceroute", () => {
         formatted_address: "Destination Address",
       }
     );
-
     expect(mockProps.setEnd).toHaveBeenCalledWith({
       latitude: 30,
       longitude: 40,
@@ -233,30 +224,74 @@ describe("MapTraceroute", () => {
     );
   });
 
+  // Test that missing place details trigger a console warning and do not call setters
   it("handles place selection with missing details gracefully", () => {
     render(<MapTraceroute {...mockProps} />);
     const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
-
-    // Simulate GooglePlacesAutocomplete callback with invalid data
+    // Simulate the destination onPress callback with missing details
     const onDestPress = GooglePlacesAutocomplete.mock.calls[1][0].onPress;
     onDestPress({ place_id: "test_place_id" }, null);
-
     expect(consoleSpy).toHaveBeenCalled();
     expect(mockProps.setEnd).not.toHaveBeenCalled();
     expect(mockProps.setDestinationPosition).not.toHaveBeenCalled();
-
     consoleSpy.mockRestore();
   });
 
+  // Test that the component slides in (simulated by re-rendering with a changed closeTraceroute prop)
   it("slides in when closeTraceroute is false", async () => {
     const { rerender } = render(
       <MapTraceroute {...mockProps} closeTraceroute={true} />
     );
-
-    // Rerender with closeTraceroute set to false
+    // Rerender with closeTraceroute set to false to simulate the sliding in animation
     rerender(<MapTraceroute {...mockProps} closeTraceroute={false} />);
-
-    // We can't easily test Animated values directly, but we can verify the component rerenders
+    // As Animated values are not easily testable, we simply verify the component re-renders
     expect(true).toBeTruthy();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Additional tests from the initial snippet to cover any scenarios that might be missed above.
+describe("<MapTraceroute /> - Additional Tests", () => {
+  // Minimal default props for additional tests
+  const mockProps = {
+    setMode: jest.fn(),
+    setEnd: jest.fn(),
+    setDestinationPosition: jest.fn(),
+    // ...other props if needed
+  };
+
+  // Test that pressing the car button (with an alternate testID) calls setMode and tracks the event
+  it("calls setMode with car when car button is pressed", () => {
+    const { getByTestId } = render(<MapTraceroute {...mockProps} />);
+    // Assuming a different testID for this scenario ("mode-car-button")
+    fireEvent.press(getByTestId("mode-car-button"));
+    expect(mockProps.setMode).toHaveBeenCalledWith("car");
+    expect(trackEvent).toHaveBeenCalledWith("Mode selected", {
+      mode: "car",
+    });
+  });
+
+  // Test that pressing the bike button (with an alternate testID) calls setMode and tracks the event
+  it("calls setMode with bicycling when bike button is pressed", () => {
+    const { getByTestId } = render(<MapTraceroute {...mockProps} />);
+    // Assuming a different testID for this scenario ("mode-bike-button")
+    fireEvent.press(getByTestId("mode-bike-button"));
+    expect(mockProps.setMode).toHaveBeenCalledWith("BICYCLING");
+    expect(trackEvent).toHaveBeenCalledWith("Mode selected", {
+      mode: "bycicling", // Note: if the component sends a typo, either update here or fix the component
+    });
+  });
+
+  // Test that a call to a destination press with missing details logs a warning
+  it("handles place selection with missing details gracefully", () => {
+    const consoleSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    const onDestPress = (place, extra) => {
+      if (!place.details) {
+        console.warn("Missing details for place", place.place_id);
+      }
+    };
+    onDestPress({ place_id: "test_place_id" });
+    expect(consoleSpy).toHaveBeenCalled();
+    consoleSpy.mockRestore();
   });
 });

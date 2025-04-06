@@ -19,7 +19,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "@clerk/clerk-expo";
 import { useAppSettings } from "../../AppSettingsContext";
 import getThemeColors from "../../ColorBindTheme";
-import { loadUserData, pickImage, handleLogout } from "../../settingsUtils";
+import { loadUserData, pickImage, handleLogout } from "../app/settingsUtils";
 import PropTypes from "prop-types"; 
 
 export default function SettingsScreen() {

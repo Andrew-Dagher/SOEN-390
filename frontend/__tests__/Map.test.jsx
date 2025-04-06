@@ -1,13 +1,14 @@
 /**
  * Map.test.jsx
  *
- * This test file is designed to drive execution through key branches
+ * This test file is designed to drive execution through key branches.
  */
 
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, screen } from '@testing-library/react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import CampusMap from '../app/components/navigation/Map';
+import Map from '../app/components/navigation/Map';
 
 // ---------------------------------------------------------------------------
 // 1) MOCK REACT NAVIGATION
@@ -57,7 +58,7 @@ import { trackEvent } from '@aptabase/react-native';
 
 // ---------------------------------------------------------------------------
 // 5) (Optionally) MOCK any additional modules (e.g., polygons) if needed.
-// If you want to override polygons, you can uncomment and adjust the following:
+// Uncomment and adjust the following if you want to override polygons:
 // jest.mock('../../screens/navigation/navigationConfig', () => ({
 //   polygons: [
 //     {
@@ -73,7 +74,7 @@ import { trackEvent } from '@aptabase/react-native';
 // }));
 
 // ---------------------------------------------------------------------------
-// TEST SUITE
+// TEST SUITE: CampusMap - Coverage Tests
 describe('CampusMap - Coverage Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -104,13 +105,11 @@ describe('CampusMap - Coverage Tests', () => {
 
   // 2. fetchTravelTime: early return if start or end is missing
   it('does not call fetchTravelTime when start or end is missing', async () => {
-    // Render without providing buildingName/currentLocation that sets start/end.
     const { queryByTestId } = render(
       <NavigationContainer>
         <CampusMap navigationParams={{}} />
       </NavigationContainer>
     );
-    // Assuming the "get-directions" button triggers travel time fetch:
     const dirBtn = queryByTestId('get-directions');
     if (dirBtn) {
       fireEvent.press(dirBtn);
@@ -133,8 +132,6 @@ describe('CampusMap - Coverage Tests', () => {
         />
       </NavigationContainer>
     );
-    // The component’s useEffect should set start and end the same.
-    // Then fetchTravelTime checks for identical coordinates and returns early.
     await waitFor(() => {
       expect(fetch).not.toHaveBeenCalled();
     });
@@ -143,30 +140,18 @@ describe('CampusMap - Coverage Tests', () => {
   // 4. fetchTravelTime: transit mode branch (append transit_mode to URL)
   it('appends transit_mode parameter for TRANSIT mode', async () => {
     const currentLocation = { latitude: 45.4, longitude: -73.3 };
-    render(
-      <NavigationContainer>
-        <CampusMap
-          navigationParams={{
-            buildingName: 'Hall',
-            currentLocation: currentLocation,
-          }}
-        />
-      </NavigationContainer>
-    );
-    // Alternatively, if using getByTestId:
     const { getByTestId } = render(
       <NavigationContainer>
         <CampusMap
           navigationParams={{
             buildingName: 'Hall',
-            currentLocation: currentLocation,
+            currentLocation,
           }}
         />
       </NavigationContainer>
     );
     fireEvent.press(getByTestId('get-directions'));
     await waitFor(() => {
-      // Check that at least one fetch call URL includes "mode=transit" and transit_mode parameter.
       const transitCall = fetch.mock.calls.find(([url]) => url.includes('mode=transit'));
       expect(transitCall).toBeTruthy();
       expect(transitCall[0]).toContain('&transit_mode=bus|subway|train');
@@ -202,7 +187,7 @@ describe('CampusMap - Coverage Tests', () => {
     fetch.mockResolvedValueOnce({
       json: async () => ({
         status: 'OK',
-        routes: [{}], // No legs array
+        routes: [{}],
       }),
     });
     const { getByTestId } = render(
@@ -243,7 +228,6 @@ describe('CampusMap - Coverage Tests', () => {
   // 8. useEffect: Handling building selection vs. not found
   it('warns if buildingName is not found and sets building if found', async () => {
     const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    // Not found branch
     render(
       <NavigationContainer>
         <CampusMap
@@ -271,12 +255,9 @@ describe('CampusMap - Coverage Tests', () => {
       </NavigationContainer>
     );
     const setStartBtn = await findByTestId('set-start-end');
-    // Press once to set start.
     fireEvent.press(setStartBtn);
-    // Press again to trigger the branch that resets travel times and calls fetchTravelTime.
     fireEvent.press(setStartBtn);
     await waitFor(() => {
-      // Expect 4 fetch calls for DRIVING, BICYCLING, TRANSIT, and WALKING.
       expect(fetch).toHaveBeenCalledTimes(4);
     });
   });
@@ -302,7 +283,6 @@ describe('CampusMap - Coverage Tests', () => {
 
   // 11. handleLoyola & handleSGW branches
   it('switches campuses when toggled', async () => {
-    // Assume campus toggle buttons are rendered with text including "Loyola" and "SGW"
     const { getByText } = render(
       <NavigationContainer>
         <CampusMap navigationParams={{ campus: 'sgw' }} />
@@ -323,7 +303,6 @@ describe('CampusMap - Coverage Tests', () => {
         <CampusMap navigationParams={{}} />
       </NavigationContainer>
     );
-    // Assume a marker for "Hall" exists with testID "building-Hall"
     const marker = queryByTestId('building-Hall');
     if (marker) {
       fireEvent.press(marker);
@@ -333,7 +312,6 @@ describe('CampusMap - Coverage Tests', () => {
 
   // 13. reset branch: clearing route and search state
   it('resets route state when reset is triggered', async () => {
-    // If your MapTraceroute or MapTracerouteBottom renders a close button with testID "close-traceroute"
     const { queryByTestId } = render(
       <NavigationContainer>
         <CampusMap
@@ -347,8 +325,29 @@ describe('CampusMap - Coverage Tests', () => {
     const closeBtn = queryByTestId('close-traceroute');
     if (closeBtn) {
       fireEvent.press(closeBtn);
-      // Optionally, verify that certain elements (e.g., the route overlay) are no longer rendered.
       expect(queryByTestId('get-directions')).toBeTruthy();
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// TEST SUITE: Map Component (Minimal & Additional Tests)
+describe('Map Component', () => {
+  test('renders correctly', () => {
+    const tree = render(<Map />);
+    expect(tree).toBeTruthy();
+  });
+
+  test('should render the map container', () => {
+    render(<Map />);
+    const mapContainer = screen.getByTestId('map-container');
+    expect(mapContainer).toBeInTheDocument();
+  });
+
+  test('should display markers if provided', () => {
+    const markers = [{ id: 1, lat: 40.7128, lng: -74.0060 }];
+    render(<Map markers={markers} />);
+    const markerElement = screen.getByTestId('marker-1');
+    expect(markerElement).toBeInTheDocument();
   });
 });
