@@ -69,16 +69,16 @@ jest.mock('@react-navigation/native', () => ({
     // Test basic rendering
     it('should render the component', () => {
       jest.mock('react-native', () => {
-        const RN = jest.requireActual('react-native');
+        const ReactNative = jest.requireActual('react-native');
         return {
-          ...RN,
+          ...ReactNative,
           // Mock Text and other components that might use className
-          Text: ({ children, ...props }) => <RN.Text {...props}>{children}</RN.Text>,
+          Text: ({ children, ...props }) => <ReactNative.Text {...props}>{children}</ReactNative.Text>,
           TouchableHighlight: ({ children, ...props }) => (
-            <RN.TouchableHighlight {...props}>{children}</RN.TouchableHighlight>
+            <ReactNative.TouchableHighlight {...props}>{children}</ReactNative.TouchableHighlight>
           ),
           Pressable: ({ children, ...props }) => (
-            <RN.Pressable {...props}>{children}</RN.Pressable>
+            <ReactNative.Pressable {...props}>{children}</ReactNative.Pressable>
           )
         };
       });

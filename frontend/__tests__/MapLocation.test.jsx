@@ -1,7 +1,6 @@
 import React from "react";
-import { render, fireEvent, waitFor } from "@testing-library/react-native";
+import { render, fireEvent } from "@testing-library/react-native";
 import MapLocation from "../app/components/navigation/MapLocation";
-import * as Location from "expo-location";
 
 jest.mock("expo-location", () => ({
     requestForegroundPermissionsAsync: jest.fn(),
