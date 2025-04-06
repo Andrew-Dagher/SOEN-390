@@ -538,6 +538,7 @@ export default function CampusMap({ navigationParams }) {
 
       {isRoute ? (
         <MapTraceroute
+          indoor={params?.indoor}
           isShuttle={isShuttle}
           setWalkToBus={setWalkToBus}
           setWalkFromBus={setWalkFromBus}

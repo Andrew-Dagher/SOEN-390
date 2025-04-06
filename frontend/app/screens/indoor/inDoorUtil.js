@@ -37,6 +37,35 @@ export const areRoomsOnSameBuilding = (roomId1, roomId2) => {
   return false; // Rooms are not in the same building
 };
 
+export const isEntranceFloor = (floorId) => {
+  for (const building of buildings) {
+    let start_name = building.start_floor
+    for (const floor of building.floors) {
+      if (floor.floor_id === floorId && floor.name == start_name) return true; // true, the floor id is the same floor as the first floor of the building
+    }
+  }
+  return false;
+}
+
+export const getEntranceFloor = (floorId) => {
+  let start_name = "";
+  for (const building of buildings) {
+    for (const floor of building.floors) {
+      if (floor.floor_id === floorId) {
+        start_name = building.start_floor; // extraxct the building start floor from the floor id
+      }
+    }    
+  }
+  for (const building of buildings) {
+    for (const floor of building.floors) {
+      if (floor.name === start_name) {
+        return floor; // return the start floor with all its information
+      }
+    }
+  }
+  return null; // return null if the entrance is not in the floors
+}
+
 export const getFloorIdByRoomId = (roomValue) => {
   for (const building of buildings) {
     for (const floor of building.floors) {

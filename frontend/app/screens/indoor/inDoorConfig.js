@@ -1,6 +1,7 @@
 export const buildings = [
     {
         name: "Hall Building",
+        start_floor: "Hall 1",
         floors: [
             {
                 "name":"Hall 9",
@@ -22,11 +23,22 @@ export const buildings = [
                     "H815": "s_adee63f7d4d4f772",
                     "H849": "s_46120eef38d0b708"
                 }
+            },
+            {
+                "name":"Hall 1",
+                "url": "https://app.mappedin.com/map/67d7285c3b90e4000beb55d5/directions?kiosk=false&outdoors=false",
+                "floor_id":"m_a14d6eee24abdc1a",
+                "exit": "45.497306310248916%2C-73.5786979551609%2Cm_a14d6eee24abdc1a",
+                "entrance":"45.49700962858394%2C-73.57864498620205%2Cm_a14d6eee24abdc1a",
+                "rooms": {
+                    "H110": "s_e2338f7e63930230"
+                }
             }
-        ]
+        ],
     },
     {
         name: "SP Building",
+        start_floor: "SP 1",
         floors: [
             {
                 "name":"SP 1",
@@ -47,6 +59,7 @@ export const buildings = [
     },
     {
         name: "MB Building",
+        start_floor: "MB 1",
         floors: [
             {
                 "name":"MB 1",

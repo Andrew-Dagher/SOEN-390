@@ -19,8 +19,10 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { WebView } from 'react-native-webview';
 import getThemeColors from "../../ColorBindTheme";
 import { useAppSettings } from "../../AppSettingsContext";
-import { pickerList, areRoomsOnSameFloor, areRoomsOnSameBuilding, getUrlByFloorId, getFloorIdByRoomId, getEntranceByRoomId, getUrlByRoomId } from "./inDoorUtil";
+import { pickerList, areRoomsOnSameFloor, areRoomsOnSameBuilding, getUrlByFloorId, getFloorIdByRoomId, getEntranceByRoomId, getUrlByRoomId, getEntranceFloor, isEntranceFloor } from "./inDoorUtil";
 import DropDownPicker from 'react-native-dropdown-picker';
+import InDoorDirections from "../../components/indoor/InDoorDirections";
+import InDoorView from "../../components/indoor/InDoorView";
 
 const InDoorScreen = () => {
   const { wheelchairAccess } = useAppSettings();
@@ -33,10 +35,6 @@ const InDoorScreen = () => {
   const { building, step1 } = route.params || { selectedFloorplan: "Unknown" };
 
   const headerPadding = Platform.OS === "ios" ? 48 : 32;
-  const [floorPlanURL, setFloorPlanURL] = useState(building?.floorPlans);
-  const [nextFloorPlanURL, setNextFloorPlanURL] = useState(building?.floorPlans);
-  const [isSameFloor, setIsSameFloor] = useState(true);
-  const [isSameBuilding, setIsSameBuilding] = useState(false);
   const [open, setOpen] = useState(false);
   const [open1, setOpen1] = useState(false);
   const [value, setValue] = useState(step1?.value || null);
@@ -45,9 +43,9 @@ const InDoorScreen = () => {
   const [items1, setItems1] = useState(pickerList);
   const [selectedStart, setSelectedStart] = useState(null);
   const [selectedEnd, setSelectedEnd] = useState(null);
+  const [directionsFlow, setDirectionsFlow] = useState([])
+  const [index, setIndex] = useState(-1);
   
-  // currentStep: 0 = Search, 1 = Departure Indoor, 2 = Outdoor Directions, 3 = Destination Indoor
-  const [currentStep, setCurrentStep] = useState(0);
 
   const handleToCampus = () => {
     if (value == null || value1 == null) return;
@@ -63,70 +61,77 @@ const InDoorScreen = () => {
       nextEntranceLoc= getEntranceByRoomId(value1, true)
     }
 
-    console.log("start url", startUrl, floorId)
 
     if (areRoomsOnSameFloor(value, value1)) {
       // If rooms are on the same floor, directly show the indoor map
-      setFloorPlanURL(startUrl + "&floor=" + floorId + "&location=" + value + "&departure=" + value1);
-      setCurrentStep(1);
+      let url = startUrl + "&floor=" + floorId + "&location=" + value1 + "&departure=" + value
+      let flow = [
+        {url: url, is_indoor: true}
+      ]
+      setDirectionsFlow(flow);
+      setIndex(0);
       return;
     } 
     if (areRoomsOnSameBuilding(value, value1)) {
       // rooms are on different floors but same building
-
-      setIsSameBuilding(true);
-      setIsSameFloor(false);
-      setFloorPlanURL(startUrl+ "&floor=" + floorId + "&departure=" + value + "&location=" + entranceLoc);
-
-      setNextFloorPlanURL(startUrl + "&floor=" + nextFloorId + "&location=" + value1 + "&departure=" + nextEntranceLoc);
-      setCurrentStep(1);
-
+      let url1 = startUrl+ "&floor=" + floorId + "&departure=" + value + "&location=" + entranceLoc;
+      let url2 = startUrl + "&floor=" + nextFloorId + "&location=" + value1 + "&departure=" + nextEntranceLoc;
+      let flow = [
+        {url: url1, is_indoor: true},
+        {url: url2, is_indoor: true}
+      ]
+      console.log("hhi");
+      console.log(flow);
+      setDirectionsFlow(flow);
+      setIndex(0);
       return;
     }
     // If rooms are on different buildings, get outdoor navigations
     // Multi-floor or multi-building navigation
-    setIsSameFloor(false);
-
-    // Step 1: Departure indoor map with departure information
-    setFloorPlanURL(startUrl + "&floor=" + floorId + "&departure=" + value + "&location=" + entranceLoc);
-
+    let buildingURL = getUrlByRoomId(value1);
+    let entranceFloor = getEntranceFloor(floorId); // get the information for the first floor of the building
+    let entranceFloor2 = getEntranceFloor(nextFloorId); // get the information for the first floor of the building destination
     if (wheelchairAccess){
       nextEntranceLoc=getEntranceByRoomId(value1, true,true)
     }
     else{
-    nextEntranceLoc=getEntranceByRoomId(value1, false, true)
+      nextEntranceLoc=getEntranceByRoomId(value1, false, true)
     }
-    // Prepare destination indoor map URL (for step 3)
-    let buildingURL = getUrlByRoomId(value1);
-    setNextFloorPlanURL(buildingURL + "&floor=" + nextFloorId + "&location=" + value1 + "&departure=" + nextEntranceLoc);
 
-    // Begin at step 1 (departure indoor). User can then proceed to outdoor directions.
-    setCurrentStep(1);
+    let url1 = startUrl + "&floor=" + floorId + "&departure=" + value + "&location=" + entranceLoc;
+    let url2 = startUrl+"&floor="+ entranceFloor.floor_id + "&departure="+entranceFloor.exit+"&location="+entranceFloor.entrance;
+    let url3 = buildingURL + "&floor=" + entranceFloor2.floor_id + "&departure=" + entranceFloor2.exit+"&location="+entranceFloor2.entrance; // build the building destination first floor
+    let url4 = buildingURL + "&floor=" + nextFloorId + "&location=" + value1 + "&departure=" + nextEntranceLoc;
+    if (isEntranceFloor(floorId)) {
+      url2 = null;
+    }
+    if (isEntranceFloor(nextFloorId)) {
+      url3 = null;
+    }
+    let flow = [
+      {url: url1, is_indoor: true},
+      ...(url2 ? [{url: url2, is_indoor: true}] : []),
+      {is_indoor: false},
+      ...(url3 ? [{url: url3, is_indoor: true}] : []),
+      {url: url4, is_indoor: true}
+    ]
+    setDirectionsFlow(flow);
+    setIndex(0);
   };
 
-  useEffect(() => {
-  }, [floorPlanURL, nextFloorPlanURL]);
+  useEffect(() => {},[directionsFlow, index])
 
   useEffect(() => {
-    console.log("floor plan 2", floorPlanURL)
-    console.log("next floor 2", nextFloorPlanURL)
-    if (currentStep === 2) {
-      console.log("Route in step 2:", route);
-  
-      if (route.params) {
-        route.params.campus = route.params.isSGW ? "sgw" : "loyola";
-      }
-  
-      // Ensure longName exists and then set buildingName to its lowercase version.
-      if (route.params?.longName) {
-        route.params.buildingName = route.params.longName.toLowerCase();
-      }
+    if (route.params) {
+      route.params.campus = route.params.isSGW ? "sgw" : "loyola";
     }
-  }, [currentStep, route]);
-  console.log("Wheelk ", wheelchairAccess)
-  
-  
 
+    // Ensure longName exists and then set buildingName to its lowercase version.
+    if (route.params?.longName) {
+      route.params.buildingName = route.params.longName.toLowerCase();
+    }
+  }, [directionsFlow]);
+  
   return (
     <View style={{ flex: 1, backgroundColor: "#F3F4F6" }}>
       <StatusBar barStyle="dark-content" />
@@ -182,102 +187,15 @@ const InDoorScreen = () => {
           >
             <Text style={{ fontSize: textSize, color: "white", fontWeight: "bold" }}>Search</Text>
           </TouchableHighlight>
-          {currentStep === 1 && !isSameFloor && !isSameBuilding && <View style={{ flexDirection: "row", justifyContent: "center", margin: 16 }}>
-              <TouchableHighlight
-                style={[styles.shadow, { backgroundColor: theme.backgroundColor, padding: 12, borderRadius: 8 }]}
-                onPress={() => setCurrentStep(2)}
-              >
-                <Text style={{ fontSize: textSize, color: "white", fontWeight: "bold" }}>Outdoor Directions</Text>
-              </TouchableHighlight>
-          </View>}
-          {currentStep === 1 && !isSameFloor && isSameBuilding && <View style={{ flexDirection: "row", justifyContent: "center", margin: 16 }}>
-              <TouchableHighlight
-                style={[styles.shadow, { backgroundColor: theme.backgroundColor, padding: 12, borderRadius: 8 }]}
-                onPress={() => setCurrentStep(3)}
-              >
-                <Text style={{ fontSize: textSize, color: "white", fontWeight: "bold" }}>Next Directions</Text>
-              </TouchableHighlight>
-          </View>}
-            
-          {currentStep === 3 && !isSameBuilding &&
-            <View style={{ flexDirection: "row", justifyContent: "center", margin: 16 }}>
-            <TouchableHighlight
-              style={[styles.shadow, { backgroundColor: theme.backgroundColor, padding: 12, borderRadius: 8 }]}
-              onPress={() => setCurrentStep(prev => (prev > 1 ? prev - 1 : prev))}
-            >
-              <Text style={{ fontSize: textSize, color: "white", fontWeight: "bold" }}>Outdoor Directions</Text>
-            </TouchableHighlight>
-          </View>
-          }
 
-          {currentStep === 3 && isSameBuilding &&
-            <View style={{ flexDirection: "row", justifyContent: "center", margin: 16 }}>
-            <TouchableHighlight
-              style={[styles.shadow, { backgroundColor: theme.backgroundColor, padding: 12, borderRadius: 8 }]}
-              onPress={() => setCurrentStep(1)}
-            >
-              <Text style={{ fontSize: textSize, color: "white", fontWeight: "bold" }}>Prev Directions</Text>
-            </TouchableHighlight>
+          <View style={{ flexDirection: "row", justifyContent: "center", margin: 16 }}>
+            <InDoorDirections directionsFlow={directionsFlow} index={index} setIndex={setIndex}></InDoorDirections>
           </View>
-          }
-
         </View>
   
       </View>
-
-      {/* Render views based on current step */}
-      {currentStep === 1 && (
-        <View  style={{ flex: 1 }}>
-          <WebView
-            style={{
-              flex: 1,
-              marginHorizontal: 16,
-              marginBottom: 50,
-              backgroundColor: "#D1D5DB",
-              borderRadius: 8,
-            }}
-            source={{ uri: floorPlanURL }}
-          />
-        </View>
-      )}
-
-      {currentStep === 2 && (
-        <View style={{ flex: 1 }}>
-          <Map navigationParams={{ start: selectedStart, end: selectedEnd, indoor: true }} />
-          <View style={{ flexDirection: "row", justifyContent: "space-around", margin: 16 }}>
-            <TouchableHighlight
-              style={[styles.shadow, { backgroundColor: theme.backgroundColor, padding: 12, borderRadius: 8 }]}
-              onPress={() => setCurrentStep(prev => (prev > 1 ? prev - 1 : prev))}
-            >
-              <Text style={{ fontSize: textSize, color: "white", fontWeight: "bold" }}>Back</Text>
-            </TouchableHighlight>
-            <TouchableHighlight
-              style={[styles.shadow, { backgroundColor: theme.backgroundColor, padding: 12, borderRadius: 8 }]}
-              onPress={() => setCurrentStep(3)}
-            >
-              <Text style={{ fontSize: textSize, color: "white", fontWeight: "bold" }}>Next</Text>
-            </TouchableHighlight>
-          </View>
-        </View>
-      )}
-
-      {currentStep === 3 && (
-        <View style={{ flex: 1 }}>
-        <WebView
-          style={{
-            flex: 1,
-            marginHorizontal: 16,
-            marginBottom: 50,
-            backgroundColor: "#D1D5DB",
-            borderRadius: 8,
-          }}
-          source={{ uri: nextFloorPlanURL }}
-        />
         
-          
- 
-      </View>
-      )}
+      {directionsFlow.length > 0 && <InDoorView directionsFlow={directionsFlow} index={index} selectedEnd={selectedEnd} selectedStart={selectedStart} />}
     </View>
   );
 };
