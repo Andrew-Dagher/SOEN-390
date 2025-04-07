@@ -5,14 +5,52 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { poiTypes } from "../../../services/PoiService";
 import PropTypes from "prop-types"; // Added PropTypes import
 
+/**
+ * @typedef {Object} POI
+ * @property {string} name - Name of the POI
+ * @property {string} place_id - Unique identifier for the POI
+ * @property {string} [vicinity] - Address or vicinity information
+ * @property {string} [poiType] - Type of POI (e.g., restaurant, cafe, etc.)
+ * @property {Object} geometry - Location geometry information
+ * @property {Object} geometry.location - Coordinates
+ * @property {number} geometry.location.lat - Latitude
+ * @property {number} geometry.location.lng - Longitude
+ * @property {number} [rating] - Rating value if available
+ * @property {number} [user_ratings_total] - Number of ratings if available
+ * @property {Object} [opening_hours] - Opening hours information if available
+ * @property {boolean} [opening_hours.open_now] - Whether the place is currently open
+ */
+
+/**
+ * PoiMarker component renders a marker on the map for a Point of Interest (POI)
+ * with a styled callout showing details about the POI.
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {POI} props.poi - The POI data to display
+ * @param {string} [props.selectedPoiType=""] - The type of POI selected (used as fallback if poi.poiType is not available)
+ * @param {Function} props.onPress - Callback function when the marker is pressed
+ * @param {number} [props.textSize=14] - Base text size for UI elements
+ * @returns {React.ReactElement} The rendered marker component
+ */
 const PoiMarker = ({ poi, selectedPoiType, onPress, textSize }) => {
-  // Get the icon for the POI type
+  /**
+   * Gets the icon name for a POI type from the poiTypes service
+   *
+   * @param {string} type - The POI type
+   * @returns {string} - The icon name for the POI type
+   */
   const getIconName = (type) => {
     const foundType = poiTypes.find((poiType) => poiType.value === type);
     return foundType?.icon || "place";
   };
 
-  // Get marker color based on POI type
+  /**
+   * Gets the marker color based on POI type
+   *
+   * @param {string} type - The POI type
+   * @returns {string} - Hex color code for the marker
+   */
   const getMarkerColor = (type) => {
     switch (type) {
       case "restaurant":
@@ -45,7 +83,12 @@ const PoiMarker = ({ poi, selectedPoiType, onPress, textSize }) => {
   const iconName = getIconName(poiType);
   const markerColor = getMarkerColor(poiType);
 
-  // Get POI type label for display
+  /**
+   * Gets a human-readable label for a POI type
+   *
+   * @param {string} type - The POI type
+   * @returns {string} - Human-readable label for the POI type
+   */
   const getPoiTypeLabel = (type) => {
     const foundType = poiTypes.find((poiType) => poiType.value === type);
     return foundType?.label || "Place";

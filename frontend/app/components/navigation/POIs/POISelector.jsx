@@ -14,6 +14,25 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { poiTypes } from "../../../services/PoiService";
 import PropTypes from "prop-types"; // Added PropTypes import
 
+/**
+ * PoiSelector component provides a modal interface for filtering Points of Interest (POIs)
+ * by type and search radius. It allows users to select specific POI types and adjust
+ * the search radius.
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {boolean} [props.showPoiSelector=false] - Controls the visibility of the POI selector modal
+ * @param {Function} [props.togglePoiSelector=()=>{}] - Function to toggle the visibility of the selector
+ * @param {string[]} [props.selectedPoiTypes=["none"]] - Array of currently selected POI types
+ * @param {Function} [props.setSelectedPoiTypes=()=>{}] - Function to update selected POI types
+ * @param {number} [props.searchRadius=1500] - Current search radius in meters
+ * @param {Function} [props.setSearchRadius=()=>{}] - Function to update search radius
+ * @param {Object} [props.theme={ backgroundColor: "#007AFF" }] - Theme object for styling
+ * @param {number} [props.textSize=14] - Base text size for UI elements
+ * @param {Object} [props.styles={ shadow: {} }] - Custom styles object
+ * @param {Function} [props.applyFilters=()=>{}] - Function to apply selected filters
+ * @returns {React.ReactElement} The rendered component
+ */
 const PoiSelector = ({
   showPoiSelector = false,
   togglePoiSelector = () => {},
@@ -26,6 +45,7 @@ const PoiSelector = ({
   styles = { shadow: {} },
   applyFilters = () => {},
 }) => {
+  // Local state to manage changes before applying
   const [localRadius, setLocalRadius] = useState(searchRadius);
   const [localSelectedTypes, setLocalSelectedTypes] =
     useState(selectedPoiTypes);
@@ -36,7 +56,10 @@ const PoiSelector = ({
     new Animated.Value(Dimensions.get("window").height)
   ).current;
 
-  // Handle back button
+  /**
+   * Handle hardware back button press
+   * Close the selector if it's open
+   */
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
@@ -52,7 +75,9 @@ const PoiSelector = ({
     return () => backHandler.remove();
   }, [showPoiSelector, togglePoiSelector]);
 
-  // Reset local state when the selector is opened
+  /**
+   * Reset local state when the selector is opened
+   */
   useEffect(() => {
     if (showPoiSelector) {
       setLocalSelectedTypes(selectedPoiTypes);
@@ -60,7 +85,9 @@ const PoiSelector = ({
     }
   }, [showPoiSelector, selectedPoiTypes, searchRadius]);
 
-  // Handle animations
+  /**
+   * Handle animations for showing and hiding the selector
+   */
   useEffect(() => {
     if (showPoiSelector) {
       // Show animations
@@ -93,7 +120,11 @@ const PoiSelector = ({
     }
   }, [showPoiSelector, fadeAnim, slideAnim]);
 
-  // Toggle a POI type in the local selection
+  /**
+   * Toggle a POI type in the local selection
+   *
+   * @param {string} typeValue - The POI type value to toggle
+   */
   const togglePoiType = (typeValue) => {
     if (typeValue === "none") {
       // If "No Filters" is selected, clear all other selections
@@ -122,13 +153,17 @@ const PoiSelector = ({
     }
   };
 
-  // Reset filters to default
+  /**
+   * Reset filters to default values
+   */
   const handleResetFilters = () => {
     setLocalSelectedTypes(["none"]);
     setLocalRadius(1500);
   };
 
-  // Handle applying filters
+  /**
+   * Apply the selected filters and close the selector
+   */
   const handleApplyFilters = () => {
     // If no specific types are selected, default to "none"
     const typesToApply =
