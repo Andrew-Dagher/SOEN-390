@@ -4,6 +4,7 @@ import { useNavigation } from "@react-navigation/native";
 import * as Location from "expo-location";
 import PropTypes from "prop-types";
 import CalendarDirectionsIcon from "./CalendarIcons/CalendarDirectionsIcon"; // Import the icon
+import { trackEvent } from "@aptabase/react-native";  // Import trackEvent
 
 export default function NextClassButton({ eventObserver }) {
   const navigation = useNavigation();
@@ -51,6 +52,14 @@ export default function NextClassButton({ eventObserver }) {
 
       const currentLocation = await Location.getCurrentPositionAsync({});
 
+      // Track the event using Aptabase
+      trackEvent("Next Class Button Clicked", {
+        campus: campus,
+        buildingName: buildingName,
+        latitude: currentLocation.coords.latitude,
+        longitude: currentLocation.coords.longitude
+      });
+
       navigation.navigate("Navigation", {
         campus,
         buildingName,
@@ -68,7 +77,7 @@ export default function NextClassButton({ eventObserver }) {
 
   return (
     <Animated.View style={[styles.floatingContainer, { opacity: fadeAnim }]}>
-      <TouchableOpacity style={styles.floatingButton} onPress={handleGoToNextClass}>
+      <TouchableOpacity style={[styles.floatingButton, { backgroundColor: theme.backgroundColor }]} onPress={handleGoToNextClass}>
         <Text style={styles.floatingButtonText}>Go to My Next Class</Text>
         <CalendarDirectionsIcon style={styles.icon} />
       </TouchableOpacity>
@@ -83,15 +92,15 @@ NextClassButton.propTypes = {
 const styles = StyleSheet.create({
   floatingContainer: {
     position: "absolute",
-    bottom: 70, // Keep it at the bottom
+    bottom: 70,
     left: 0,
     right: 0,
-    alignItems: "center", // Center horizontally
-    zIndex: 1000, // Ensure it stays on top
+    alignItems: "center",
+    zIndex: 1000,
   },
   floatingButton: {
-    flexDirection: "row", // Arrange text and icon in a row
-    alignItems: "center", // Align vertically in center
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#862532",
     paddingVertical: 14,
     paddingHorizontal: 20,
@@ -100,14 +109,14 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
-    elevation: 5, // Android shadow
+    elevation: 5,
   },
   floatingButtonText: {
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "bold",
     textAlign: "center",
-    marginRight: 10, // Space between text and icon
+    marginRight: 10,
   },
   icon: {
     width: 24,

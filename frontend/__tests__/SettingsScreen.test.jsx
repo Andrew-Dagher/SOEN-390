@@ -1,150 +1,218 @@
+
 /**
- * @file SettingsScreen.test.jsx
- * @description Tests the SettingsScreen component to ensure that it renders correctly
- * with the provided context and navigation. Mocks Clerk authentication and BottomNavBar to
- * prevent route errors during testing. Additionally, tests utility functions in settingsUtils.js.
+ * SettingsScreen component allows the user to modify various settings including
+ * accessibility options, text size, and profile image. It also provides a logout option.
  */
 
-import { render, fireEvent, waitFor } from "@testing-library/react-native";
-import { NavigationContainer } from "@react-navigation/native";
-import SettingsScreen from "../app/screens/settings/settingsScreen";
-import { AppSettingsProvider } from "../app/AppSettingsContext";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as ImagePicker from "expo-image-picker";
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  Switch,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
+import Slider from "@react-native-community/slider";
+import { useNavigation } from "@react-navigation/native";
+import { useAuth } from "@clerk/clerk-expo";
+import { useAppSettings } from "../../AppSettingsContext";
+import getThemeColors from "../../ColorBindTheme";
 import { loadUserData, pickImage, handleLogout } from "../app/settingsUtils";
+import PropTypes from "prop-types"; 
 
-// Mock AsyncStorage
-jest.mock("@react-native-async-storage/async-storage", () => ({
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  multiRemove: jest.fn(),
-}));
+export default function SettingsScreen() {
+  const {
+    textSize, setTextSize,
+    colorBlindMode, setColorBlindMode,
+    profileImage, setProfileImage
+  } = useAppSettings();
 
-// Mock ImagePicker
-jest.mock("expo-image-picker", () => ({
-  launchImageLibraryAsync: jest.fn(),
-  MediaTypeOptions: { Images: "images" },
-}));
+  const theme = getThemeColors();
+  const navigation = useNavigation();
+  const { signOut, isSignedIn } = useAuth();
 
-// Mock Clerk's useAuth hook to simulate an authenticated user.
-jest.mock("@clerk/clerk-expo", () => ({
-  useAuth: () => ({
-    isSignedIn: true,
-    signOut: jest.fn(),
-  }),
-  ClerkProvider: ({ children }) => <>{children}</>,
-}));
+  const [isWheelchairAccessEnabled, setIsWheelchairAccessEnabled] = useState(false);
+  const [tempProfileImage, setTempProfileImage] = useState(profileImage);
+  const [userName, setUserName] = useState("Guest");
+  const [isColorBlindModeEnabled, setIsColorBlindModeEnabled] = useState(!!colorBlindMode);
+  const [tempSize, setTempSize] = useState(textSize);
 
-// Mock BottomNavBar to prevent useRoute errors during tests.
-jest.mock("../app/components/BottomNavBar/BottomNavBar", () => "BottomNavBar");
+  useEffect(() => { loadUserData(setUserName, setProfileImage); }, []);
 
-/**
- * Test suite for the <SettingsScreen /> component.
- */
-describe("<SettingsScreen />", () => {
-  /**
-   * Verifies that the SettingsScreen component renders without errors.
-   */
-  test("Text renders correctly on Settings Screen", () => {
-    const { getByTestId } = render(
-      <NavigationContainer>
-        <AppSettingsProvider>
-          <SettingsScreen />
-        </AppSettingsProvider>
-      </NavigationContainer>
-    );
+  const applyChanges = () => {
+    setTextSize(tempSize);
+    setProfileImage(tempProfileImage);
+  };
 
-    // Retrieve the SettingsScreen component using its testID.
-    const viewComponent = getByTestId("settings-screen");
+  return (
+    <View testID="settings-screen" className="flex-1">
+      <ScrollView>
+        {/* Profile Section */}
+        <View style={[styles.header, { backgroundColor: theme.backgroundColor }]} className="pt-16 pb-8 items-center">
+          <TouchableOpacity onPress={() => pickImage(setTempProfileImage)} className="mb-4">
+            <Image
+              source={ profileImage ? { uri: profileImage } : require("../../../assets/default-avatar.png") }
+              className="w-24 h-24 rounded-full border-4 border-white"
+            />
+          </TouchableOpacity>
+          <Text style={[styles.userName, { fontSize: 26 }]} className="text-white text-3xl font-medium">{userName}</Text>
+        </View>
 
-    // Assert that the SettingsScreen component is rendered.
-    expect(viewComponent).toBeTruthy();
-  });
-});
+        {/* Settings Section */}
+        <View style={[styles.content, { backgroundColor: "#FFFFFF" }]} className="-mt-6 rounded-t-3xl px-6 pt-6 pb-24">
+          <Text style={[styles.userName, { fontSize: textSize }]} className="text-2xl font-bold mb-6">Accessibility Settings</Text>
 
-/**
- * Test suite for settingsUtils.js functions.
- */
-describe("settingsUtils.js functions", () => {
-  beforeEach(() => {
-    jest.clearAllMocks(); // Reset mocks before each test
-  });
+          {/* Mobility Settings */}
+          <SettingToggle 
+          label="Mobility disability"
+          description="Enable features optimized for wheelchair users."
+          value={isWheelchairAccessEnabled}
+          onChange={setIsWheelchairAccessEnabled}
+          textSize={textSize} 
+        />
 
-  /**
-   * Tests that loadUserData correctly loads user data from AsyncStorage.
-   */
-  test("loadUserData loads user data from AsyncStorage", async () => {
-    const setUserNameMock = jest.fn();
-    const setProfileImageMock = jest.fn();
-    
-    AsyncStorage.getItem.mockResolvedValueOnce(
-      JSON.stringify({ fullName: "John Doe", imageUrl: "https://example.com/avatar.jpg" })
-    );
 
-    await loadUserData(setUserNameMock, setProfileImageMock);
+          {/* Color Vision Settings */}
+          <SettingToggle 
+            label="Color vision deficient"
+            value={isColorBlindModeEnabled}
+            onChange={(value) => {
+              setIsColorBlindModeEnabled(value);
+              if (!value) setColorBlindMode(null);
+            }}
+            textSize={textSize}
+          />
+          
+          {/* Color Vision Options */}
+          {isColorBlindModeEnabled && (
+           ["Deuteranomaly", "Protanomaly", "Tritanomaly"].map((type) => (
+            <RadioOption 
+              key={type}
+              label={type}
+              selected={colorBlindMode === type.toLowerCase()}
+              onPress={() => setColorBlindMode(type.toLowerCase())}
+              textSize={textSize}
+            />
+          ))
+          )}
+        
+          <View style={{ marginTop: 20 }} /> 
 
-    expect(AsyncStorage.getItem).toHaveBeenCalledWith("userData");
-    expect(setUserNameMock).toHaveBeenCalledWith("John Doe");
-    expect(setProfileImageMock).toHaveBeenCalledWith("https://example.com/avatar.jpg");
-  });
+          {/* Text Size Settings */}
+          <View className="mb-6">
+            <Text style={[{ fontSize: textSize }]} className="text-lg font-medium mb-2">Text size</Text>
+            <Slider
+              minimumValue={12}
+              maximumValue={25}
+              step={1}
+              value={tempSize}
+              onValueChange={setTempSize}
+              minimumTrackTintColor={theme.backgroundColor}
+              maximumTrackTintColor="#D1D1D6"
+              className="w-full h-10"
+            />
+            <Text style={{ fontSize: tempSize }} className="text-gray-900 mb-2">Preview text size</Text>
+          </View>
 
-  /**
-   * Tests that pickImage correctly sets a profile image when an image is selected.
-   */
-  test("pickImage sets profile image when image is selected", async () => {
-    const setTempProfileImageMock = jest.fn();
+          {/* Apply Button */}
+          <ActionButton 
+          label="Apply Changes" 
+          onPress={applyChanges} 
+          theme={theme} 
+          textSize={textSize}
+          />
 
-    // Mock ImagePicker response
-    ImagePicker.launchImageLibraryAsync.mockResolvedValueOnce({
-      canceled: false,
-      assets: [{ uri: "https://example.com/image.jpg" }],
-    });
+          {/* Logout Button */}
+          <ActionButton 
+          label="Logout" 
+          onPress={() => handleLogout(signOut, isSignedIn, navigation)} 
+          theme={theme} 
+          textSize={textSize}  // Pass textSize here
+          />
 
-    await pickImage(setTempProfileImageMock);
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
 
-    expect(ImagePicker.launchImageLibraryAsync).toHaveBeenCalled();
-    expect(setTempProfileImageMock).toHaveBeenCalledWith("https://example.com/image.jpg");
-  });
+// Extracted Components for Reusability
+const SettingToggle = ({ label, description, value, onChange, textSize }) => (
+  <View className="mb-6">
+    <View className="flex-row justify-between items-center mb-2">
+      <Text style={[{ fontSize: textSize }]} className="text-lg font-medium">{label}</Text>
+      <Switch value={value} onValueChange={onChange} />
+    </View>
+    {description && <Text style={[{ fontSize: textSize - 8 }]} className="text-gray-500 text-sm mb-4">{description}</Text>}
+    <View className="h-px bg-gray-200 w-full" />
+  </View>
+);
 
-  /**
-   * Tests that pickImage does nothing if the user cancels image selection.
-   */
-  test("pickImage does nothing if image selection is canceled", async () => {
-    const setTempProfileImageMock = jest.fn();
+SettingToggle.propTypes = {
+  label: PropTypes.string.isRequired,
+  description: PropTypes.string,
+  value: PropTypes.bool.isRequired,
+  onChange: PropTypes.func.isRequired,
+  textSize: PropTypes.number.isRequired,
+};
 
-    ImagePicker.launchImageLibraryAsync.mockResolvedValueOnce({ canceled: true });
+const RadioOption = ({ label, selected, onPress, textSize }) => (
+  <View className="flex-row justify-between items-center h-12">
+    <Text style={[{ fontSize: textSize - 2 }]} className="text-lg">{label}</Text>
+    <TouchableOpacity onPress={onPress}>
+      <View style={[styles.radioButton, { borderColor: selected ? "#7c2933" : "#D1D1D6" }]}>
+        {selected && <View style={styles.radioFill} />}
+      </View>
+    </TouchableOpacity>
+  </View>
+);
 
-    await pickImage(setTempProfileImageMock);
+RadioOption.propTypes = {
+  label: PropTypes.string.isRequired,
+  selected: PropTypes.bool.isRequired,
+  onPress: PropTypes.func.isRequired,
+  textSize: PropTypes.number.isRequired,
+};
 
-    expect(setTempProfileImageMock).not.toHaveBeenCalled();
-  });
+const ActionButton = ({ label, onPress, theme, textSize }) => (
+  <TouchableOpacity 
+    onPress={onPress} 
+    style={[styles.applyButton, { backgroundColor: theme.backgroundColor }]} 
+    className="py-3 rounded-lg items-center mt-4"
+  >
+    <Text style={[{ fontSize: textSize }]} className="text-white text-lg font-medium">{label}</Text>
+  </TouchableOpacity>
+);
 
-  /**
-   * Tests that handleLogout clears AsyncStorage and calls signOut when logged in.
-   */
-  test("handleLogout clears AsyncStorage and calls signOut", async () => {
-    const signOutMock = jest.fn();
-    const navigationMock = { reset: jest.fn() };
+ActionButton.propTypes = {
+  label: PropTypes.string.isRequired,
+  onPress: PropTypes.func.isRequired,
+  theme: PropTypes.shape({
+    backgroundColor: PropTypes.string.isRequired,
+  }).isRequired,
+  textSize: PropTypes.number.isRequired,
+};
 
-    await handleLogout(signOutMock, true, navigationMock);
+const styles = StyleSheet.create({
+  header: { backgroundColor: "#7c2933" },
+  content: { backgroundColor: "#FFFFFF" },
+  radioButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#7c2933",
+    alignItems: "center", 
+    justifyContent: "center", 
+  },
+  radioFill: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: "#7c2933",
+  },
 
-    expect(AsyncStorage.multiRemove).toHaveBeenCalledWith(["sessionId", "userData", "guestMode"]);
-    expect(signOutMock).toHaveBeenCalled();
-    expect(navigationMock.reset).toHaveBeenCalledWith({ index: 0, routes: [{ name: "Login" }] });
-  });
-
-  /**
-   * Tests that handleLogout clears AsyncStorage but does not call signOut when not logged in.
-   */
-  test("handleLogout clears AsyncStorage but does not call signOut when user is not signed in", async () => {
-    const signOutMock = jest.fn();
-    const navigationMock = { reset: jest.fn() };
-
-    await handleLogout(signOutMock, false, navigationMock);
-
-    expect(AsyncStorage.multiRemove).toHaveBeenCalledWith(["sessionId", "userData", "guestMode"]);
-    expect(signOutMock).not.toHaveBeenCalled();
-    expect(navigationMock.reset).toHaveBeenCalledWith({ index: 0, routes: [{ name: "Login" }] });
-  });
+  applyButton: { backgroundColor: "#7c2933", padding: 10, borderRadius: 8 },
 });

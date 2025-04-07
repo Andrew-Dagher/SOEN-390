@@ -1,0 +1,39 @@
+appId: host.exp.Exponent
+---
+- launchApp
+# Testing calendar as guest
+- tapOn: "frontend"
+- tapOn: "Continue as Guest"
+
+# Select map
+- tapOn:
+    point: "38%,96%"
+# Select starting point
+- tapOn:
+    id: "building-9"
+- tapOn: "Set Start"
+
+# Select destination point
+- tapOn:
+    id: "building-15"
+- tapOn: "Set Destination"
+- waitForAnimationToEnd:
+    timeout: 1000
+- tapOn: "Start"
+
+# Choose buildings
+- tapOn:
+    id: "back-button"
+- tapOn: "Search the campus"
+- inputText: "Hall building"
+- pressKey: Enter
+- swipe:
+    start: 50%,23%
+    end: 50%,90%
+    duration: 1500
+
+
+- tapOn:
+    id: "building-13"
+- tapOn:
+    id: get-directions

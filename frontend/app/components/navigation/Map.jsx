@@ -6,12 +6,7 @@ import {
   Dimensions,
   TouchableHighlight,
 } from "react-native";
-import MapView, {
-  Marker,
-  PROVIDER_DEFAULT,
-  Polygon,
-  Callout,
-} from "react-native-maps";
+import MapView, { Marker, PROVIDER_DEFAULT, Callout } from "react-native-maps";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import MapViewDirections from "react-native-maps-directions";
 import NavigationIcon from "./Icons/NavigationIcon";
@@ -39,7 +34,8 @@ import getThemeColors from "../../ColorBindTheme";
 import busService from "../../services/BusService";
 import POIManager from "./POIs/POIManager";
 import PropTypes from "prop-types";
-
+import MapPolygonHighlight from "./MapPolygonHighlight";
+import RenderBusMarkers from "./Icons/RenderBusMarkers";
 export default function CampusMap({ navigationParams }) {
   const route = useRoute();
   const params = navigationParams || route.params; // Ensure params are retrieved
@@ -197,6 +193,22 @@ export default function CampusMap({ navigationParams }) {
     }
   };
 
+  const fetchAllTravelTimes = async (start, end) => {
+    await Promise.all([
+      fetchTravelTime(start, end, "DRIVING"),
+      fetchTravelTime(start, end, "BICYCLING"),
+      fetchTravelTime(start, end, "TRANSIT"),
+      fetchTravelTime(start, end, "WALKING"),
+    ]);
+  };
+
+  const resetTravelTimes = () => {
+    setCarTravelTime(null);
+    setBikeTravelTime(null);
+    setMetroTravelTime(null);
+    setWalkTravelTime(null);
+  };
+
   useEffect(() => {
     if (params?.campus === "loyola") {
       handleLoyola();
@@ -254,21 +266,10 @@ export default function CampusMap({ navigationParams }) {
       setEnd(pointLocation);
 
       // Reset travel times
-      setCarTravelTime(null);
-      setBikeTravelTime(null);
-      setMetroTravelTime(null);
-      setWalkTravelTime(null);
+      resetTravelTimes();
 
       // Calculate travel times
-      const fetchAllTravelTimes = async () => {
-        await Promise.all([
-          fetchTravelTime(start, pointLocation, "DRIVING"),
-          fetchTravelTime(start, pointLocation, "BICYCLING"),
-          fetchTravelTime(start, pointLocation, "TRANSIT"),
-          fetchTravelTime(start, pointLocation, "WALKING"),
-        ]);
-      };
-      fetchAllTravelTimes();
+      fetchAllTravelTimes(start, pointLocation);
 
       // Track the event
       trackEvent("Set Destination", {
@@ -286,7 +287,6 @@ export default function CampusMap({ navigationParams }) {
       type: selectedPoi ? "POI" : "Building",
     });
   };
-
   // Updated handleGetDirections function
   const handleGetDirections = () => {
     try {
@@ -313,6 +313,7 @@ export default function CampusMap({ navigationParams }) {
         selected: pointName,
         type: selectedPoi ? "POI" : "Building",
       });
+      console.log("Event tracked");
 
       setIsRoute(true);
       setIsSearch(true);
@@ -324,23 +325,9 @@ export default function CampusMap({ navigationParams }) {
         setStartPosition("Your Location");
       }
 
-      // Reset travel times
-      setCarTravelTime(null);
-      setBikeTravelTime(null);
-      setMetroTravelTime(null);
-      setWalkTravelTime(null);
+      resetTravelTimes(); // Reset travel times before fetching new ones
 
-      // Fetch travel times
-      const fetchAllTravelTimes = async () => {
-        await Promise.all([
-          fetchTravelTime(location?.coords, pointLocation, "DRIVING"),
-          fetchTravelTime(location?.coords, pointLocation, "BICYCLING"),
-          fetchTravelTime(location?.coords, pointLocation, "TRANSIT"),
-          fetchTravelTime(location?.coords, pointLocation, "WALKING"),
-        ]);
-      };
-
-      fetchAllTravelTimes();
+      fetchAllTravelTimes(location?.coords, pointLocation);
     } catch (e) {
       console.error("Error getting directions:", e);
     }
@@ -370,34 +357,30 @@ export default function CampusMap({ navigationParams }) {
     ref.current?.animateToRegion(location.coords);
   };
 
-  const renderPolygons = polygons.map((building) => {
-    return (
-      <View key={building.name}>
-        {/* Modified condition: Show building markers unless in route mode */}
-        {!isRoute && (
-          <Marker
-            testID={"building-" + building.name}
-            coordinate={building.point}
-            onPress={() => handleMarkerPress(building)}
-            image={require("../../../assets/concordia-logo.png")}
+  const renderPolygons = polygons.map((building) => (
+    <View key={building.name}>
+      {!isRoute && (
+        <Marker
+          testID={"building-" + building.name}
+          coordinate={building.point}
+          onPress={() => handleMarkerPress(building)}
+          image={require("../../../assets/concordia-logo.png")}
+        >
+          <Callout
+            tooltip={true}
+            onPress={() => navigation.navigate("Building Details", building)}
           >
-            <Callout
-              tooltip={true}
-              onPress={() => navigation.navigate("Building Details", building)}
-            >
-              <MapCard building={building} isCallout={true} />
-            </Callout>
-          </Marker>
-        )}
-        <Polygon
-          coordinates={building.boundaries}
-          strokeWidth={2}
-          strokeColor={theme.backgroundColor}
-          fillColor={theme.polygonFillColor}
-        />
-      </View>
-    );
-  });
+            <MapCard building={building} isCallout={true} />
+          </Callout>
+        </Marker>
+      )}
+      <MapPolygonHighlight
+        building={building}
+        location={location}
+        theme={theme}
+      />
+    </View>
+  ));
 
   const traceRouteOnReady = (args) => {
     console.log("Directions are ready!");
@@ -442,65 +425,66 @@ export default function CampusMap({ navigationParams }) {
 
   useEffect(() => {
     if (params?.indoor) {
-      try{
-      console.log("Indoor tracing activated: Tracing route from start to end.");
-  
-      if (params.start && params.end) {
-        // Create new objects to avoid mutating params directly (right now we just have cc and hall)
-        let startLocation = { latitude: 45.458470794629754, longitude: -73.64061814691485 };
-        let endLocation = { latitude: 45.458470794629754, longitude: -73.64061814691485 };
-  
-        if (params.start[0] === 'H') {
-          startLocation = { latitude: 45.49781725012627, longitude: -73.57950979221253 };
+      try {
+        console.log(
+          "Indoor tracing activated: Tracing route from start to end."
+        );
+
+        if (params.start && params.end) {
+          // Create new objects to avoid mutating params directly (right now we just have cc and hall)
+          let startLocation = {
+            latitude: 45.458470794629754,
+            longitude: -73.64061814691485,
+          };
+          let endLocation = {
+            latitude: 45.458470794629754,
+            longitude: -73.64061814691485,
+          };
+
+          if (params.start[0] === "H") {
+            startLocation = {
+              latitude: 45.49781725012627,
+              longitude: -73.57950979221253,
+            };
+          } else if (params.start[0] === "M") {
+            startLocation = {
+              latitude: 45.49550722087804,
+              longitude: -73.57917572331318,
+            };
+          }
+
+          if (params.end[0] === "H") {
+            endLocation = {
+              latitude: 45.49781725012627,
+              longitude: -73.57950979221253,
+            };
+          } else if (params.end[0] === "M") {
+            endLocation = {
+              latitude: 45.49550722087804,
+              longitude: -73.57917572331318,
+            };
+          }
+
+          setIsSearch(true);
+          setStart(startLocation);
+          setEnd(endLocation);
+          setIsRoute(true);
+
+          setDestinationPosition(params.end);
+          setStartPosition(params.start);
+
+          // Reset all travel times before fetching new ones
+          resetTravelTimes();
+
+          // Fetch travel times for all modes
+          fetchAllTravelTimes(startLocation, endLocation);
+        } else {
+          console.warn(
+            "Indoor tracing requested but start or end location is missing in params."
+          );
         }
-        else if (params.start[0]==='M'){
-          startLocation= {latitude:45.49550722087804, longitude:-73.57917572331318}
-        }
-  
-        if (params.end[0] === 'H') {
-          endLocation = { latitude: 45.49781725012627, longitude: -73.57950979221253 };
-        }
-
-        else if (params.end[0]==='M'){
-          endLocation = {latitude:45.49550722087804, longitude:-73.57917572331318}
-        }
-        
-        setIsSearch(true);
-        setStart(startLocation);
-        setEnd(endLocation);
-        setIsRoute(true);
-        
-  
-        setDestinationPosition(params.end);
-        setStartPosition(params.start);
-
-        // Reset all travel times before fetching new ones
-      setCarTravelTime(null);
-      setBikeTravelTime(null);
-      setMetroTravelTime(null);
-      setWalkTravelTime(null);
-
-      // Fetch travel times for all modes
-      const fetchAllTravelTimes = async () => {
-        await Promise.all([
-          fetchTravelTime(startLocation, endLocation, "DRIVING"),
-          fetchTravelTime(
-            startLocation,
-            endLocation,
-            "BICYCLING"
-          ),
-          fetchTravelTime(startLocation, endLocation, "TRANSIT"),
-          fetchTravelTime(startLocation, endLocation, "WALKING"),
-        ]);
-      };
-
-      fetchAllTravelTimes();
-
-      } else {
-        console.warn("Indoor tracing requested but start or end location is missing in params.");
-      }}
-      catch(e){
-        console.error('Error in mapping of outdoor directions', e)
+      } catch (e) {
+        console.error("Error in mapping of outdoor directions", e);
       }
     }
   }, [params]);
@@ -582,7 +566,7 @@ export default function CampusMap({ navigationParams }) {
             origin={SGWShuttlePickup}
             destination={LoyolaShuttlePickup}
             apikey={process.env.EXPO_PUBLIC_GOOGLE_API_KEY}
-            strokeColor="#862532"
+            strokeColor={theme.backgroundColor}
             strokeWidth={6}
             mode={"DRIVING"}
           />
@@ -592,27 +576,15 @@ export default function CampusMap({ navigationParams }) {
             origin={start}
             destination={end}
             apikey={process.env.EXPO_PUBLIC_GOOGLE_API_KEY}
-            strokeColor="#862532"
+            strokeColor={theme.backgroundColor}
             strokeWidth={6}
             waypoints={[]} // replaced state with an empty array literal
             mode={mode}
             onReady={traceRouteOnReady}
           />
         ) : null}
-        {busMarkers.map((bus) => {
-          console.log("rendering bus marker", bus);
-          return (
-            <Marker
-              testID="bus-marker"
-              key={bus.id}
-              coordinate={{
-                latitude: bus.latitude,
-                longitude: bus.longitude,
-              }}
-              image={require("../../../assets/shuttle-bus-map.png")}
-            />
-          );
-        })}
+
+        {RenderBusMarkers(busMarkers)}
         <View ref={polygonRef}>{renderPolygons}</View>
       </MapView>
 

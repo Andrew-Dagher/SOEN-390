@@ -1,6 +1,6 @@
 import React from "react";
 import { render, fireEvent } from "@testing-library/react-native";
-import GoToClassButton from "../app/components/calendar/GoToClassButton";
+import GoToClassButton from "../app/components/Calendar/GoToClassButton";
 import { useNavigation } from "@react-navigation/native";
 import * as Location from "expo-location";
 

@@ -25,7 +25,7 @@ export const loadUserData = async (setUserName, setProfileImage) => {
  */
 export const pickImage = async (setTempProfileImage) => {
   let result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    mediaTypes: ['images'],
     allowsEditing: true,
     aspect: [1, 1],
     quality: 1,

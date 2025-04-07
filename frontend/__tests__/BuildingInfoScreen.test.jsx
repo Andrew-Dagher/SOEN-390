@@ -4,7 +4,7 @@
  */
 import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
-import { Linking, Modal, Pressable, Image } from "react-native";
+import { Linking } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import BuildingInfoScreen from "../app/screens/Info/BuildingInfoScreen";
 

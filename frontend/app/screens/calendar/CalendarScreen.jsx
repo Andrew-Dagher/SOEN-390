@@ -21,12 +21,13 @@ import NextClassButton from "../../components/Calendar/NextClassButton";
 import { trackEvent } from "@aptabase/react-native";
 import { useAppSettings } from "../../AppSettingsContext";
 import styles from "./CalendarScreenStyles.js";
+import getThemeColors from "../../ColorBindTheme";
 
 export default function CalendarScreen() {
   const navigation = useNavigation();
   const { isSignedIn } = useAuth();
   const { textSize } = useAppSettings();
-
+  const theme = getThemeColors();
   // Event observer for notifications
   const [eventsObserver] = useState(new EventObserver());
 
@@ -308,7 +309,7 @@ export default function CalendarScreen() {
         <ActivityIndicator
           testID="loading-indicator" // Add test ID for loading state
           size="large"
-          color="#862532"
+          color= {theme.backgroundColor}
         />
       </View>
     );

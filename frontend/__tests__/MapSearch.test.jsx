@@ -1,7 +1,6 @@
 import React from "react";
 import { render, fireEvent } from "@testing-library/react-native";
 import MapSearch from "../app/components/navigation/MapSearch";
-import { polygons } from "../app/screens/navigation/navigationConfig";
 
 jest.mock("../app/screens/navigation/navigationConfig", () => ({
   polygons: [

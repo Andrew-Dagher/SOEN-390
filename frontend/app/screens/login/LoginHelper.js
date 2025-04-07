@@ -6,7 +6,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
  * @param {string} calendarId - The public Google Calendar ID.
  * @returns {Promise<string>} The calendar name (summary) or a fallback name if fetch fails.
  */
-async function fetchCalendarName(calendarId, index) {
+export async function fetchCalendarName(calendarId, index) {
   try {
     const GOOGLE_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_API_KEY2;
     if (!GOOGLE_API_KEY) {
@@ -39,10 +39,10 @@ export async function getAvailableCalendars() {
   const calendars = [];
   let index = 1;
 
+  // Gather all EXPO_PUBLIC_GOOGLE_CALENDAR_ID* from env
   while (true) {
     const calendarIdKey = `EXPO_PUBLIC_GOOGLE_CALENDAR_ID${index}`;
     const calendarId = process.env[calendarIdKey];
-
     if (!calendarId) break;
 
     calendars.push({
@@ -52,6 +52,7 @@ export async function getAvailableCalendars() {
     index++;
   }
 
+  // Fetch each calendar's name
   await Promise.all(
     calendars.map(async (calendar, idx) => {
       calendar.name = await fetchCalendarName(calendar.id, idx + 1);
@@ -88,7 +89,9 @@ export async function fetchPublicCalendarEvents(calendarId, startDate, endDate) 
     const textResponse = await response.text();
 
     if (!response.ok) {
-      console.warn(`Warning: Unable to fetch events for ${calendarId} (Status: ${response.status})`);
+      console.warn(
+        `Warning: Unable to fetch events for ${calendarId} (Status: ${response.status})`
+      );
       return [];
     }
 

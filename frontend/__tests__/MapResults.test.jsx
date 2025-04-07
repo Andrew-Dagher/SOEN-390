@@ -5,7 +5,7 @@
  */
 
 import React from "react";
-import { render, fireEvent, waitFor, act } from "@testing-library/react-native";
+import { render, fireEvent, act } from "@testing-library/react-native";
 import MapResults from "../app/components/navigation/MapResults";
 
 // Mock callback functions for keyboard events

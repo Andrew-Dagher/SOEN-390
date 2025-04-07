@@ -1,0 +1,25 @@
+appId: host.exp.Exponent
+---
+- launchApp
+# Testing Signing in as a guest
+- tapOn: "frontend"
+- tapOn: "Continue as Guest"
+
+# Testing Signing in as a user using google auth
+- tapOn:
+    point: 87%,97%
+- tapOn: "Logout"
+- tapOn:
+    point: "65%,56%"
+- tapOn: "Continue with Google"
+- tapOn: "Continue"
+
+# Log in with email and password if it is the first time
+# - inputText:
+#    label: Email or phone
+#    text: maestro@mobile.dev
+
+# Log in selecting email
+- tapOn: "Cedric Lim Ah Tock"
+- tapOn: "Continue"
+- assertVisible: "Welcome back"

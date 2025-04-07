@@ -1,0 +1,53 @@
+appId: host.exp.Exponent
+---
+- launchApp
+# Testing calendar as guest
+- tapOn: "frontend"
+- tapOn: "Continue as Guest"
+
+# Tap on calendar
+- tapOn:
+    point: 63%,97%
+- assertVisible: "Go to Login"
+
+# Tap on settings
+- tapOn:
+    point: 88%,97%
+- tapOn: "Logout"
+- tapOn:
+    point: "65%,56%"
+
+# Scenario 1: Connect to google calendar   
+- tapOn: "Continue with Google"
+- tapOn: "Continue"
+- tapOn: "Cedric Lim Ah Tock"
+- tapOn: "Continue"
+- tapOn: "Continue"
+- tapOn:
+    point: "12%,51%"
+- swipe:
+    start: 53%,90%
+    end: 53%,15%
+    duration: 1500
+- tapOn: "Continue"
+
+# Tap on calendar
+- tapOn:
+    point: 63%,97%
+
+# Scenario 2: Select multiple calendars
+- tapOn: "Calendar 1"
+- tapOn:
+    point: "50%,52%"
+- tapOn:
+    point: "50%,35%"
+- tapOn: "Go to Class"
+- waitForAnimationToEnd:
+    timeout: 4000
+
+# Scenario 2: Go to my next class
+- tapOn:
+    point: 63%,97%
+- tapOn: "Go to My Next Class"
+- waitForAnimationToEnd:
+    timeout: 4000

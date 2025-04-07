@@ -1,0 +1,46 @@
+appId: host.exp.Exponent
+---
+- launchApp
+# Testing Signing in as a guest
+- tapOn: "frontend"
+- tapOn: "Continue as Guest"
+
+# Tap on map
+- tapOn:
+    point: 38%,97%
+- tapOn:
+    id: "poi-filter-button"
+
+# Customize POIs
+- swipe:
+    start: 56%,34%
+    end: 42%,34%
+    duration: 500
+- waitForAnimationToEnd:
+    timeout: 500
+- tapOn:
+    point: "50%,57%"
+- tapOn:
+    point: "50%,68%"
+- swipe:
+    start: 50%,68%
+    end: 50%,45%
+    duration: 500
+- tapOn: "Apply Filters"
+
+# Wait for animation
+- waitForAnimationToEnd:
+    timeout: 5000
+- waitForAnimationToEnd:
+    timeout: 5000
+- tapOn:
+    point: "31%,40%"
+- tapOn:
+    point: "31%,40%"
+- waitForAnimationToEnd:
+    timeout: 4000
+
+# Select restaurant as destination
+- tapOn:
+    point: "31%,40%"
+- tapOn: "Get Directions"
