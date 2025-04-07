@@ -8,8 +8,6 @@ import { useAppSettings } from "../app/AppSettingsContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import moment from "moment";
 import { fetchPublicCalendarEvents } from "../app/screens/login/LoginHelper";
-// Import EventObserver so we can mock it properly
-import EventObserver from "../app/screens/calendar/EventObserver";
 
 // Mock dependencies
 jest.mock("@clerk/clerk-expo", () => ({

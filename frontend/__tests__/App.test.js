@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { render, act } from "@testing-library/react-native";
+import { render, act, screen } from "@testing-library/react-native";
 import App from "../app/App";
 import busService from "../app/services/BusService";
 import Aptabase from "@aptabase/react-native";
@@ -107,5 +107,17 @@ describe("App Component", () => {
     expect(getByText("SettingsScreen")).toBeTruthy();
     expect(getByText("BuildingInfoScreen")).toBeTruthy();
     expect(getByText("LoginScreen")).toBeTruthy();
+  });
+
+  test('renders header element', () => {
+    render(<App />);
+    const headerElement = screen.getByRole('banner');
+    expect(headerElement).toBeInTheDocument();
+  });
+
+  test('renders Map component', () => {
+    render(<App />);
+    const mapContainer = screen.getByTestId('map-container');
+    expect(mapContainer).toBeInTheDocument();
   });
 });

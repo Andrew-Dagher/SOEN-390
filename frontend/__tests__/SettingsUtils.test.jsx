@@ -90,7 +90,7 @@ describe("settingsUtils", () => {
 
       await pickImage(setTempProfileImageMock);
       expect(ImagePicker.launchImageLibraryAsync).toHaveBeenCalledWith({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [1, 1],
         quality: 1,

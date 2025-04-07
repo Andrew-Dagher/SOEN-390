@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Animated } from "react-native";
 import PropTypes from 'prop-types'; // Import PropTypes
+import getThemeColors from "../ColorBindTheme";
 
 export default function InAppNotification({ message, visible }) {
   const [fadeAnim] = useState(new Animated.Value(0)); // For fade-in effect
   const [translateY] = useState(new Animated.Value(-50)); // Start slightly above
-
+  const theme = getThemeColors();
+  
   useEffect(() => {
     if (visible) {
       console.log("📢 Rendering In-App Notification:", message);
@@ -46,10 +48,7 @@ export default function InAppNotification({ message, visible }) {
 
   return (
     <Animated.View
-      style={[
-        styles.notificationContainer,
-        { opacity: fadeAnim, transform: [{ translateY }] },
-      ]}
+      style={[styles.notificationContainer, { backgroundColor: theme.backgroundColor },{ opacity: fadeAnim, transform: [{ translateY }] }]}
     >
       <Text style={styles.notificationText}>{message}</Text>
     </Animated.View>

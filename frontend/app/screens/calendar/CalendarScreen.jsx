@@ -21,13 +21,14 @@ import NextClassButton from "../../components/Calendar/NextClassButton";
 import { trackEvent } from "@aptabase/react-native";
 import { useAppSettings } from "../../AppSettingsContext";
 import styles from "./CalendarScreenStyles.js";
+import getThemeColors from "../../ColorBindTheme";
 import { Coachmark } from "react-native-coachmark";
 
 export default function CalendarScreen() {
   const navigation = useNavigation();
   const { isSignedIn } = useAuth();
   const { textSize } = useAppSettings();
-
+  const theme = getThemeColors();
   // Event observer for notifications
   const [eventsObserver] = useState(new EventObserver());
 
@@ -42,7 +43,6 @@ export default function CalendarScreen() {
   const [calendars, setCalendars] = useState([]);
   const [selectedCalendar, setSelectedCalendar] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [showCoachMark, setShowCoachMark] = useState(false);
 
   // Date navigation state
   const [selectedDate, setSelectedDate] = useState(moment().startOf("day"));
@@ -211,25 +211,6 @@ export default function CalendarScreen() {
     return () => eventsObserver.unsubscribe(observerCallback);
   }, [eventsObserver, selectedDate]);
 
-  //AsyncStorage for guide
-// AsyncStorage for guide
-useEffect(() => {
-  const checkCoachmarkStatus = async () => {
-    try {
-      const seen = await AsyncStorage.getItem("hasSeenCalendarCoachmark");
-      if (!seen) {
-        setShowCoachMark(true);
-        await AsyncStorage.setItem("hasSeenCalendarCoachmark", "true");
-      }
-    } catch (error) {
-      console.error("Coachmark Storage Error:", error);
-    }
-  };
-
-  checkCoachmarkStatus();
-}, []);
-
-
   // Notify observer when events change
   useEffect(() => {
     if (events.length > 0) {
@@ -309,8 +290,6 @@ if (!isSignedIn) {
       <Coachmark
         message="Sign in to access your calendar events!"
         autoShow
-        visible={showCoachMark}
-        onHide={() => setShowCoachMark(false)}
       >
         <GoToLoginButton
           onPress={async () => {
@@ -329,7 +308,6 @@ if (!isSignedIn) {
   );
 }
 
-
   // Loading view
   if (loading) {
     return (
@@ -337,7 +315,7 @@ if (!isSignedIn) {
         <ActivityIndicator
           testID="loading-indicator" // Add test ID for loading state
           size="large"
-          color="#862532"
+          color= {theme.backgroundColor}
         />
       </View>
     );

@@ -77,7 +77,7 @@ export default function NextClassButton({ eventObserver }) {
 
   return (
     <Animated.View style={[styles.floatingContainer, { opacity: fadeAnim }]}>
-      <TouchableOpacity style={styles.floatingButton} onPress={handleGoToNextClass}>
+      <TouchableOpacity style={[styles.floatingButton, { backgroundColor: theme.backgroundColor }]} onPress={handleGoToNextClass}>
         <Text style={styles.floatingButtonText}>Go to My Next Class</Text>
         <CalendarDirectionsIcon style={styles.icon} />
       </TouchableOpacity>

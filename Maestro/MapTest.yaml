@@ -1,0 +1,32 @@
+appId: host.exp.Exponent
+---
+- launchApp
+# Testing Signing in as a guest
+- tapOn: "frontend"
+- tapOn: "Continue as Guest"
+
+# Tap on map
+- tapOn:
+    point: 38%,97%
+- tapOn: "Search the campus"
+
+# Setting start
+- inputText: "Hall building"
+- pressKey: Enter
+- tapOn: "Set Start"
+- doubleTapOn:
+    point: "38%,73%"
+
+    # Setting destination
+- eraseText: 13
+- inputText: "JMSB"
+- pressKey: Enter
+- tapOn: "Set Destination"
+
+
+# Switch campus
+- tapOn:
+    point: "17%,72%"
+
+
+
