@@ -3,7 +3,7 @@ import { View, Text } from "react-native";
 import { Marker, Callout } from "react-native-maps";
 import { MaterialIcons } from "@expo/vector-icons";
 import { poiTypes } from "../../../services/PoiService";
-import PropTypes from "prop-types"; // Added PropTypes import
+import PropTypes from "prop-types";
 
 /**
  * @typedef {Object} POI
@@ -94,6 +94,12 @@ const PoiMarker = ({ poi, selectedPoiType, onPress, textSize }) => {
     return foundType?.label || "Place";
   };
 
+  // Boolean flags for conditional rendering
+  const hasVicinity = Boolean(poi.vicinity);
+  const hasRating = Boolean(poi.rating);
+  const hasOpeningHours = Boolean(poi.opening_hours);
+  const isOpenNow = hasOpeningHours && Boolean(poi.opening_hours.open_now);
+
   return (
     <Marker
       testID="poi-marker"
@@ -165,7 +171,7 @@ const PoiMarker = ({ poi, selectedPoiType, onPress, textSize }) => {
             </Text>
           </View>
 
-          {poi.vicinity && (
+          {hasVicinity && (
             <Text
               testID="poi-vicinity"
               style={{ fontSize: textSize - 2, marginTop: 3 }}
@@ -173,7 +179,7 @@ const PoiMarker = ({ poi, selectedPoiType, onPress, textSize }) => {
               {poi.vicinity}
             </Text>
           )}
-          {poi.rating && (
+          {hasRating && (
             <View
               testID="poi-rating-container"
               style={{
@@ -191,15 +197,15 @@ const PoiMarker = ({ poi, selectedPoiType, onPress, textSize }) => {
               </Text>
             </View>
           )}
-          {poi.opening_hours && (
+          {hasOpeningHours && (
             <Text
               testID="poi-open-status"
               style={{
                 marginTop: 5,
-                color: poi.opening_hours.open_now ? "green" : "red",
+                color: isOpenNow ? "green" : "red",
               }}
             >
-              {poi.opening_hours.open_now ? "Open Now" : "Closed"}
+              {isOpenNow ? "Open Now" : "Closed"}
             </Text>
           )}
         </View>
