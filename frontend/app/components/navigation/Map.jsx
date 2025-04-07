@@ -32,6 +32,7 @@ import { trackEvent } from "@aptabase/react-native";
 import { useAppSettings } from "../../AppSettingsContext";
 import getThemeColors from "../../ColorBindTheme";
 import busService from "../../services/BusService";
+import POIManager from "./POIs/POIManager";
 import PropTypes from "prop-types";
 import MapPolygonHighlight from "./MapPolygonHighlight";
 import RenderBusMarkers from "./Icons/RenderBusMarkers";
@@ -83,6 +84,7 @@ export default function CampusMap({ navigationParams }) {
 
   // Add to busService observer list
   const [busMarkers, setBusMarkers] = useState([]);
+  const [selectedPoi, setSelectedPoi] = useState(null);
 
   const observerRef = useRef(null);
 
@@ -235,43 +237,99 @@ export default function CampusMap({ navigationParams }) {
     }
   }, [params]);
 
+  // Updated handleSetStart function
   const handleSetStart = () => {
+    // Determine which location we're working with (POI or Building)
+    let pointLocation = null;
+    let pointName = "";
+
+    if (selectedPoi) {
+      pointLocation = {
+        latitude: selectedPoi.geometry.location.lat,
+        longitude: selectedPoi.geometry.location.lng,
+      };
+      pointName = selectedPoi.name;
+    } else if (selectedBuilding) {
+      pointLocation = selectedBuilding.point;
+      pointName = selectedBuilding.name;
+    } else {
+      // Nothing selected
+      return;
+    }
+
+    // If start is already set and not equal to user location,
+    // we're setting this point as destination instead
     if (start != null && start !== location?.coords) {
       setIsRoute(true);
       setIsSearch(true);
-      setDestinationPosition(selectedBuilding.name);
-      setEnd(selectedBuilding.point);
+      setDestinationPosition(pointName);
+      setEnd(pointLocation);
 
       // Reset travel times
       resetTravelTimes();
 
-      fetchAllTravelTimes(start, selectedBuilding.point);
+      // Calculate travel times
+      fetchAllTravelTimes(start, pointLocation);
+
+      // Track the event
+      trackEvent("Set Destination", {
+        name: pointName,
+        type: selectedPoi ? "POI" : "Building",
+      });
       return;
     }
-    setStart(selectedBuilding.point);
-    setStartPosition(selectedBuilding.name);
-  };
 
+    // Set as start point
+    setStart(pointLocation);
+    setStartPosition(pointName);
+    trackEvent("Set Start", {
+      name: pointName,
+      type: selectedPoi ? "POI" : "Building",
+    });
+  };
+  // Updated handleGetDirections function
   const handleGetDirections = () => {
     try {
+      // Determine which location we're working with (POI or Building)
+      let pointLocation = null;
+      let pointName = "";
+
+      if (selectedPoi) {
+        pointLocation = {
+          latitude: selectedPoi.geometry.location.lat,
+          longitude: selectedPoi.geometry.location.lng,
+        };
+        pointName = selectedPoi.name;
+      } else if (selectedBuilding) {
+        pointLocation = selectedBuilding.point;
+        pointName = selectedBuilding.name;
+      } else {
+        // Nothing selected
+        return;
+      }
+
+      // Set up route
       trackEvent("Get Directions", {
-        "selected building": selectedBuilding.name,
+        selected: pointName,
+        type: selectedPoi ? "POI" : "Building",
       });
       console.log("Event tracked");
+
       setIsRoute(true);
       setIsSearch(true);
-      setEnd(selectedBuilding.point);
-      setDestinationPosition(selectedBuilding.name);
+      setEnd(pointLocation);
+      setDestinationPosition(pointName);
+
       if (location != null) {
         setStart(location.coords);
+        setStartPosition("Your Location");
       }
-      setStartPosition("Your Location");
 
       resetTravelTimes(); // Reset travel times before fetching new ones
 
-      fetchAllTravelTimes(location?.coords, selectedBuilding.point);
+      fetchAllTravelTimes(location?.coords, pointLocation);
     } catch (e) {
-      console.error(e);
+      console.error("Error getting directions:", e);
     }
   };
 
@@ -291,8 +349,8 @@ export default function CampusMap({ navigationParams }) {
   const handleMarkerPress = (building) => {
     setIsSearch(false);
     setSelectedBuilding(building);
+    setSelectedPoi(null); // Clear any selected POI
     trackEvent("Selected building", { building: building.name });
-    // Removed unused setIsSelected(true) call
   };
 
   const panToMyLocation = () => {
@@ -301,8 +359,9 @@ export default function CampusMap({ navigationParams }) {
 
   const renderPolygons = polygons.map((building) => (
     <View key={building.name}>
-      {end == null ? (
+      {!isRoute && (
         <Marker
+          testID={"building-" + building.name}
           coordinate={building.point}
           onPress={() => handleMarkerPress(building)}
           image={require("../../../assets/concordia-logo.png")}
@@ -314,7 +373,7 @@ export default function CampusMap({ navigationParams }) {
             <MapCard building={building} isCallout={true} />
           </Callout>
         </Marker>
-      ) : null}
+      )}
       <MapPolygonHighlight
         building={building}
         location={location}
@@ -430,11 +489,16 @@ export default function CampusMap({ navigationParams }) {
     }
   }, [params]);
 
+  const handlePoiSelect = (poi) => {
+    setSelectedPoi(poi);
+    setSelectedBuilding(null); // Clear selected building when a POI is selected
+  };
+
   return (
     <View style={styles.container}>
       <MapView
         ref={ref}
-        style={styles.map}
+        style={[styles.map, { zIndex: 0 }]}
         initialRegion={{
           latitude: locationData.latitude,
           longitude: locationData.longitude,
@@ -444,6 +508,7 @@ export default function CampusMap({ navigationParams }) {
         mapType="terrain"
         provider={PROVIDER_DEFAULT}
         onPress={handleMapPress}
+        showsPointsOfInterest={false}
         end={end}
         start={start}
       >
@@ -463,6 +528,17 @@ export default function CampusMap({ navigationParams }) {
         />
         {hasRoute ? <Marker coordinate={end} /> : null}
         {hasRoute ? <Marker coordinate={start} /> : null}
+        <POIManager
+          campus={campus}
+          SGWLocation={SGWLocation}
+          LoyolaLocation={LoyolaLocation}
+          isRoute={isRoute}
+          isSearch={isSearch}
+          textSize={textSize}
+          theme={theme}
+          styles={styles}
+          onSelectPoi={handlePoiSelect}
+        />
         {hasRoute && isShuttle ? (
           <MapViewDirections
             origin={walkToBus.start}
@@ -617,7 +693,7 @@ export default function CampusMap({ navigationParams }) {
         />
       )}
 
-      {selectedBuilding && !isSearch && (
+      {(selectedBuilding || selectedPoi) && !isSearch && (
         <View className="absolute w-full bottom-20">
           <View className="flex flex-row justify-center items-center">
             <TouchableHighlight
@@ -630,7 +706,7 @@ export default function CampusMap({ navigationParams }) {
               onPress={handleSetStart}
             >
               <View className="flex flex-row justify-around items-center">
-                {start != null && start != location?.coords ? (
+                {start != null && start !== location?.coords ? (
                   <Text
                     style={[{ fontSize: textSize }]}
                     className="color-white mr-4 font-bold"
@@ -670,7 +746,6 @@ export default function CampusMap({ navigationParams }) {
           </View>
         </View>
       )}
-
       <View className="w-full absolute bottom-0">
         <BottomNavBar />
       </View>
