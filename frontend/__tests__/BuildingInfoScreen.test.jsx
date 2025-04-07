@@ -3,22 +3,38 @@
  * @description Tests the rendering of the BuildingInfoScreen
  */
 import React from "react";
-import { render, fireEvent, waitFor } from "@testing-library/react-native";
-import { Linking } from "react-native";
+import { render, fireEvent, waitFor, act } from "@testing-library/react-native";
+import { Linking, Text } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import BuildingInfoScreen from "../app/screens/Info/BuildingInfoScreen";
 
-// Rename the variable to start with 'mock'
+// Mock navigation
 const mockGoBack = jest.fn();
-
+const mockNavigate = jest.fn();
 jest.mock("@react-navigation/native", () => ({
   ...jest.requireActual("@react-navigation/native"),
   useNavigation: () => ({
     goBack: mockGoBack,
+    navigate: mockNavigate,
   }),
 }));
 
-// Sample building data for testing
+// Define the mock Coachmark component
+const MockCoachmark = ({ message, children }) => (
+  <>
+    <Text testID="coachmark-message">{message}</Text>
+    {children}
+  </>
+);
+
+// Mock react-native-coachmark
+jest.mock("react-native-coachmark", () => ({
+  Coachmark: jest.fn((props) => <MockCoachmark {...props} />),
+}));
+
+jest.useFakeTimers(); // Enable fake timers
+
+// Sample building data
 const building = {
   longName: "Test Building",
   address: "123 Test St",
@@ -60,22 +76,38 @@ describe("BuildingInfoScreen", () => {
     expect(queryByText("Service A")).toBeNull();
   });
 
-  it("switches to Services tab and renders service items", () => {
+  it("switches to Services tab and renders service items", async () => {
     const { getByText, queryByText } = renderComponent();
+    act(() => {
+      jest.runAllTimers();
+    });
+    await waitFor(() => {
+      expect(getByText("Services")).toBeTruthy();
+    });
     fireEvent.press(getByText("Services"));
     expect(getByText("Service A")).toBeTruthy();
     expect(queryByText("Dept A")).toBeNull();
   });
 
-  it("switches to Floorplans tab and renders floorplan items", () => {
+  it("switches to Floorplans tab and renders floorplan items", async () => {
     const { getByText, queryByText } = renderComponent();
+    act(() => {
+      jest.runAllTimers();
+    });
+    await waitFor(() => {
+      expect(getByText("Floorplans")).toBeTruthy();
+    });
     fireEvent.press(getByText("Floorplans"));
-    expect(getByText("Hall 1")).toBeTruthy();
-    expect(getByText("Hall 2")).toBeTruthy();
-    expect(queryByText("Dept A")).toBeNull();
+    act(() => {
+      jest.runAllTimers();
+    });
+    await waitFor(() => {
+      expect(getByText("Indoor Map")).toBeTruthy();
+      expect(queryByText("Dept A")).toBeNull();
+    });
   });
 
-  it("calls Linking.openURL when a department item is pressed", () => {
+  it("calls Linking.openURL when a department item is pressed", async () => {
     const openURLSpy = jest.spyOn(Linking, "openURL").mockResolvedValue();
     const { getByText } = renderComponent();
     fireEvent.press(getByText("Dept A"));
@@ -85,42 +117,32 @@ describe("BuildingInfoScreen", () => {
   it("calls navigation.goBack when the back button is pressed", () => {
     const { getByText } = renderComponent();
     fireEvent.press(getByText("←"));
-    expect(mockGoBack).toHaveBeenCalled(); // Use the renamed variable here
+    expect(mockGoBack).toHaveBeenCalled();
   });
 
-  it("opens/closes modal with mocked event", async () => {
-    const { getByText, queryByTestId, getByTestId } = renderComponent();
-
-    // Switch to Floorplans tab
+  it("navigates to InDoorScreen when Indoor Map is pressed", async () => {
+    const { getByText } = renderComponent();
+    act(() => {
+      jest.runAllTimers();
+    });
+    await waitFor(() => {
+      expect(getByText("Floorplans")).toBeTruthy();
+    });
     fireEvent.press(getByText("Floorplans"));
-
-    // Open modal
-    fireEvent.press(getByText("Hall 1"));
-    
-    // Verify modal opens
-    await waitFor(() => {
-      expect(getByTestId("floorplanModal")).toBeTruthy();
+    act(() => {
+      jest.runAllTimers();
     });
-
-    // Mock the press event with nativeEvent data
-    fireEvent.press(
-      getByTestId("modal-background"),
-      {
-        nativeEvent: { // Mocked event payload
-          locationX: 100,
-          locationY: 200,
-          timestamp: Date.now()
-        }
-      }
-    );
-
-    // Verify modal closes
     await waitFor(() => {
-      expect(queryByTestId("floorplanModal")).toBeNull();
+      expect(getByText("Indoor Map")).toBeTruthy();
+    });
+    fireEvent.press(getByText("Indoor Map"));
+    expect(mockNavigate).toHaveBeenCalledWith("InDoorScreen", {
+      building,
+      selectedFloorplan: building.floorPlans, // Matches the component's handleFloorplanPress(links)
     });
   });
 
-  it("does not render the Floorplans tab if there are no floor plans", () => {
+  it("does not render the Floorplans tab if there are no floor plans", async () => {
     const buildingNoFloorplans = { ...building, floorPlans: [] };
     const routeNoFloorplans = { params: buildingNoFloorplans };
     const { queryByText } = render(
@@ -128,6 +150,38 @@ describe("BuildingInfoScreen", () => {
         <BuildingInfoScreen route={routeNoFloorplans} />
       </NavigationContainer>
     );
-    expect(queryByText("Floorplans")).toBeNull();
+    act(() => {
+      jest.runAllTimers();
+    });
+    await waitFor(() => {
+      expect(queryByText("Floorplans")).toBeNull();
+    });
+  });
+
+  it("shows detailed building information coachmark after delay", async () => {
+    const { getByText } = renderComponent();
+    act(() => {
+      jest.runAllTimers();
+    });
+    await waitFor(() => {
+      expect(getByText("Detailed building information")).toBeTruthy();
+    });
+  });
+
+  it("shows indoor map coachmark when Floorplans tab is active", async () => {
+    const { getByText } = renderComponent();
+    act(() => {
+      jest.runAllTimers();
+    });
+    await waitFor(() => {
+      expect(getByText("Floorplans")).toBeTruthy();
+    });
+    fireEvent.press(getByText("Floorplans"));
+    act(() => {
+      jest.runAllTimers();
+    });
+    await waitFor(() => {
+      expect(getByText("Tap here for the indoor map!")).toBeTruthy();
+    });
   });
 });
