@@ -59,7 +59,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^5.5.0",
-    "react-native": "0.76.6",
+    "react-native": "0.79.0",
     "react-native-auth0": "^4.2.0",
     "react-native-calendars": "^1.1308.1",
     "react-native-color-matrix-image-filters": "^7.0.2",
