@@ -52,7 +52,7 @@
     "expo-status-bar": "~2.0.1",
     "expo-web-browser": "~14.0.2",
     "install": "^0.13.0",
-    "jest-expo": "~52.0.3",
+    "jest-expo": "~53.0.0",
     "lightningcss": "^1.29.3",
     "nativewind": "^4.1.23",
     "prop-types": "^15.8.1",
