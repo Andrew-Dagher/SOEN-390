@@ -68,7 +68,7 @@
     "react-native-gesture-handler": "^2.24.0",
     "react-native-get-location": "^5.0.0",
     "react-native-get-random-values": "^1.11.0",
-    "react-native-google-places-autocomplete": "^2.5.7",
+    "react-native-google-places-autocomplete": "^2.6.4",
     "react-native-maps": "^1.20.1",
     "react-native-maps-directions": "^1.9.0",
     "react-native-overlay": "^0.5.0",
